@@ -339,6 +339,22 @@ export class AuthService {
       throw new Error('Invalid or expired token');
     }
   }
+
+  // Helper method for OAuth providers to generate tokens
+  generateTokens(user: { id: string; email: string }) {
+    const tokenPayload: TokenPayload = {
+      userId: user.id,
+      email: user.email,
+    };
+
+    const accessToken = generateAccessToken(tokenPayload);
+    const refreshToken = generateRefreshToken(tokenPayload);
+
+    return {
+      accessToken,
+      refreshToken,
+    };
+  }
 }
 
 export const authService = new AuthService();

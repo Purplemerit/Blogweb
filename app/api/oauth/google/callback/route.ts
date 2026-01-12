@@ -66,9 +66,10 @@ export async function GET(request: NextRequest) {
       user = await prisma.user.create({
         data: {
           email: userInfo.email,
+          password: '', // OAuth users don't need password
           name: userInfo.name || userInfo.email.split('@')[0],
           avatar: userInfo.picture,
-          emailVerified: new Date(), // Google emails are already verified
+          emailVerified: true, // Google emails are already verified
           provider: 'GOOGLE',
           providerId: userInfo.id,
         },
@@ -88,7 +89,7 @@ export async function GET(request: NextRequest) {
           provider: 'GOOGLE',
           providerId: userInfo.id,
           avatar: userInfo.picture || user.avatar,
-          emailVerified: user.emailVerified || new Date(),
+          emailVerified: true,
         },
       })
     }

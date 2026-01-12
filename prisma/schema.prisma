@@ -25,6 +25,10 @@ model User {
   twitterHandle  String?
   linkedinUrl    String?
 
+  // OAuth
+  provider       String?
+  providerId     String?
+
   // Subscription
   subscriptionPlan  SubscriptionPlan @default(FREE)
   subscriptionStatus SubscriptionStatus @default(ACTIVE)

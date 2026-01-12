@@ -84,9 +84,10 @@ export async function GET(request: NextRequest) {
       user = await prisma.user.create({
         data: {
           email,
+          password: '', // OAuth users don't need password
           name: userInfo.name || userInfo.login || email.split('@')[0],
           avatar: userInfo.avatar_url,
-          emailVerified: new Date(), // GitHub emails are verified
+          emailVerified: true, // GitHub emails are verified
           provider: 'GITHUB',
           providerId: userInfo.id.toString(),
         },
@@ -106,7 +107,7 @@ export async function GET(request: NextRequest) {
           provider: 'GITHUB',
           providerId: userInfo.id.toString(),
           avatar: userInfo.avatar_url || user.avatar,
-          emailVerified: user.emailVerified || new Date(),
+          emailVerified: true,
         },
       })
     }
