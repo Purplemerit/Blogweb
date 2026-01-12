@@ -1,0 +1,140 @@
+"use client"
+
+import React, { createContext, useContext, useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+
+export interface User {
+  id: string
+  name: string
+  email: string
+  role: string
+  emailVerified: boolean
+  avatar?: string | null
+  bio?: string | null
+  website?: string | null
+  twitterHandle?: string | null
+  linkedinUrl?: string | null
+  subscriptionPlan: 'FREE' | 'STARTER' | 'CREATOR' | 'PROFESSIONAL'
+  subscriptionStatus: 'ACTIVE' | 'CANCELLED' | 'EXPIRED' | 'TRIAL'
+  createdAt: string
+}
+
+interface AuthContextType {
+  user: User | null
+  loading: boolean
+  login: (email: string, password: string) => Promise<void>
+  logout: () => Promise<void>
+  refetchUser: () => Promise<void>
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
+
+  const fetchUser = async () => {
+    try {
+      const token = localStorage.getItem('accessToken')
+
+      if (!token) {
+        setLoading(false)
+        return
+      }
+
+      const response = await fetch('/api/auth/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setUser(data.data.user)
+      } else {
+        localStorage.removeItem('accessToken')
+        setUser(null)
+      }
+    } catch (error) {
+      console.error('Error fetching user:', error)
+      localStorage.removeItem('accessToken')
+      setUser(null)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchUser()
+  }, [])
+
+  const login = async (email: string, password: string) => {
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to login')
+      }
+
+      localStorage.setItem('accessToken', data.data.accessToken)
+      await fetchUser()
+
+      toast.success('Logged in successfully!')
+      router.push('/dashboard')
+    } catch (error: any) {
+      toast.error(error.message || 'An error occurred')
+      throw error
+    }
+  }
+
+  const logout = async () => {
+    try {
+      const token = localStorage.getItem('accessToken')
+
+      if (token) {
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        })
+      }
+
+      localStorage.removeItem('accessToken')
+      setUser(null)
+      toast.success('Logged out successfully')
+      router.push('/login')
+    } catch (error) {
+      console.error('Logout error:', error)
+      localStorage.removeItem('accessToken')
+      setUser(null)
+      router.push('/login')
+    }
+  }
+
+  const refetchUser = async () => {
+    await fetchUser()
+  }
+
+  return (
+    <AuthContext.Provider value={{ user, loading, login, logout, refetchUser }}>
+      {children}
+    </AuthContext.Provider>
+  )
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext)
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider')
+  }
+  return context
+}

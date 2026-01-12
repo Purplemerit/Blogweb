@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npm run dev:*)",
+      "Bash(timeout /t 5 /nobreak)",
+      "Bash(dir /B /S *.tsx *.ts)",
+      "Bash(npm uninstall:*)",
+      "Bash(taskkill:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(wmic process where \"name=''node.exe''\" delete)",
+      "Bash(dir:*)",
+      "Bash(if exist postcss.config.mjs del /F /Q postcss.config.mjs)",
+      "Bash(if exist postcss.config.js del /F /Q postcss.config.js)",
+      "Bash(del postcss.config.mjs)",
+      "Bash(timeout:*)",
+      "Bash(if exist .nextdevlock del /F /Q .nextdevlock)",
+      "Bash(mkdir:*)",
+      "Bash(npx prisma generate:*)",
+      "Bash(npx prisma db push:*)",
+      "Bash(node -e:*)",
+      "Bash(echo:*)",
+      "Bash(node:*)",
+      "Bash(del:*)",
+      "Bash(npx prisma:*)",
+      "Bash(cmd /c \"set DATABASE_URL=postgresql://postgres.zuknhfxgirfxncgiyelf:xiZqqPdXdWOjFYGv@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres && npx prisma db push\")",
+      "Bash(cat:*)",
+      "Bash(if exist .next rd /s /q .next)",
+      "Bash(if exist node_modules rd /s /q node_modules)",
+      "Bash(rm:*)",
+      "Bash(test:*)",
+      "Bash(done)",
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(tasklist:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx tsc:*)"
+    ]
+  }
+}
