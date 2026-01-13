@@ -76,6 +76,13 @@ export class AuthService {
       },
     });
 
+    // Create usage stats for new user
+    await prisma.usageStats.create({
+      data: {
+        userId: user.id,
+      },
+    });
+
     // TODO: Send verification email
     // await sendVerificationEmail(user.email, verificationToken);
 

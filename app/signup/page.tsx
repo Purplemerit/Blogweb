@@ -127,6 +127,9 @@ export default function SignupPage() {
                   onChange={(e) => setName(e.target.value)}
                   required
                 />
+                {errors.name && (
+                  <p className="text-xs text-red-500">{errors.name}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -138,6 +141,9 @@ export default function SignupPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                 />
+                {errors.email && (
+                  <p className="text-xs text-red-500">{errors.email}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>

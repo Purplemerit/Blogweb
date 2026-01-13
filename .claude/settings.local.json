@@ -34,7 +34,8 @@
       "Bash(npx shadcn@latest add:*)",
       "Bash(tasklist:*)",
       "Bash(npm run build:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(git add:*)"
     ]
   }
 }
