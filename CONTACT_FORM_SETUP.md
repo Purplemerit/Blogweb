@@ -42,7 +42,7 @@ This will create the `contact_submissions` table in your database.
 # Stop your current server (Ctrl+C)
 # Then restart it
 npm run dev
-```
+```pm run dev
 
 ## ✅ Testing Your Setup
 

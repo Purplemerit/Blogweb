@@ -43,6 +43,13 @@ interface Article {
   focusKeyword: string | null
   wordCount: number
   readingTime: number
+  userId?: string
+  collaborators?: Array<{
+    id: string
+    userId: string
+    role: string
+    status: string
+  }>
 }
 
 // Helper function to detect if content is markdown
@@ -71,6 +78,16 @@ const convertMarkdownToHtml = async (markdown: string): Promise<string> => {
   }
 }
 
+// Helper function to check if user can edit
+const canEdit = (role: string | null): boolean => {
+  return role === 'OWNER' || role === 'EDITOR'
+}
+
+// Helper function to check if user can view
+const canView = (role: string | null): boolean => {
+  return role === 'OWNER' || role === 'EDITOR' || role === 'COMMENTER' || role === 'VIEWER'
+}
+
 export default function ArticleEditorPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
@@ -84,6 +101,8 @@ export default function ArticleEditorPage() {
   const [excerpt, setExcerpt] = useState("")
   const [content, setContent] = useState("")
   const [showAISidebar, setShowAISidebar] = useState(true)
+  const [userRole, setUserRole] = useState<string | null>(null) // OWNER, EDITOR, COMMENTER, VIEWER
+  const [isOwner, setIsOwner] = useState(false)
   const [aiLoading, setAiLoading] = useState(false)
   const [generateContentLoading, setGenerateContentLoading] = useState(false)
   const [generateOutlineLoading, setGenerateOutlineLoading] = useState(false)
@@ -171,6 +190,21 @@ export default function ArticleEditorPage() {
         setToneOfVoice(articleData.toneOfVoice || "professional")
         setContentFramework(articleData.contentFramework || "standard")
         setHasUnsavedChanges(false)
+
+        // Check if user is owner or collaborator
+        const isArticleOwner = articleData.userId === user?.id
+        setIsOwner(isArticleOwner)
+
+        if (isArticleOwner) {
+          setUserRole('OWNER')
+        } else if (articleData.collaborators && articleData.collaborators.length > 0) {
+          const userCollaborator = articleData.collaborators.find(
+            (c: any) => c.userId === user?.id && c.status === 'ACCEPTED'
+          )
+          if (userCollaborator) {
+            setUserRole(userCollaborator.role)
+          }
+        }
       } else {
         toast.error(data.error || "Failed to fetch article")
         router.push("/dashboard/articles")
@@ -185,6 +219,12 @@ export default function ArticleEditorPage() {
   }
 
   const handleSave = useCallback(async (status?: string) => {
+    // Check edit permission
+    if (!canEdit(userRole)) {
+      toast.error("You don't have permission to edit this article")
+      return
+    }
+
     if (!title.trim()) {
       toast.error("Please enter a title")
       return
@@ -567,23 +607,27 @@ export default function ArticleEditorPage() {
               >
                 {showAISidebar ? <ChevronRight className="h-5 w-5 text-neutral-700" /> : <Wand2 className="h-5 w-5 text-emerald-600" />}
               </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleSave()}
-                disabled={saving}
-                className="bg-white border-neutral-200 hover:bg-neutral-50 px-3 md:px-5 py-3 md:py-5 h-auto rounded-lg font-medium shadow-sm"
-              >
-                <Save className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">{saving ? "Saving..." : "Save Draft"}</span>
-              </Button>
-              <Button
-                onClick={handlePublishClick}
-                disabled={saving || articleId === "new"}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 md:px-5 py-3 md:py-5 h-auto rounded-lg font-medium shadow-sm disabled:bg-neutral-400"
-              >
-                <Send className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">Publish</span>
-              </Button>
+              {canEdit(userRole) && (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleSave()}
+                    disabled={saving}
+                    className="bg-white border-neutral-200 hover:bg-neutral-50 px-3 md:px-5 py-3 md:py-5 h-auto rounded-lg font-medium shadow-sm"
+                  >
+                    <Save className="h-4 w-4 md:mr-2" />
+                    <span className="hidden md:inline">{saving ? "Saving..." : "Save Draft"}</span>
+                  </Button>
+                  <Button
+                    onClick={handlePublishClick}
+                    disabled={saving || articleId === "new"}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 md:px-5 py-3 md:py-5 h-auto rounded-lg font-medium shadow-sm disabled:bg-neutral-400"
+                  >
+                    <Send className="h-4 w-4 md:mr-2" />
+                    <span className="hidden md:inline">Publish</span>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -595,13 +639,22 @@ export default function ArticleEditorPage() {
               placeholder="Article Title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="text-5xl font-bold border-none focus-visible:ring-0 px-0 mb-8 text-neutral-900 placeholder:text-neutral-300"
+              disabled={!canEdit(userRole)}
+              className="text-5xl font-bold border-none focus-visible:ring-0 px-0 mb-8 text-neutral-900 placeholder:text-neutral-300 disabled:opacity-60 disabled:cursor-not-allowed"
             />
+            {!canEdit(userRole) && userRole && (
+              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-800">
+                  🔒 You have <strong>{userRole}</strong> access to this article. You can view but cannot edit.
+                </p>
+              </div>
+            )}
             <RichTextEditor
               content={content}
               onChange={setContent}
               placeholder="Start writing your article..."
               onSave={() => handleSave()}
+              editable={canEdit(userRole)}
             />
           </div>
         </div>

@@ -283,7 +283,7 @@ export default function TeamPage() {
                       )}
                       {invitation.status === 'ACCEPTED' && (
                         <a
-                          href={`/dashboard/articles/${invitation.article.id}/edit`}
+                          href={`/dashboard/articles/${invitation.article.id}`}
                           className="flex items-center gap-2 px-4 py-2 text-[13px] font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded transition-colors"
                         >
                           <Edit3 className="h-4 w-4" />
