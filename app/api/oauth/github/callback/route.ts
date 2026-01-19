@@ -93,12 +93,8 @@ export async function GET(request: NextRequest) {
         },
       })
 
-      // Create usage stats for new user
-      await prisma.usageStats.create({
-        data: {
-          userId: user.id,
-        },
-      })
+      // Note: UsageStats model removed from schema
+      // Usage stats are now tracked differently or not needed
     } else if (!user.providerId && user.provider !== 'GITHUB') {
       // Update existing user to link GitHub account
       user = await prisma.user.update({

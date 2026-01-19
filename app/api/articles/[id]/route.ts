@@ -32,7 +32,7 @@ export async function GET(
             collaborators: {
               some: {
                 userId: currentUser.id,
-                status: 'ACCEPTED'
+                status: { in: ['ACCEPTED', 'PENDING'] }
               }
             }
           }
@@ -52,7 +52,7 @@ export async function GET(
         },
         collaborators: {
           where: {
-            status: 'ACCEPTED'
+            status: { in: ['ACCEPTED', 'PENDING'] }
           },
           include: {
             user: {
@@ -181,15 +181,8 @@ export async function PUT(
     if (status === 'PUBLISHED' && existingArticle.status !== 'PUBLISHED') {
       updateData.publishedAt = new Date();
 
-      // Update published count for the article owner (not collaborator)
-      await prisma.usageStats.upsert({
-        where: { userId: existingArticle.userId },
-        update: { totalPublished: { increment: 1 } },
-        create: {
-          userId: existingArticle.userId,
-          totalPublished: 1,
-        },
-      });
+      // Note: UsageStats tracking removed - not needed for core functionality
+      // Stats are calculated dynamically from articles table
     }
 
     const article = await prisma.article.update({
@@ -296,15 +289,8 @@ export async function PATCH(
       if (status === 'PUBLISHED' && existingArticle.status !== 'PUBLISHED') {
         updateData.publishedAt = publishedAt || new Date();
 
-        // Update published count for the article owner (not collaborator)
-        await prisma.usageStats.upsert({
-          where: { userId: existingArticle.userId },
-          update: { totalPublished: { increment: 1 } },
-          create: {
-            userId: existingArticle.userId,
-            totalPublished: 1,
-          },
-        });
+        // Note: UsageStats tracking removed - not needed for core functionality
+        // Stats are calculated dynamically from articles table
       }
 
       // If status is SCHEDULED, set scheduleAt (matching schema field name)

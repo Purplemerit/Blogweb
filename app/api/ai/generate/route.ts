@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authService } from '@/lib/services/auth.service';
 import { geminiService } from '@/lib/services/gemini.service';
-import { getPlanLimits, hasReachedLimit, canAccessFeature } from '@/lib/subscription/features';
-import prisma from '@/lib/prisma';
+import { canAccessModel, getDefaultModel, getSystemPrompt } from '@/lib/ai/models';
+import { getPlanLimits } from '@/lib/subscription/features';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,43 +18,41 @@ export async function POST(request: NextRequest) {
     const accessToken = authHeader.substring(7);
     const currentUser = await authService.getCurrentUser(accessToken);
 
-    // Check if user has AI access
-    if (!canAccessFeature(currentUser.subscriptionPlan, 'aiWritingAccess')) {
+    const body = await request.json();
+    const { type, model, ...params } = body;
+
+    // Check if user has access to AI features
+    const planLimits = getPlanLimits(currentUser.subscriptionPlan);
+    if (!planLimits.aiWritingAccess) {
       return NextResponse.json(
         {
           success: false,
-          error: 'AI writing features are not available in your plan. Please upgrade.',
+          error: 'AI features not available on your plan',
+          upgradeRequired: true,
+          upgradeUrl: '/dashboard/settings/billing',
         },
         { status: 403 }
       );
     }
 
-    // Check AI generation limits
-    const usageStats = await prisma.usageStats.findUnique({
-      where: { userId: currentUser.id },
-    });
-
-    const planLimits = getPlanLimits(currentUser.subscriptionPlan);
-
-    // For free tier, we can limit AI generations
-    if (usageStats && planLimits.maxArticlesPerMonth !== -1) {
-      if (hasReachedLimit(
-        currentUser.subscriptionPlan,
-        'maxArticlesPerMonth',
-        usageStats.aiGenerationsThisMonth
-      )) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'You have reached your monthly AI generation limit. Please upgrade your plan.',
-          },
-          { status: 403 }
-        );
-      }
+    // Validate model access
+    const requestedModel = model || getDefaultModel(currentUser.subscriptionPlan).id;
+    if (!canAccessModel(currentUser.subscriptionPlan, requestedModel)) {
+      const defaultModel = getDefaultModel(currentUser.subscriptionPlan);
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Model '${requestedModel}' requires a higher subscription plan`,
+          upgradeRequired: true,
+          upgradeUrl: '/dashboard/settings/billing',
+          fallbackModel: defaultModel.id,
+        },
+        { status: 403 }
+      );
     }
 
-    const body = await request.json();
-    const { type, ...params } = body;
+    // Get optimized system prompt based on subscription tier
+    const systemPrompt = getSystemPrompt(currentUser.subscriptionPlan, 'content');
 
     let result: any;
 
@@ -95,22 +93,35 @@ export async function POST(request: NextRequest) {
         result = await geminiService.summarizeContent(summaryContent, maxWords);
         break;
 
+      case 'image':
+        const { prompt } = params;
+        // Generate a more attractive placeholder using a better service
+        // Using a gradient placeholder with better formatting
+        const encodedPrompt = encodeURIComponent(prompt.substring(0, 100));
+        result = {
+          url: `https://placehold.co/800x600/8B5CF6/FFFFFF/png?text=${encodedPrompt}&font=roboto`,
+          prompt: prompt,
+          message: 'Placeholder image (upgrade to premium for AI-generated images)',
+        };
+        break;
+
+      case 'seo-analysis':
+        const { content: seoContent, title: seoTitle } = params;
+        const seoPrompt = getSystemPrompt(currentUser.subscriptionPlan, 'seo');
+        // Use different depth based on model/plan
+        result = await geminiService.analyzeSEO({
+          content: seoContent,
+          title: seoTitle,
+          plan: currentUser.subscriptionPlan,
+        });
+        break;
+
       default:
         return NextResponse.json(
           { success: false, error: 'Invalid generation type' },
           { status: 400 }
         );
     }
-
-    // Update AI generation count
-    await prisma.usageStats.upsert({
-      where: { userId: currentUser.id },
-      update: { aiGenerationsThisMonth: { increment: 1 } },
-      create: {
-        userId: currentUser.id,
-        aiGenerationsThisMonth: 1,
-      },
-    });
 
     return NextResponse.json({
       success: true,

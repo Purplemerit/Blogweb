@@ -87,14 +87,14 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <PenSquare className="h-8 w-8" />
-            <span className="text-2xl font-bold">BlogAI</span>
+      <div className="w-full max-w-md md:max-w-lg lg:max-w-xl">
+        <div className="text-center mb-6 md:mb-8">
+          <Link href="/" className="inline-flex items-center gap-2 mb-4 md:mb-6">
+            <PenSquare className="h-7 w-7 md:h-8 md:w-8" />
+            <span className="text-xl md:text-2xl font-bold">Publish Type</span>
           </Link>
-          <h1 className="text-4xl font-serif italic text-neutral-900">Welcome back</h1>
-          <p className="text-sm text-neutral-500 mt-1">Sign in to your account to continue</p>
+          <h1 className="text-3xl md:text-4xl font-serif italic text-neutral-900">Welcome back</h1>
+          <p className="text-sm md:text-base text-neutral-500 mt-1">Sign in to your account to continue</p>
         </div>
 
         <Card>

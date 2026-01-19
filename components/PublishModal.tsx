@@ -54,6 +54,18 @@ export function PublishModal({ open, onClose, articleId, articleTitle }: Publish
     try {
       setLoading(true)
       const token = localStorage.getItem('accessToken')
+
+      // Always include PublishType as a built-in platform
+      const publishTypePlatform: Platform = {
+        id: 'publishtype-builtin',
+        platform: 'PUBLISHTYPE',
+        status: 'CONNECTED',
+        metadata: {
+          displayName: 'Publish Type',
+          blogUrl: window.location.origin
+        }
+      }
+
       const response = await fetch('/api/platforms/connections', {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -63,14 +75,33 @@ export function PublishModal({ open, onClose, articleId, articleTitle }: Publish
       if (response.ok) {
         const data = await response.json()
         const connectedPlatforms = data.data.connections.filter((p: Platform) => p.status === 'CONNECTED')
-        setPlatforms(connectedPlatforms)
 
-        // Auto-select all connected platforms
-        setSelectedPlatforms(connectedPlatforms.map((p: Platform) => p.id))
+        // Combine PublishType with other connected platforms
+        const allPlatforms = [publishTypePlatform, ...connectedPlatforms]
+        setPlatforms(allPlatforms)
+
+        // Auto-select all platforms including PublishType
+        const selectedIds = allPlatforms.map((p: Platform) => p.id)
+        setSelectedPlatforms(selectedIds)
+      } else {
+        // Even if API fails, show PublishType
+        setPlatforms([publishTypePlatform])
+        setSelectedPlatforms([publishTypePlatform.id])
       }
     } catch (error) {
       console.error('Error fetching platforms:', error)
-      toast.error('Failed to load platforms')
+      // On error, still show PublishType platform
+      const publishTypePlatform: Platform = {
+        id: 'publishtype-builtin',
+        platform: 'PUBLISHTYPE',
+        status: 'CONNECTED',
+        metadata: {
+          displayName: 'Publish Type',
+          blogUrl: window.location.origin
+        }
+      }
+      setPlatforms([publishTypePlatform])
+      setSelectedPlatforms([publishTypePlatform.id])
     } finally {
       setLoading(false)
     }
@@ -157,43 +188,94 @@ export function PublishModal({ open, onClose, articleId, articleTitle }: Publish
           toast.error(data.error || 'Failed to schedule article')
         }
       } else {
-        // Publish immediately - use the multi-platform API
-        const response = await fetch('/api/platforms/publish-multiple', {
-          method: 'POST',
+        // Handle PublishType publishing separately
+        const isPublishTypeSelected = selectedPlatforms.includes('publishtype-builtin')
+        const otherPlatforms = platformNames.filter(p => p !== 'PUBLISHTYPE')
+
+        // IMPORTANT: Update article status to PUBLISHED FIRST
+        // This must happen before PublishType publish because that API requires status to be PUBLISHED
+        const statusResponse = await fetch(`/api/articles/${articleId}`, {
+          method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify({
-            articleId,
-            platforms: platformNames,
-            published: true
+            status: 'PUBLISHED',
+            publishedAt: new Date().toISOString()
           })
         })
 
-        const data = await response.json()
+        const statusData = await statusResponse.json()
 
-        if (data.success) {
-          const successful = data.data.results.filter((r: any) => r.success)
-          const failed = data.data.results.filter((r: any) => !r.success)
-
-          if (successful.length > 0) {
-            toast.success(`Published to ${successful.length}/${platformNames.length} platform(s)`)
-          }
-
-          if (failed.length > 0) {
-            failed.forEach((result: any) => {
-              toast.error(`Failed to publish to ${result.platform}: ${result.error}`)
+        // Publish to PublishType if selected (now article is PUBLISHED)
+        if (isPublishTypeSelected) {
+          try {
+            const publishTypeResponse = await fetch(`/api/articles/${articleId}/publish-publishtype`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                isPublicOnPublishType: true
+              })
             })
-          }
 
-          setTimeout(() => {
-            onClose()
-            window.location.reload() // Refresh to update status
-          }, 1500)
-        } else {
-          toast.error(data.error || 'Failed to publish')
+            const publishTypeData = await publishTypeResponse.json()
+
+            if (!publishTypeData.success) {
+              console.error('PublishType publish failed:', publishTypeData.error)
+              toast.error(`PublishType: ${publishTypeData.error}`)
+            } else {
+              toast.success('Published to Publish Type!')
+            }
+          } catch (publishTypeError) {
+            console.error('PublishType fetch error:', publishTypeError)
+            toast.error('Failed to publish to Publish Type')
+          }
         }
+
+        // Publish to other platforms if any selected
+        if (otherPlatforms.length > 0) {
+          const response = await fetch('/api/platforms/publish-multiple', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              articleId,
+              platforms: otherPlatforms,
+              published: true
+            })
+          })
+
+          const data = await response.json()
+
+          if (data.success) {
+            const successful = data.data.results.filter((r: any) => r.success)
+            const failed = data.data.results.filter((r: any) => !r.success)
+
+            if (successful.length > 0 || isPublishTypeSelected) {
+              const totalSuccess = successful.length + (isPublishTypeSelected ? 1 : 0)
+              toast.success(`Published to ${totalSuccess}/${platformNames.length} platform(s)`)
+            }
+
+            if (failed.length > 0) {
+              failed.forEach((result: any) => {
+                toast.error(`Failed to publish to ${result.platform}: ${result.error}`)
+              })
+            }
+          }
+        } else if (isPublishTypeSelected) {
+          // Only PublishType was selected - already showed toast above
+        }
+
+        setTimeout(() => {
+          onClose()
+          window.location.reload() // Refresh to update status
+        }, 1500)
       }
     } catch (error) {
       console.error('Publish error:', error)
@@ -205,6 +287,14 @@ export function PublishModal({ open, onClose, articleId, articleTitle }: Publish
 
   const getPlatformIcon = (platform: string) => {
     switch (platform) {
+      case 'PUBLISHTYPE':
+        return (
+          <div className="h-10 w-10 rounded-lg bg-emerald-50 flex items-center justify-center">
+            <div className="h-6 w-6 rounded bg-emerald-600 text-white flex items-center justify-center text-xs font-bold">
+              P
+            </div>
+          </div>
+        )
       case 'WORDPRESS':
         return (
           <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center">
@@ -260,6 +350,8 @@ export function PublishModal({ open, onClose, articleId, articleTitle }: Publish
 
   const getPlatformName = (platform: string) => {
     switch (platform) {
+      case 'PUBLISHTYPE':
+        return 'Publish Type (Your Website)'
       case 'WORDPRESS':
         return 'WordPress.com'
       case 'GHOST':
@@ -294,81 +386,83 @@ export function PublishModal({ open, onClose, articleId, articleTitle }: Publish
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-neutral-400" />
             </div>
-          ) : platforms.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-sm text-neutral-500 mb-4">No platforms connected</p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  onClose()
-                  window.location.href = '/dashboard/integrations'
-                }}
-              >
-                Connect Platforms
-              </Button>
-            </div>
           ) : (
-            <div className="space-y-3">
-              {platforms.map((platform) => {
-                const isSelected = selectedPlatforms.includes(platform.id)
-                const result = publishResults[platform.id]
+            <>
+              <div className="space-y-3">
+                {platforms.map((platform) => {
+                  const isSelected = selectedPlatforms.includes(platform.id)
+                  const result = publishResults[platform.id]
 
-                return (
-                  <div
-                    key={platform.id}
-                    className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-all ${
-                      isSelected
+                  return (
+                    <div
+                      key={platform.id}
+                      className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-all ${isSelected
                         ? 'border-emerald-500 bg-emerald-50'
                         : 'border-neutral-200 hover:border-neutral-300'
-                    }`}
-                  >
-                    <Checkbox
-                      checked={isSelected}
-                      onCheckedChange={() => handleTogglePlatform(platform.id)}
-                      disabled={publishing}
-                    />
+                        }`}
+                    >
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => handleTogglePlatform(platform.id)}
+                        disabled={publishing}
+                      />
 
-                    {getPlatformIcon(platform.platform)}
+                      {getPlatformIcon(platform.platform)}
 
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-semibold">{getPlatformName(platform.platform)}</p>
-                        {result && (
-                          result.success ? (
-                            <Badge className="bg-emerald-500 text-white gap-1">
-                              <Check className="h-3 w-3" />
-                              Published
-                            </Badge>
-                          ) : (
-                            <Badge variant="destructive" className="gap-1">
-                              <X className="h-3 w-3" />
-                              Failed
-                            </Badge>
-                          )
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-semibold">{getPlatformName(platform.platform)}</p>
+                          {result && (
+                            result.success ? (
+                              <Badge className="bg-emerald-500 text-white gap-1">
+                                <Check className="h-3 w-3" />
+                                Published
+                              </Badge>
+                            ) : (
+                              <Badge variant="destructive" className="gap-1">
+                                <X className="h-3 w-3" />
+                                Failed
+                              </Badge>
+                            )
+                          )}
+                        </div>
+                        <p className="text-xs text-neutral-500">
+                          {platform.metadata?.blogUrl || platform.metadata?.siteName || platform.metadata?.displayName || 'Connected'}
+                        </p>
+                        {result?.url && (
+                          <a
+                            href={result.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-blue-600 hover:underline"
+                          >
+                            View post →
+                          </a>
+                        )}
+                        {result?.error && (
+                          <p className="text-xs text-red-600 mt-1">{result.error}</p>
                         )}
                       </div>
-                      <p className="text-xs text-neutral-500">
-                        {platform.metadata?.blogUrl || platform.metadata?.siteName || platform.metadata?.displayName || 'Connected'}
-                      </p>
-                      {result?.url && (
-                        <a
-                          href={result.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-blue-600 hover:underline"
-                        >
-                          View post →
-                        </a>
-                      )}
-                      {result?.error && (
-                        <p className="text-xs text-red-600 mt-1">{result.error}</p>
-                      )}
                     </div>
-                  </div>
-                )
-              })}
-            </div>
+                  )
+                })}
+              </div>
+
+              {platforms.length > 1 && (
+                <div className="text-xs text-center text-neutral-500 py-2">
+                  Want to publish to more platforms?{' '}
+                  <button
+                    onClick={() => {
+                      onClose()
+                      window.location.href = '/dashboard/integrations'
+                    }}
+                    className="text-emerald-600 hover:underline font-medium"
+                  >
+                    Connect platforms
+                  </button>
+                </div>
+              )}
+            </>
           )}
 
           {/* Scheduling Section */}

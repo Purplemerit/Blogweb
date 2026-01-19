@@ -3,8 +3,10 @@
  * Send and manage collaboration invitations for articles
  */
 
+
 import { NextRequest, NextResponse } from 'next/server';
 import { authService } from '@/lib/services/auth.service';
+import { emailService } from '@/lib/services/email.service';
 import prisma from '@/lib/prisma';
 import { CollaboratorRole } from '@prisma/client';
 
@@ -47,16 +49,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find the user to invite
-    const invitedUser = await prisma.user.findUnique({
+    // Find the user to invite (or create placeholder for non-registered users)
+    let invitedUser = await prisma.user.findUnique({
       where: { email },
     });
 
+    const isRegistered = !!invitedUser;
+
+    // For non-registered users, we'll just send the email
+    // They can sign up and the invitation will be there waiting
     if (!invitedUser) {
-      return NextResponse.json(
-        { success: false, error: 'User with this email not found' },
-        { status: 404 }
+      // Send invitation email to non-registered user
+      await emailService.sendCollaborationInvite(
+        email,
+        currentUser.name,
+        article.title,
+        role,
+        false
       );
+
+      return NextResponse.json({
+        success: true,
+        message: `Invitation sent to ${email}. They'll need to create an account to collaborate.`,
+        data: {
+          email,
+          role,
+          isRegistered: false,
+        },
+      });
     }
 
     // Check if already invited
@@ -75,6 +95,10 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+
+
+
 
     // Create the invitation
     const expiresAt = new Date();
@@ -101,11 +125,18 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // TODO: Send email invitation
-    // await sendInvitationEmail(invitedUser.email, article.title, currentUser.name);
+    // Send email invitation to registered user
+    await emailService.sendCollaborationInvite(
+      invitedUser.email,
+      currentUser.name,
+      article.title,
+      role,
+      true
+    );
 
     return NextResponse.json({
       success: true,
+      message: `Invitation sent to ${invitedUser.name}`,
       data: collaborator,
     });
   } catch (error: any) {

@@ -67,6 +67,8 @@ export default function ArticleCollaborationManager() {
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
   const [fixingStatus, setFixingStatus] = useState(false);
+  const [emailInput, setEmailInput] = useState('');
+  const [inviting, setInviting] = useState(false);
 
   // Fetch user's articles
   useEffect(() => {
@@ -188,7 +190,8 @@ export default function ArticleCollaborationManager() {
       });
 
       if (response.ok) {
-        alert(`Invitation sent to ${user.name}!`);
+        const data = await response.json();
+        alert(data.message || `Invitation sent to ${user.name}!`);
         setSearchQuery('');
         setSearchResults([]);
         fetchCollaborators(selectedArticle.id);
@@ -199,6 +202,50 @@ export default function ArticleCollaborationManager() {
     } catch (error) {
       console.error('Error sending invitation:', error);
       alert('Failed to send invitation');
+    }
+  };
+
+  const handleInviteByEmail = async () => {
+    if (!selectedArticle || !emailInput.trim()) return;
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailInput)) {
+      alert('Please enter a valid email address');
+      return;
+    }
+
+    try {
+      setInviting(true);
+      const response = await fetch('/api/collaboration/invite', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+        },
+        body: JSON.stringify({
+          articleId: selectedArticle.id,
+          email: emailInput.trim(),
+          role: selectedRole,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(data.message || 'Invitation sent successfully!');
+        setEmailInput('');
+        setSearchQuery('');
+        setSearchResults([]);
+        fetchCollaborators(selectedArticle.id);
+      } else {
+        alert(data.error || 'Failed to send invitation');
+      }
+    } catch (error) {
+      console.error('Error sending invitation:', error);
+      alert('Failed to send invitation');
+    } finally {
+      setInviting(false);
     }
   };
 
@@ -388,18 +435,6 @@ export default function ArticleCollaborationManager() {
                     <h2 className="text-[16px] font-semibold text-neutral-900">Invite Collaborators</h2>
                   </div>
 
-                  {/* Search Input */}
-                  <div className="relative mb-4">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search by name or email..."
-                      className="w-full pl-10 pr-4 py-2.5 text-[13px] border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-neutral-900"
-                    />
-                  </div>
-
                   {/* Role Selection */}
                   <div className="mb-4">
                     <label className="block text-[12px] font-medium text-neutral-700 mb-2">
@@ -428,52 +463,37 @@ export default function ArticleCollaborationManager() {
                     </div>
                   </div>
 
-                  {/* Search Results */}
-                  {searchQuery.length >= 2 && (
-                    <div className="border border-neutral-200 rounded-lg max-h-60 overflow-y-auto">
-                      {searching ? (
-                        <div className="p-4 text-center text-[13px] text-neutral-500">
-                          Searching...
-                        </div>
-                      ) : searchResults.length === 0 ? (
-                        <div className="p-4 text-center text-[13px] text-neutral-500">
-                          No users found
-                        </div>
-                      ) : (
-                        searchResults.map((user) => (
-                          <div
-                            key={user.id}
-                            className="flex items-center justify-between p-3 border-b border-neutral-200 last:border-b-0 hover:bg-neutral-50"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-semibold text-[12px]">
-                                {user.name.charAt(0).toUpperCase()}
-                              </div>
-                              <div>
-                                <p className="text-[13px] font-medium text-neutral-900">
-                                  {user.name}
-                                </p>
-                                <p className="text-[11px] text-neutral-600">{user.email}</p>
-                              </div>
-                            </div>
-                            {isAlreadyCollaborator(user.id) ? (
-                              <span className="text-[11px] text-neutral-500 flex items-center gap-1">
-                                <CheckCircle className="h-3 w-3" />
-                                Already added
-                              </span>
-                            ) : (
-                              <button
-                                onClick={() => handleInvite(user)}
-                                className="px-3 py-1.5 text-[12px] font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded transition-colors"
-                              >
-                                Invite
-                              </button>
-                            )}
-                          </div>
-                        ))
-                      )}
+                  {/* Direct Email Invite */}
+                  <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+                    <label className="block text-[12px] font-medium text-emerald-900 mb-2">
+                      <Mail className="inline h-3 w-3 mr-1" />
+                      Enter Email Address
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="email"
+                        value={emailInput}
+                        onChange={(e) => setEmailInput(e.target.value)}
+                        placeholder="colleague@example.com"
+                        className="flex-1 px-3 py-2 text-[13px] border border-emerald-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-neutral-900"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            handleInviteByEmail();
+                          }
+                        }}
+                      />
+                      <button
+                        onClick={handleInviteByEmail}
+                        disabled={inviting || !emailInput.trim()}
+                        className="px-4 py-2 text-[13px] font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {inviting ? 'Sending...' : 'Send Invite'}
+                      </button>
                     </div>
-                  )}
+                    <p className="text-[11px] text-emerald-700 mt-2">
+                      They'll receive an email invitation. If they don't have an account, they'll be prompted to sign up.
+                    </p>
+                  </div>
                 </div>
 
                 {/* Current Collaborators */}

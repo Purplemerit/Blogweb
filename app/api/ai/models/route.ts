@@ -1,12 +1,11 @@
-/**
- * Image Statistics API
- * Get image usage statistics and analytics
- */
-
 import { NextRequest, NextResponse } from 'next/server';
 import { authService } from '@/lib/services/auth.service';
-import { ImageService } from '@/lib/services/image.service';
+import { getModelsForPlan, getDefaultModel } from '@/lib/ai/models';
 
+/**
+ * GET /api/ai/models
+ * Returns all AI models with lock status based on user's subscription
+ */
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization');
@@ -21,25 +20,25 @@ export async function GET(request: NextRequest) {
     const accessToken = authHeader.substring(7);
     const currentUser = await authService.getCurrentUser(accessToken);
 
-    const result = await ImageService.getImageStats(currentUser.id);
-
-    if (!result.success) {
-      return NextResponse.json(
-        { success: false, error: result.error },
-        { status: 400 }
-      );
-    }
+    // Get all models with lock status
+    const models = getModelsForPlan(currentUser.subscriptionPlan);
+    const defaultModel = getDefaultModel(currentUser.subscriptionPlan);
 
     return NextResponse.json({
       success: true,
-      data: result.data,
+      data: {
+        models,
+        defaultModel: defaultModel.id,
+        currentPlan: currentUser.subscriptionPlan,
+        upgradeUrl: '/dashboard/settings/billing',
+      },
     });
   } catch (error: any) {
-    console.error('Get image stats error:', error);
+    console.error('Get AI models error:', error);
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to get image statistics',
+        error: error.message || 'Failed to fetch AI models',
       },
       { status: 500 }
     );

@@ -87,7 +87,7 @@ export function GhostConnectModal({ open, onClose, onSuccess }: GhostConnectModa
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">Connect Ghost Site</DialogTitle>
           <DialogDescription className="text-sm text-neutral-600">
-            Connect your Ghost blog to publish articles directly from BlogAI
+            Connect your Ghost blog to publish articles directly from Publish Type
           </DialogDescription>
         </DialogHeader>
 
@@ -138,7 +138,7 @@ export function GhostConnectModal({ open, onClose, onSuccess }: GhostConnectModa
                   <li>Go to your Ghost Admin panel</li>
                   <li>Navigate to Settings → Integrations</li>
                   <li>Click "Add custom integration"</li>
-                  <li>Give it a name (e.g., "BlogAI")</li>
+                  <li>Give it a name (e.g., "Publish Type")</li>
                   <li>Copy the "Admin API Key"</li>
                 </ol>
                 <a

@@ -1,83 +1,27 @@
 /**
- * Stock Image Search API
- * Search and download stock images from Pexels and Unsplash
+ * Stock Images API (Unified Pexels + Unsplash)
+ * Handles searching and downloading from multiple stock image providers
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { authService } from '@/lib/services/auth.service';
-import prisma from '@/lib/prisma';
-import { CloudinaryService } from '@/lib/services/cloudinary.service';
 
+const PEXELS_API_KEY = process.env.PEXELS_API_KEY;
+const UNSPLASH_ACCESS_KEY = process.env.UNSPLASH_ACCESS_KEY;
+
+// GET - Search stock images
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization');
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { success: false, error: 'No access token provided' },
-        { status: 401 }
-      );
-    }
-
-    const accessToken = authHeader.substring(7);
-    await authService.getCurrentUser(accessToken);
-
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('query') || 'nature';
-    const provider = searchParams.get('provider') || 'pexels'; // pexels or unsplash
+    const provider = searchParams.get('provider') || 'pexels';
     const page = parseInt(searchParams.get('page') || '1');
-    const perPage = parseInt(searchParams.get('perPage') || '15');
+    const perPage = 12;
 
-    let results: any[] = [];
-    let total = 0;
+    let results = [];
 
-    if (provider === 'unsplash') {
-      // Unsplash API
-      const unsplashKey = process.env.UNSPLASH_ACCESS_KEY;
-
-      if (!unsplashKey) {
-        return NextResponse.json(
-          { success: false, error: 'Unsplash API key not configured' },
-          { status: 500 }
-        );
-      }
-
-      const response = await fetch(
-        `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&page=${page}&per_page=${perPage}`,
-        {
-          headers: {
-            'Authorization': `Client-ID ${unsplashKey}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        return NextResponse.json(
-          { success: false, error: 'Failed to fetch Unsplash images' },
-          { status: response.status }
-        );
-      }
-
-      const data = await response.json();
-      total = data.total;
-
-      results = data.results.map((photo: any) => ({
-        id: photo.id,
-        url: photo.urls.regular,
-        thumbnailUrl: photo.urls.thumb,
-        width: photo.width,
-        height: photo.height,
-        photographer: photo.user.name,
-        photographerUrl: photo.user.links.html,
-        description: photo.description || photo.alt_description,
-        downloadUrl: photo.links.download,
-        provider: 'unsplash',
-      }));
-    } else {
-      // Pexels API
-      const pexelsKey = process.env.PEXELS_API_KEY;
-
-      if (!pexelsKey) {
+    if (provider === 'pexels') {
+      if (!PEXELS_API_KEY) {
         return NextResponse.json(
           { success: false, error: 'Pexels API key not configured' },
           { status: 500 }
@@ -88,32 +32,59 @@ export async function GET(request: NextRequest) {
         `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&page=${page}&per_page=${perPage}`,
         {
           headers: {
-            'Authorization': pexelsKey,
+            Authorization: PEXELS_API_KEY,
           },
         }
       );
 
       if (!response.ok) {
-        return NextResponse.json(
-          { success: false, error: 'Failed to fetch Pexels images' },
-          { status: response.status }
-        );
+        throw new Error('Pexels API request failed');
       }
 
       const data = await response.json();
-      total = data.total_results;
-
       results = data.photos.map((photo: any) => ({
-        id: photo.id,
+        id: photo.id.toString(),
         url: photo.src.large,
         thumbnailUrl: photo.src.medium,
         width: photo.width,
         height: photo.height,
         photographer: photo.photographer,
         photographerUrl: photo.photographer_url,
-        description: photo.alt,
-        downloadUrl: photo.src.original,
+        description: photo.alt || query,
         provider: 'pexels',
+      }));
+    } else if (provider === 'unsplash') {
+      if (!UNSPLASH_ACCESS_KEY) {
+        return NextResponse.json(
+          { success: false, error: 'Unsplash API key not configured' },
+          { status: 500 }
+        );
+      }
+
+      const response = await fetch(
+        `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&page=${page}&per_page=${perPage}&orientation=landscape`,
+        {
+          headers: {
+            Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Unsplash API request failed');
+      }
+
+      const data = await response.json();
+      results = data.results.map((photo: any) => ({
+        id: photo.id,
+        url: photo.urls.regular,
+        thumbnailUrl: photo.urls.small,
+        width: photo.width,
+        height: photo.height,
+        photographer: photo.user.name,
+        photographerUrl: photo.user.links.html,
+        description: photo.alt_description || photo.description || query,
+        provider: 'unsplash',
       }));
     }
 
@@ -121,19 +92,14 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         results,
-        total,
+        total: results.length,
         page,
-        perPage,
-        totalPages: Math.ceil(total / perPage),
       },
     });
   } catch (error: any) {
-    console.error('Stock image search error:', error);
+    console.error('Stock images search error:', error);
     return NextResponse.json(
-      {
-        success: false,
-        error: error.message || 'Failed to search stock images',
-      },
+      { success: false, error: error.message || 'Failed to search stock images' },
       { status: 500 }
     );
   }
@@ -143,7 +109,6 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization');
-
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
         { success: false, error: 'No access token provided' },
@@ -155,88 +120,33 @@ export async function POST(request: NextRequest) {
     const currentUser = await authService.getCurrentUser(accessToken);
 
     const body = await request.json();
-    const {
-      imageUrl,
-      provider,
-      articleId,
-      alt,
-      caption,
-      photographer,
-      photographerUrl,
-    } = body;
+    const { imageUrl, provider, articleId, alt, photographer, photographerUrl } = body;
 
-    if (!imageUrl || !provider) {
-      return NextResponse.json(
-        { success: false, error: 'Image URL and provider are required' },
-        { status: 400 }
-      );
-    }
-
-    // Upload to Cloudinary
-    const uploadResult = await CloudinaryService.uploadFromUrl(imageUrl, {
-      folder: `blogweb/stock-${provider}`,
-      filename: `stock_${provider}_${Date.now()}`,
-    });
-
-    if (!uploadResult.success || !uploadResult.data) {
-      return NextResponse.json(
-        { success: false, error: 'Failed to upload stock image' },
-        { status: 500 }
-      );
-    }
-
-    // Determine source
-    const source =
-      provider === 'unsplash' ? 'STOCK_UNSPLASH' : 'STOCK_PEXELS';
-
-    // Save to database
-    const image = await prisma.image.create({
-      data: {
-        userId: currentUser.id,
-        articleId: articleId || null,
-        url: uploadResult.data.secureUrl,
-        thumbnailUrl: uploadResult.data.thumbnailUrl,
-        filename: `stock_${provider}_${Date.now()}.jpg`,
-        mimeType: 'image/jpeg',
-        size: uploadResult.data.bytes,
-        width: uploadResult.data.width,
-        height: uploadResult.data.height,
-        alt: alt || caption || 'Stock image',
-        caption:
-          caption ||
-          `Photo by ${photographer} on ${provider === 'unsplash' ? 'Unsplash' : 'Pexels'}`,
-        source,
-      },
-    });
-
-    // Update usage stats
-    await prisma.usageStats.upsert({
-      where: { userId: currentUser.id },
-      update: {
-        imagesGeneratedThisMonth: { increment: 1 },
-      },
-      create: {
-        userId: currentUser.id,
-        imagesGeneratedThisMonth: 1,
-      },
-    });
+    // For now, just return the image URL directly without downloading
+    // This allows immediate use in the editor
+    const imageData = {
+      id: `stock-${Date.now()}`,
+      url: imageUrl,
+      thumbnailUrl: imageUrl,
+      filename: `${provider}-${Date.now()}.jpg`,
+      width: 1920,
+      height: 1080,
+      size: 0,
+      alt: alt || 'Stock image',
+      caption: `Photo by ${photographer}`,
+      source: provider === 'pexels' ? 'STOCK_PEXELS' : 'STOCK_UNSPLASH',
+      createdAt: new Date().toISOString(),
+    };
 
     return NextResponse.json({
       success: true,
-      message: 'Stock image saved successfully',
-      data: {
-        ...image,
-        photographer,
-        photographerUrl,
-      },
+      data: imageData,
+      message: 'Image ready to use',
     });
   } catch (error: any) {
     console.error('Stock image download error:', error);
     return NextResponse.json(
-      {
-        success: false,
-        error: error.message || 'Failed to download stock image',
-      },
+      { success: false, error: error.message || 'Failed to process stock image' },
       { status: 500 }
     );
   }

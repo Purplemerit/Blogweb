@@ -710,7 +710,7 @@ const MenuBar = ({ editor }: MenuBarProps) => {
                           onClick={() => setSelectedUnsplashImage(image)}
                         >
                           <img
-                            src={image.thumb}
+                            src={image.thumbnail || image.thumb}
                             alt={image.alt}
                             className="w-full h-32 object-cover"
                           />

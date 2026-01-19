@@ -1,10 +1,17 @@
 "use client"
 
 import Link from "next/link"
-import { PenTool, Check } from "lucide-react"
+import Image from "next/image"
+import { PenTool, Check, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { NewsletterFooter } from "@/components/NewsletterFooter"
+import { useAuth } from "@/lib/context/AuthContext"
+import { useState } from "react"
 
 export default function FeaturesPage() {
+  const { user } = useAuth()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f5f1e8' }}>
       {/* Header */}
@@ -29,28 +36,141 @@ export default function FeaturesPage() {
             <span style={{ fontSize: '18px', fontWeight: 500, letterSpacing: '-0.025em' }}>PublishType</span>
           </Link>
 
-          <nav style={{ display: 'flex', alignItems: 'center', gap: '32px', fontSize: '14px' }} className="hidden md:flex">
+          <nav className="header-nav hide-mobile" style={{ fontSize: '14px' }}>
             <Link href="/" style={{ color: '#374151', textDecoration: 'none' }}>Home</Link>
             <Link href="/features" style={{ color: '#374151', textDecoration: 'none', fontWeight: 500 }}>Features</Link>
             <Link href="/pricing" style={{ color: '#374151', textDecoration: 'none' }}>Pricing</Link>
             <Link href="/blog" style={{ color: '#374151', textDecoration: 'none' }}>Blog</Link>
           </nav>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Link href="/login">
-              <Button variant="ghost" size="sm" style={{ fontSize: '14px', fontWeight: 400 }}>Sign In</Button>
-            </Link>
-            <Link href="/signup">
-              <Button size="sm" style={{ backgroundColor: '#1f3529', color: 'white', fontSize: '14px', fontWeight: 400, padding: '8px 20px' }}>
-                Sign Up
-              </Button>
-            </Link>
+          <div className="hide-mobile" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {user ? (
+              <Link href="/dashboard">
+                <Button size="sm" style={{ backgroundColor: '#1f3529', color: 'white', fontSize: '14px', fontWeight: 400, padding: '8px 20px' }}>
+                  Dashboard
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/login">
+                  <Button variant="ghost" size="sm" style={{ fontSize: '14px', fontWeight: 400 }}>Sign In</Button>
+                </Link>
+                <Link href="/signup">
+                  <Button size="sm" style={{ backgroundColor: '#1f3529', color: 'white', fontSize: '14px', fontWeight: 400, padding: '8px 20px' }}>
+                    Sign Up
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
+
+          {/* Mobile menu button */}
+          <button
+            className="mobile-menu-toggle"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            style={{
+              border: 'none',
+              background: 'transparent',
+              cursor: 'pointer',
+              padding: '8px'
+            }}
+          >
+            {mobileMenuOpen ? <X style={{ height: '24px', width: '24px' }} /> : <Menu style={{ height: '24px', width: '24px' }} />}
+          </button>
         </div>
+
+        {/* Mobile Navigation */}
+        {mobileMenuOpen && (
+          <div style={{
+            borderTop: '1px solid rgba(0,0,0,0.1)',
+            backgroundColor: 'white',
+            padding: '16px'
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <Link
+                href="/"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  padding: '12px',
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                  color: '#374151',
+                  fontSize: '16px',
+                  fontWeight: 500
+                }}
+              >
+                Home
+              </Link>
+              <Link
+                href="/features"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  padding: '12px',
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                  color: '#374151',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  backgroundColor: '#f3f4f6'
+                }}
+              >
+                Features
+              </Link>
+              <Link
+                href="/pricing"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  padding: '12px',
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                  color: '#374151',
+                  fontSize: '16px',
+                  fontWeight: 500
+                }}
+              >
+                Pricing
+              </Link>
+              <Link
+                href="/blog"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  padding: '12px',
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                  color: '#374151',
+                  fontSize: '16px',
+                  fontWeight: 500
+                }}
+              >
+                Blog
+              </Link>
+              <div style={{ paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {user ? (
+                  <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                    <Button size="sm" style={{ width: '100%', backgroundColor: '#1f3529', color: 'white', fontSize: '14px', fontWeight: 400, padding: '12px 20px' }}>
+                      Dashboard
+                    </Button>
+                  </Link>
+                ) : (
+                  <>
+                    <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="outline" size="sm" style={{ width: '100%', fontSize: '14px', fontWeight: 400, padding: '12px 20px' }}>Sign In</Button>
+                    </Link>
+                    <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
+                      <Button size="sm" style={{ width: '100%', backgroundColor: '#1f3529', color: 'white', fontSize: '14px', fontWeight: 400, padding: '12px 20px' }}>
+                        Sign Up
+                      </Button>
+                    </Link>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Hero Section */}
-      <section style={{ maxWidth: '1152px', margin: '0 auto', padding: '80px 32px 60px', textAlign: 'center' }}>
+      <section className="section-padding" style={{ maxWidth: '1152px', margin: '0 auto', textAlign: 'center' }}>
         <p style={{
           fontSize: '11px',
           letterSpacing: '0.15em',
@@ -61,51 +181,36 @@ export default function FeaturesPage() {
         }}>
           Features
         </p>
-        <h1 style={{
+        <h1 className="text-section-title" style={{
           fontFamily: 'Playfair Display, Georgia, serif',
-          fontSize: '48px',
           lineHeight: '1.2',
           marginBottom: '20px',
           letterSpacing: '-0.025em',
           maxWidth: '600px',
           margin: '0 auto'
         }}>
-          Everything you need to<br/>succeed
+          Everything you need to succeed
         </h1>
       </section>
 
       {/* Features List */}
-      <div style={{ maxWidth: '1152px', margin: '0 auto', padding: '0 32px 80px' }}>
+      <div className="container-padding" style={{ maxWidth: '1152px', margin: '0 auto', paddingBottom: '80px' }}>
         {/* Feature 1 - Multi-Platform Publishing */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '64px', alignItems: 'center', marginBottom: '100px' }}>
+        <div className="feature-grid" style={{ marginBottom: '80px' }}>
           <div style={{ position: 'relative' }}>
             <div style={{
-              position: 'absolute',
-              inset: '-20px',
-              background: 'linear-gradient(to bottom right, rgba(251, 207, 232, 0.4), rgba(254, 205, 211, 0.3))',
-              borderRadius: '16px',
-              transform: 'rotate(-2deg)'
-            }}></div>
-            <div style={{
-              position: 'relative',
-              backgroundColor: 'white',
               borderRadius: '12px',
-              padding: '40px',
-              boxShadow: '0 10px 40px rgba(0,0,0,0.1)'
+              overflow: 'hidden',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+              position: 'relative',
+              height: '300px'
             }}>
-              <div style={{
-                width: '100%',
-                height: '250px',
-                backgroundColor: '#e5e7eb',
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '14px',
-                color: '#6b7280'
-              }}>
-                Laptop Dashboard Preview
-              </div>
+              <Image
+                src="/imagea.png"
+                alt="Multi-Platform Publishing Dashboard"
+                fill
+                style={{ objectFit: 'cover' }}
+              />
             </div>
           </div>
           <div>
@@ -149,7 +254,7 @@ export default function FeaturesPage() {
         </div>
 
         {/* Feature 2 - Customizable AI Editor */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '64px', alignItems: 'center', marginBottom: '100px' }}>
+        <div className="feature-grid" style={{ marginBottom: '80px' }}>
           <div>
             <div style={{
               width: '40px',
@@ -190,45 +295,38 @@ export default function FeaturesPage() {
           </div>
           <div style={{ position: 'relative' }}>
             <div style={{
-              backgroundColor: '#f3e8d9',
               borderRadius: '12px',
-              padding: '60px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
+              overflow: 'hidden',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+              position: 'relative',
+              height: '300px'
             }}>
-              <div style={{
-                width: '100%',
-                height: '300px',
-                backgroundColor: 'white',
-                borderRadius: '8px',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-                border: '12px solid white'
-              }}></div>
+              <Image
+                src="/imageb.png"
+                alt="AI Editor Interface"
+                fill
+                style={{ objectFit: 'cover' }}
+              />
             </div>
           </div>
         </div>
 
         {/* Feature 3 - AI-Powered Analytics */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '64px', alignItems: 'center', marginBottom: '100px' }}>
+        <div className="feature-grid" style={{ marginBottom: '80px' }}>
           <div style={{ position: 'relative' }}>
             <div style={{
               borderRadius: '12px',
               overflow: 'hidden',
-              boxShadow: '0 10px 40px rgba(0,0,0,0.15)'
+              boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
+              position: 'relative',
+              height: '400px'
             }}>
-              <div style={{
-                width: '100%',
-                height: '400px',
-                background: 'linear-gradient(180deg, #4a5568 0%, #2d3748 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'white',
-                fontSize: '14px'
-              }}>
-                Portrait Image Placeholder
-              </div>
+              <Image
+                src="/imagec.png"
+                alt="AI-Powered Analytics Dashboard"
+                fill
+                style={{ objectFit: 'cover' }}
+              />
             </div>
           </div>
           <div>
@@ -272,7 +370,7 @@ export default function FeaturesPage() {
         </div>
 
         {/* Feature 4 - SEO-Optimized */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '64px', alignItems: 'center', marginBottom: '100px' }}>
+        <div className="feature-grid" style={{ marginBottom: '80px' }}>
           <div>
             <div style={{
               width: '40px',
@@ -313,60 +411,38 @@ export default function FeaturesPage() {
           </div>
           <div style={{ position: 'relative' }}>
             <div style={{
-              position: 'absolute',
-              inset: '-20px',
-              background: 'linear-gradient(to bottom right, rgba(191, 219, 254, 0.4), rgba(219, 234, 254, 0.3))',
-              borderRadius: '16px',
-              transform: 'rotate(2deg)'
-            }}></div>
-            <div style={{
-              position: 'relative',
-              backgroundColor: 'white',
               borderRadius: '12px',
-              padding: '30px',
-              boxShadow: '0 10px 40px rgba(0,0,0,0.1)'
+              overflow: 'hidden',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+              position: 'relative',
+              height: '300px'
             }}>
-              <div style={{
-                width: '100%',
-                height: '250px',
-                backgroundColor: '#f9fafb',
-                borderRadius: '8px',
-                border: '1px solid #e5e7eb',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '14px',
-                color: '#6b7280'
-              }}>
-                SEO Dashboard Preview
-              </div>
+              <Image
+                src="/imaged.png"
+                alt="SEO Optimization Dashboard"
+                fill
+                style={{ objectFit: 'cover' }}
+              />
             </div>
           </div>
         </div>
 
         {/* Feature 5 - Collaborative Workspace */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '64px', alignItems: 'center', marginBottom: '100px' }}>
+        <div className="feature-grid" style={{ marginBottom: '80px' }}>
           <div style={{ position: 'relative' }}>
             <div style={{
               borderRadius: '12px',
               overflow: 'hidden',
-              boxShadow: '0 10px 40px rgba(0,0,0,0.2)'
+              boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+              position: 'relative',
+              height: '300px'
             }}>
-              <div style={{
-                width: '100%',
-                height: '300px',
-                backgroundColor: '#1a202c',
-                padding: '20px',
-                fontFamily: 'monospace',
-                fontSize: '12px',
-                color: '#22c55e',
-                lineHeight: '1.6'
-              }}>
-                <div>{'{'}</div>
-                <div style={{ paddingLeft: '20px' }}>"workspace": "collaborative",</div>
-                <div style={{ paddingLeft: '20px' }}>"features": ["real-time", "comments"]</div>
-                <div>{'}'}</div>
-              </div>
+              <Image
+                src="/imagee.png"
+                alt="Collaborative Workspace"
+                fill
+                style={{ objectFit: 'cover' }}
+              />
             </div>
           </div>
           <div>
@@ -410,7 +486,7 @@ export default function FeaturesPage() {
         </div>
 
         {/* Feature 6 - Content Scheduling */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '64px', alignItems: 'center', marginBottom: '100px' }}>
+        <div className="feature-grid" style={{ marginBottom: '80px' }}>
           <div>
             <div style={{
               width: '40px',
@@ -453,60 +529,35 @@ export default function FeaturesPage() {
             <div style={{
               borderRadius: '12px',
               overflow: 'hidden',
-              boxShadow: '0 10px 40px rgba(0,0,0,0.1)'
+              boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+              position: 'relative',
+              height: '350px'
             }}>
-              <div style={{
-                width: '100%',
-                height: '350px',
-                background: 'linear-gradient(135deg, #f5f3f0 0%, #e8e4dc 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '14px',
-                color: '#6b7280'
-              }}>
-                Team Collaboration Image
-              </div>
+              <Image
+                src="/imagef.png"
+                alt="Content Scheduling Calendar"
+                fill
+                style={{ objectFit: 'cover' }}
+              />
             </div>
           </div>
         </div>
 
         {/* Feature 7 - Content Optimization */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '64px', alignItems: 'center', marginBottom: '100px' }}>
+        <div className="feature-grid" style={{ marginBottom: '80px' }}>
           <div style={{ position: 'relative' }}>
             <div style={{
-              backgroundColor: '#1f3529',
               borderRadius: '12px',
-              padding: '60px 40px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              overflow: 'hidden',
               position: 'relative',
-              overflow: 'hidden'
+              height: '350px'
             }}>
-              <div style={{
-                position: 'absolute',
-                width: '100px',
-                height: '100px',
-                borderRadius: '50%',
-                backgroundColor: 'rgba(255,255,255,0.1)',
-                top: '20%',
-                left: '20%'
-              }}></div>
-              <div style={{
-                position: 'absolute',
-                width: '80px',
-                height: '80px',
-                borderRadius: '50%',
-                backgroundColor: 'rgba(255,255,255,0.08)',
-                bottom: '30%',
-                right: '25%'
-              }}></div>
-              <div style={{
-                fontSize: '48px',
-                color: 'rgba(255,255,255,0.2)',
-                fontFamily: 'Playfair Display, Georgia, serif'
-              }}>☁</div>
+              <Image
+                src="/imageg.png"
+                alt="Content Optimization Tools"
+                fill
+                style={{ objectFit: 'cover' }}
+              />
             </div>
           </div>
           <div>
@@ -550,7 +601,7 @@ export default function FeaturesPage() {
         </div>
 
         {/* Feature 8 - Content Curation Library */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '64px', alignItems: 'center', marginBottom: '100px' }}>
+        <div className="feature-grid" style={{ marginBottom: '80px' }}>
           <div>
             <div style={{
               width: '40px',
@@ -591,34 +642,17 @@ export default function FeaturesPage() {
           </div>
           <div style={{ position: 'relative' }}>
             <div style={{
-              backgroundColor: '#d4e8d4',
               borderRadius: '12px',
-              padding: '80px 60px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
+              overflow: 'hidden',
+              position: 'relative',
+              height: '350px'
             }}>
-              <div style={{
-                backgroundColor: 'white',
-                borderRadius: '8px',
-                padding: '40px',
-                textAlign: 'center',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
-              }}>
-                <h3 style={{
-                  fontFamily: 'Playfair Display, Georgia, serif',
-                  fontSize: '24px',
-                  color: '#1f3529',
-                  marginBottom: '8px',
-                  letterSpacing: '-0.025em'
-                }}>CONTENT</h3>
-                <h3 style={{
-                  fontFamily: 'Playfair Display, Georgia, serif',
-                  fontSize: '24px',
-                  color: '#1f3529',
-                  letterSpacing: '-0.025em'
-                }}>CURATED</h3>
-              </div>
+              <Image
+                src="/imageh.png"
+                alt="Content Curation Library"
+                fill
+                style={{ objectFit: 'cover' }}
+              />
             </div>
           </div>
         </div>
@@ -626,16 +660,15 @@ export default function FeaturesPage() {
 
       {/* Comparison Table */}
       <section style={{ backgroundColor: 'white', padding: '80px 0' }}>
-        <div style={{ maxWidth: '1152px', margin: '0 auto', padding: '0 32px' }}>
-          <h2 style={{
+        <div className="container-padding" style={{ maxWidth: '1152px', margin: '0 auto' }}>
+          <h2 className="text-section-title" style={{
             fontFamily: 'Playfair Display, Georgia, serif',
-            fontSize: '40px',
             textAlign: 'center',
             marginBottom: '48px',
             letterSpacing: '-0.025em'
           }}>Compare Plans</h2>
 
-          <div style={{ overflowX: 'auto' }}>
+          <div className="responsive-table-wrapper">
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
               <thead>
                 <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
@@ -694,96 +727,8 @@ export default function FeaturesPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section style={{ backgroundColor: '#1f3529', color: 'white', padding: '80px 0' }}>
-        <div style={{ maxWidth: '768px', margin: '0 auto', padding: '0 32px', textAlign: 'center' }}>
-          <h2 style={{
-            fontFamily: 'Playfair Display, Georgia, serif',
-            fontSize: '40px',
-            marginBottom: '24px',
-            letterSpacing: '-0.025em'
-          }}>Ready to publish smarter?</h2>
-          <p style={{ fontSize: '16px', marginBottom: '32px', color: 'rgba(255,255,255,0.9)' }}>
-            Join thousands of creators who are already using PublishType to streamline their content workflow.
-          </p>
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', maxWidth: '500px', margin: '0 auto' }}>
-            <input
-              type="email"
-              placeholder="Enter your email"
-              style={{
-                flex: 1,
-                padding: '14px 20px',
-                borderRadius: '8px',
-                border: '1px solid rgba(255,255,255,0.2)',
-                backgroundColor: 'rgba(255,255,255,0.1)',
-                color: 'white',
-                fontSize: '15px'
-              }}
-            />
-            <button style={{
-              backgroundColor: 'white',
-              color: '#1f3529',
-              padding: '14px 32px',
-              borderRadius: '8px',
-              border: 'none',
-              fontSize: '15px',
-              fontWeight: 500,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap'
-            }}>
-              Get Started
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer style={{ backgroundColor: '#1a3428', color: 'white', padding: '64px 0' }}>
-        <div style={{ maxWidth: '1152px', margin: '0 auto', padding: '0 32px' }}>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '48px',
-            marginBottom: '48px'
-          }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                <PenTool style={{ height: '20px', width: '20px' }} strokeWidth={2} />
-                <span style={{ fontWeight: 500, fontSize: '18px' }}>PublishType</span>
-              </div>
-              <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', lineHeight: '1.6' }}>
-                Publish once, reach everywhere.
-              </p>
-            </div>
-
-            <div>
-              <h4 style={{ fontWeight: 500, marginBottom: '16px', fontSize: '15px' }}>Product</h4>
-              <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <li><Link href="/features" style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>Features</Link></li>
-                <li><Link href="/#pricing" style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>Pricing</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 style={{ fontWeight: 500, marginBottom: '16px', fontSize: '15px' }}>Company</h4>
-              <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <li><Link href="#" style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>About</Link></li>
-                <li><Link href="#" style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>Contact</Link></li>
-              </ul>
-            </div>
-          </div>
-
-          <div style={{
-            borderTop: '1px solid rgba(255,255,255,0.1)',
-            paddingTop: '32px',
-            textAlign: 'center',
-            fontSize: '13px',
-            color: 'rgba(255,255,255,0.5)'
-          }}>
-            <p>© 2024 PublishType. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      {/* Newsletter and Footer */}
+      <NewsletterFooter />
     </div>
   )
 }

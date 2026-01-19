@@ -420,22 +420,12 @@ export class ImageService {
 
   /**
    * Update usage stats for image uploads
+   * Note: UsageStats model removed from schema - stats tracking disabled
    */
   private static async updateUsageStats(userId: string): Promise<void> {
-    try {
-      await prisma.usageStats.upsert({
-        where: { userId },
-        update: {
-          imagesGeneratedThisMonth: { increment: 1 },
-        },
-        create: {
-          userId,
-          imagesGeneratedThisMonth: 1,
-        },
-      });
-    } catch (error) {
-      console.error('Failed to update usage stats:', error);
-    }
+    // UsageStats model no longer exists in schema
+    // This method is now a no-op but kept for backward compatibility
+    return;
   }
 
   /**

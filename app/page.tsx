@@ -9,10 +9,25 @@ import {
   BarChart3,
   Sparkles,
   Check,
-  Plus
+  Plus,
+  ArrowRight,
+  Zap,
+  Users,
+  Globe,
+  Twitter,
+  Linkedin,
+  Github,
+  Mail,
+  ChevronLeft,
+  ChevronRight,
+  Info
 } from "lucide-react"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts'
 import { useState, useEffect, useRef } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/context/AuthContext"
+import { Header } from "@/components/layout/header"
+import { PricingCarousel } from "@/components/PricingCarousel"
 
 const chartData = [
   { month: 'Jan', platform1: 1200, platform2: 800 },
@@ -25,12 +40,21 @@ const chartData = [
 ]
 
 export default function Home() {
+  const { user } = useAuth()
+  const router = useRouter()
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [isChartVisible, setIsChartVisible] = useState(false)
   const [heroVisible, setHeroVisible] = useState(false)
   const [featuresVisible, setFeaturesVisible] = useState(false)
   const [statsVisible, setStatsVisible] = useState(false)
   const [pricingVisible, setPricingVisible] = useState(false)
+  const [currentTestimonial, setCurrentTestimonial] = useState(0)
+  const [hoveredPlatform, setHoveredPlatform] = useState<string | null>(null)
+  const [activeFeature, setActiveFeature] = useState<number | null>(null)
+  const [counters, setCounters] = useState({ users: 0, content: 0, reach: 0 })
+  const [email, setEmail] = useState("")
+  const [screenSize, setScreenSize] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200)
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly')
 
   const chartRef = useRef<HTMLDivElement>(null)
   const heroRef = useRef<HTMLDivElement>(null)
@@ -41,6 +65,18 @@ export default function Home() {
   useEffect(() => {
     // Hero animation on mount
     setTimeout(() => setHeroVisible(true), 100)
+
+    // Handle window resize for responsive pricing cards
+    const handleResize = () => {
+      setScreenSize(window.innerWidth)
+    }
+
+    window.addEventListener('resize', handleResize)
+
+    // Testimonial carousel auto-rotate
+    const testimonialInterval = setInterval(() => {
+      setCurrentTestimonial((prev) => (prev + 1) % 3)
+    }, 5000)
 
     const observerOptions = { threshold: 0.15 }
 
@@ -58,7 +94,27 @@ export default function Home() {
 
     const statsObserver = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
-        if (entry.isIntersecting) setStatsVisible(true)
+        if (entry.isIntersecting) {
+          setStatsVisible(true)
+          // Animate counters
+          const duration = 2000
+          const steps = 60
+          const usersTarget = 10000
+          const contentTarget = 500000
+          const reachTarget = 5000000
+
+          let currentStep = 0
+          const counterInterval = setInterval(() => {
+            currentStep++
+            const progress = currentStep / steps
+            setCounters({
+              users: Math.floor(usersTarget * progress),
+              content: Math.floor(contentTarget * progress),
+              reach: Math.floor(reachTarget * progress)
+            })
+            if (currentStep >= steps) clearInterval(counterInterval)
+          }, duration / steps)
+        }
       })
     }, observerOptions)
 
@@ -74,12 +130,21 @@ export default function Home() {
     if (pricingRef.current) pricingObserver.observe(pricingRef.current)
 
     return () => {
+      window.removeEventListener('resize', handleResize)
+      clearInterval(testimonialInterval)
       if (chartRef.current) chartObserver.unobserve(chartRef.current)
       if (featuresRef.current) featuresObserver.unobserve(featuresRef.current)
       if (statsRef.current) statsObserver.unobserve(statsRef.current)
       if (pricingRef.current) pricingObserver.unobserve(pricingRef.current)
     }
   }, [])
+
+  // Helper function to format numbers
+  const formatNumber = (num: number) => {
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
+    if (num >= 1000) return `${(num / 1000).toFixed(0)}K`
+    return num.toString()
+  }
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f5f1e8' }}>
@@ -238,90 +303,135 @@ export default function Home() {
           opacity: 1;
           transform: translateY(-3px);
         }
+
+        .pulse {
+          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.5;
+          }
+        }
+
+        .gradient-bg {
+          background: linear-gradient(135deg, #f5f1e8 0%, #ebe4d5 50%, #f5f1e8 100%);
+          background-size: 200% 200%;
+          animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+          0% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+          100% {
+            background-position: 0% 50%;
+          }
+        }
+
+        .slide-in {
+          animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+
+        .tooltip {
+          position: absolute;
+          bottom: 100%;
+          left: 50%;
+          transform: translateX(-50%) translateY(-10px);
+          background: #1f3529;
+          color: white;
+          padding: 8px 14px;
+          border-radius: 8px;
+          font-size: 13px;
+          white-space: nowrap;
+          opacity: 0;
+          pointer-events: none;
+          transition: all 0.3s;
+        }
+
+        .tooltip::after {
+          content: '';
+          position: absolute;
+          top: 100%;
+          left: 50%;
+          transform: translateX(-50%);
+          border: 6px solid transparent;
+          border-top-color: #1f3529;
+        }
+
+        .platform-item:hover .tooltip {
+          opacity: 1;
+          transform: translateX(-50%) translateY(-5px);
+        }
       `}</style>
 
       {/* Header */}
-      <header style={{
-        borderBottom: '1px solid rgba(0,0,0,0.1)',
-        backgroundColor: 'rgba(245,241,232,0.95)',
-        backdropFilter: 'blur(12px)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 50,
-        transition: 'all 0.3s ease'
-      }}>
-        <div style={{
-          maxWidth: '1280px',
-          margin: '0 auto',
-          padding: '14px 32px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
-        }}>
-          <Link href="/" style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            textDecoration: 'none',
-            color: 'inherit',
-            transition: 'transform 0.2s ease'
-          }}
-          className="hover-scale">
-            <PenTool style={{ height: '22px', width: '22px', color: '#1f3529' }} strokeWidth={2} />
-            <span style={{ fontSize: '19px', fontWeight: 600, letterSpacing: '-0.025em', color: '#1f3529' }}>PublishType</span>
-          </Link>
-
-          <nav style={{ display: 'flex', alignItems: 'center', gap: '36px', fontSize: '14px' }} className="hidden md:flex">
-            {['Home', 'Features', 'Pricing', 'Blog'].map((item) => (
-              <Link
-                key={item}
-                href={item === 'Home' ? '/' : `/${item.toLowerCase()}`}
-                style={{
-                  color: '#374151',
-                  textDecoration: 'none',
-                  fontWeight: 500,
-                  position: 'relative',
-                  padding: '4px 0',
-                  transition: 'color 0.2s'
-                }}
-              >
-                {item}
-              </Link>
-            ))}
-          </nav>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Link href="/login">
-              <Button variant="ghost" size="sm" style={{
-                fontSize: '14px',
-                fontWeight: 500,
-                transition: 'all 0.2s'
-              }}>
-                Sign In
-              </Button>
-            </Link>
-            <Link href="/signup">
-              <Button
-                size="sm"
-                className="btn-primary"
-                style={{
-                  backgroundColor: '#1f3529',
-                  color: 'white',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  padding: '10px 24px'
-                }}
-              >
-                Sign Up
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* Hero Section */}
-      <section style={{ maxWidth: '1152px', margin: '0 auto', padding: '104px 32px 72px' }} ref={heroRef}>
-        <div style={{ textAlign: 'center', maxWidth: '840px', margin: '0 auto 56px' }}>
+      <section className="gradient-bg" style={{ maxWidth: '1152px', margin: '0 auto', padding: '104px 32px 72px', position: 'relative', overflow: 'hidden' }} ref={heroRef}>
+        {/* Animated decorative elements */}
+        <div style={{
+          position: 'absolute',
+          top: '10%',
+          right: '5%',
+          width: '120px',
+          height: '120px',
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(31, 53, 41, 0.08) 0%, transparent 70%)',
+          opacity: heroVisible ? 0.6 : 0,
+          transition: 'opacity 1.5s ease-out 0.5s'
+        }} />
+        <div style={{
+          position: 'absolute',
+          bottom: '20%',
+          left: '8%',
+          width: '80px',
+          height: '80px',
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(31, 53, 41, 0.06) 0%, transparent 70%)',
+          opacity: heroVisible ? 0.5 : 0,
+          transition: 'opacity 1.5s ease-out 0.8s'
+        }} />
+
+        <div style={{ textAlign: 'center', maxWidth: '840px', margin: '0 auto 56px', position: 'relative', zIndex: 1 }}>
+          {/* Badge */}
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            backgroundColor: 'white',
+            padding: '8px 18px',
+            borderRadius: '24px',
+            marginBottom: '32px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+            opacity: heroVisible ? 1 : 0,
+            transform: heroVisible ? 'translateY(0)' : 'translateY(-10px)',
+            transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.05s'
+          }}>
+            <Zap style={{ height: '14px', width: '14px', color: '#1f3529' }} strokeWidth={2.5} />
+            <span style={{ fontSize: '12px', fontWeight: 600, color: '#1f3529', letterSpacing: '0.3px' }}>
+              Join 10,000+ creators
+            </span>
+          </div>
+
           <p style={{
             fontSize: '11px',
             letterSpacing: '0.15em',
@@ -345,7 +455,7 @@ export default function Home() {
             transform: heroVisible ? 'translateY(0)' : 'translateY(20px)',
             transition: 'all 0.7s cubic-bezier(0.4, 0, 0.2, 1) 0.2s'
           }}>
-            Publish Once,<br/>
+            Publish Once,<br />
             <span style={{ fontStyle: 'italic', fontWeight: 400 }}>Reach Everywhere</span>
           </h1>
           <p style={{
@@ -372,30 +482,34 @@ export default function Home() {
             transform: heroVisible ? 'translateY(0)' : 'translateY(20px)',
             transition: 'all 0.7s cubic-bezier(0.4, 0, 0.2, 1) 0.4s'
           }}>
-            <button className="btn-primary" style={{
-              backgroundColor: '#1f3529',
-              color: 'white',
-              padding: '16px 36px',
-              fontSize: '16px',
-              fontWeight: 500,
-              borderRadius: '8px',
-              border: 'none',
-              cursor: 'pointer'
-            }}>
-              Start For Free
-            </button>
-            <button className="hover-lift" style={{
-              border: '2px solid #1f3529',
-              color: '#1f3529',
-              backgroundColor: 'transparent',
-              padding: '14px 36px',
-              fontSize: '16px',
-              fontWeight: 500,
-              borderRadius: '8px',
-              cursor: 'pointer'
-            }}>
-              Learn More
-            </button>
+            <Link href="/signup">
+              <button className="btn-primary" style={{
+                backgroundColor: '#1f3529',
+                color: 'white',
+                padding: '16px 36px',
+                fontSize: '16px',
+                fontWeight: 500,
+                borderRadius: '8px',
+                border: 'none',
+                cursor: 'pointer'
+              }}>
+                Start For Free
+              </button>
+            </Link>
+            <Link href="#features">
+              <button className="hover-lift" style={{
+                border: '2px solid #1f3529',
+                color: '#1f3529',
+                backgroundColor: 'transparent',
+                padding: '14px 36px',
+                fontSize: '16px',
+                fontWeight: 500,
+                borderRadius: '8px',
+                cursor: 'pointer'
+              }}>
+                Learn More
+              </button>
+            </Link>
           </div>
 
           {/* Analytics Chart */}
@@ -477,12 +591,12 @@ export default function Home() {
                   <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorPlatform1" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#1f3529" stopOpacity={0.1}/>
-                        <stop offset="95%" stopColor="#1f3529" stopOpacity={0}/>
+                        <stop offset="5%" stopColor="#1f3529" stopOpacity={0.1} />
+                        <stop offset="95%" stopColor="#1f3529" stopOpacity={0} />
                       </linearGradient>
                       <linearGradient id="colorPlatform2" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#8b9485" stopOpacity={0.1}/>
-                        <stop offset="95%" stopColor="#8b9485" stopOpacity={0}/>
+                        <stop offset="5%" stopColor="#8b9485" stopOpacity={0.1} />
+                        <stop offset="95%" stopColor="#8b9485" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid
@@ -659,11 +773,11 @@ export default function Home() {
         </p>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '72px 56px' }}>
           {[
-            { icon: '👻', name: 'Ghost Blog' },
-            { icon: '📮', name: 'Substack' },
-            { icon: '💼', name: 'LinkedIn' },
-            { icon: '🐝', name: 'Beehiiv' },
-            { icon: '✉️', name: 'ConvertKit' },
+            { icon: '👻', name: 'Ghost Blog', desc: '500+ integrations' },
+            { icon: '📮', name: 'Substack', desc: 'Newsletter platform' },
+            { icon: '💼', name: 'LinkedIn', desc: 'Professional network' },
+            { icon: '🐝', name: 'Beehiiv', desc: 'Modern newsletters' },
+            { icon: '✉️', name: 'ConvertKit', desc: 'Email marketing' },
           ].map((platform, i) => (
             <div
               key={platform.name}
@@ -673,11 +787,26 @@ export default function Home() {
                 alignItems: 'center',
                 gap: '10px',
                 color: '#6b7280',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                position: 'relative',
+                padding: '12px 20px',
+                borderRadius: '12px',
+                backgroundColor: hoveredPlatform === platform.name ? 'white' : 'transparent',
+                boxShadow: hoveredPlatform === platform.name ? '0 4px 12px rgba(0,0,0,0.08)' : 'none',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
               }}
+              onMouseEnter={() => setHoveredPlatform(platform.name)}
+              onMouseLeave={() => setHoveredPlatform(null)}
             >
-              <span style={{ fontSize: '24px' }}>{platform.icon}</span>
-              <span style={{ fontSize: '15px', fontWeight: 600 }}>{platform.name}</span>
+              <span style={{ fontSize: '24px', transition: 'transform 0.3s', transform: hoveredPlatform === platform.name ? 'scale(1.2)' : 'scale(1)' }}>{platform.icon}</span>
+              <div>
+                <div style={{ fontSize: '15px', fontWeight: 600 }}>{platform.name}</div>
+                {hoveredPlatform === platform.name && (
+                  <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }} className="slide-in">
+                    {platform.desc}
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -687,9 +816,9 @@ export default function Home() {
       <section ref={statsRef} style={{ maxWidth: '1152px', margin: '0 auto', padding: '88px 32px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '56px' }}>
           {[
-            { icon: BarChart3, number: '10,000+', label: 'Active Users', delay: '0s' },
-            { icon: PenTool, number: '500K+', label: 'Content Published', delay: '0.1s' },
-            { icon: Sparkles, number: '5M+', label: 'Total Reach', delay: '0.2s' }
+            { icon: BarChart3, key: 'users' as const, label: 'Active Users', delay: '0s', suffix: '+' },
+            { icon: PenTool, key: 'content' as const, label: 'Content Published', delay: '0.1s', suffix: '+' },
+            { icon: Sparkles, key: 'reach' as const, label: 'Total Reach', delay: '0.2s', suffix: '+' }
           ].map((stat, i) => (
             <div
               key={i}
@@ -704,14 +833,15 @@ export default function Home() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: '64px',
-                height: '64px',
+                width: '72px',
+                height: '72px',
                 borderRadius: '50%',
                 backgroundColor: '#1f3529',
-                marginBottom: '24px',
-                cursor: 'pointer'
+                marginBottom: '28px',
+                cursor: 'pointer',
+                boxShadow: '0 8px 20px rgba(31, 53, 41, 0.25)'
               }}>
-                <stat.icon style={{ height: '32px', width: '32px', color: 'white' }} strokeWidth={1.5} />
+                <stat.icon style={{ height: '34px', width: '34px', color: 'white' }} strokeWidth={1.5} />
               </div>
               <div style={{
                 fontFamily: 'Playfair Display, Georgia, serif',
@@ -720,7 +850,9 @@ export default function Home() {
                 marginBottom: '14px',
                 letterSpacing: '-0.03em',
                 color: '#1f3529'
-              }}>{stat.number}</div>
+              }}>
+                {statsVisible ? formatNumber(counters[stat.key]) : '0'}{stat.suffix}
+              </div>
               <p style={{
                 fontSize: '12px',
                 letterSpacing: '0.15em',
@@ -760,25 +892,31 @@ export default function Home() {
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '28px' }}>
+        <div className="responsive-grid-3">
           {[
             {
-              icon: Sparkles,
+              icon: Globe,
               title: 'Multi-Platform Publishing',
               desc: 'Publish your content to Ghost, Substack, LinkedIn, and more with one click. Save time and reach your audience wherever they are.',
-              delay: '0s'
+              delay: '0s',
+              color: '#1f3529',
+              benefits: ['Save 5+ hours/week', '10+ platforms', 'One-click sync']
             },
             {
               icon: Sparkles,
               title: 'AI-Powered Generation',
               desc: 'Create engaging, platform-optimized content with our AI writing assistant. Generate ideas, titles, and outlines in seconds.',
-              delay: '0.1s'
+              delay: '0.1s',
+              color: '#8b9485',
+              benefits: ['Smart suggestions', 'Auto-formatting', 'SEO optimized']
             },
             {
               icon: BarChart3,
               title: 'Real-Time Analytics',
               desc: 'Track engagement metrics across all platforms in one unified dashboard. Make data-driven decisions to grow your audience.',
-              delay: '0.2s'
+              delay: '0.2s',
+              color: '#6b7280',
+              benefits: ['Unified dashboard', 'Real-time data', 'Growth insights']
             }
           ].map((feature, i) => (
             <div
@@ -791,31 +929,70 @@ export default function Home() {
                 borderRadius: '20px',
                 opacity: featuresVisible ? 1 : 0,
                 transform: featuresVisible ? 'translateY(0)' : 'translateY(30px)',
-                transition: `all 0.7s cubic-bezier(0.4, 0, 0.2, 1) ${feature.delay}`
+                transition: `all 0.7s cubic-bezier(0.4, 0, 0.2, 1) ${feature.delay}`,
+                cursor: 'pointer',
+                position: 'relative',
+                overflow: 'hidden'
               }}
+              onMouseEnter={() => setActiveFeature(i)}
+              onMouseLeave={() => setActiveFeature(null)}
             >
+              {/* Animated background on hover */}
               <div style={{
-                width: '56px',
-                height: '56px',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '4px',
+                backgroundColor: feature.color,
+                transform: activeFeature === i ? 'scaleX(1)' : 'scaleX(0)',
+                transformOrigin: 'left',
+                transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+              }} />
+
+              <div style={{
+                width: '64px',
+                height: '64px',
                 borderRadius: '50%',
-                backgroundColor: '#ebe4d5',
+                backgroundColor: activeFeature === i ? feature.color : '#ebe4d5',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                marginBottom: '28px'
+                marginBottom: '28px',
+                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                boxShadow: activeFeature === i ? `0 8px 20px ${feature.color}40` : 'none'
               }}>
-                <feature.icon style={{ height: '24px', width: '24px', color: '#1f3529' }} strokeWidth={2} />
+                <feature.icon style={{ height: '28px', width: '28px', color: activeFeature === i ? 'white' : '#1f3529' }} strokeWidth={2} />
               </div>
               <h3 style={{
                 fontFamily: 'Playfair Display, Georgia, serif',
                 fontSize: '26px',
                 marginBottom: '18px',
                 letterSpacing: '-0.025em',
-                color: '#1f3529'
+                color: '#1f3529',
+                transition: 'color 0.3s'
               }}>{feature.title}</h3>
-              <p style={{ fontSize: '16px', color: '#4b5563', lineHeight: '1.7' }}>
+              <p style={{ fontSize: '16px', color: '#4b5563', lineHeight: '1.7', marginBottom: '24px' }}>
                 {feature.desc}
               </p>
+
+              {/* Benefits list on hover */}
+              {activeFeature === i && (
+                <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #e5e7eb' }}>
+                  {feature.benefits.map((benefit, idx) => (
+                    <div key={idx} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      marginBottom: '10px',
+                      animation: `slideInLeft 0.4s ease-out ${idx * 0.1}s both`
+                    }}>
+                      <Check style={{ height: '16px', width: '16px', color: feature.color }} strokeWidth={2.5} />
+                      <span style={{ fontSize: '14px', color: '#374151', fontWeight: 500 }}>{benefit}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -835,7 +1012,7 @@ export default function Home() {
             <p style={{ fontSize: '17px', color: '#4b5563', lineHeight: '1.7' }}>Your content journey, simplified in four steps</p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '40px' }}>
+          <div className="workflow-grid">
             {[
               { icon: PenTool, num: '1', title: 'Create', desc: 'Write your content in our intuitive editor', bg: '#1f3529' },
               { icon: Sparkles, num: '2', title: 'Craft', desc: 'Optimize with AI suggestions and formatting', bg: 'white' },
@@ -882,54 +1059,154 @@ export default function Home() {
             fontFamily: 'Playfair Display, Georgia, serif',
             fontSize: '56px',
             letterSpacing: '-0.03em',
-            color: '#1f3529'
+            color: '#1f3529',
+            marginBottom: '12px'
           }}>Creators love PublishType</h2>
+          <p style={{ fontSize: '16px', color: '#6b7280' }}>Join thousands of happy creators</p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '28px' }}>
-          {[
-            {
-              stars: 5,
-              text: "PublishType has AMAZING content that I used for my latest blog posts. I got 200K+ views across all platforms in just one week!",
-              name: "Sarah Khan",
-              role: "Content Creator"
-            },
-            {
-              stars: 5,
-              text: "I spent 3-4 hours a day manually posting to different platforms. Now it takes me 10 minutes with PublishType. Game changer!",
-              name: "Marcus Lee",
-              role: "Tech Blogger"
-            },
-            {
-              stars: 5,
-              text: "The analytics dashboard is pure magic! I can actually see what works and optimize my strategy accordingly.",
-              name: "Emma Rodriguez",
-              role: "Newsletter Writer"
-            }
-          ].map((testimonial, i) => (
-            <div key={i} className="hover-lift" style={{
-              padding: '36px',
-              backgroundColor: 'white',
-              border: '1px solid rgba(0,0,0,0.06)',
-              borderRadius: '20px'
-            }}>
-              <div style={{ display: 'flex', gap: '3px', marginBottom: '24px' }}>
-                {[...Array(testimonial.stars)].map((_, i) => (
-                  <span key={i} style={{ color: '#1f3529', fontSize: '20px' }}>★</span>
-                ))}
-              </div>
-              <p style={{ fontSize: '16px', color: '#374151', marginBottom: '36px', lineHeight: '1.7', fontStyle: 'italic' }}>
-                "{testimonial.text}"
-              </p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#ebe4d5' }}></div>
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: '15px', color: '#111827' }}>{testimonial.name}</div>
-                  <div style={{ fontSize: '13px', color: '#6b7280' }}>{testimonial.role}</div>
+        <div style={{ position: 'relative' }}>
+          <div className="responsive-grid-3">
+            {[
+              {
+                stars: 5,
+                text: "PublishType has AMAZING content that I used for my latest blog posts. I got 200K+ views across all platforms in just one week!",
+                name: "Sarah Khan",
+                role: "Content Creator",
+                avatar: 'S',
+                highlight: true
+              },
+              {
+                stars: 5,
+                text: "I spent 3-4 hours a day manually posting to different platforms. Now it takes me 10 minutes with PublishType. Game changer!",
+                name: "Marcus Lee",
+                role: "Tech Blogger",
+                avatar: 'M',
+                highlight: false
+              },
+              {
+                stars: 5,
+                text: "The analytics dashboard is pure magic! I can actually see what works and optimize my strategy accordingly.",
+                name: "Emma Rodriguez",
+                role: "Newsletter Writer",
+                avatar: 'E',
+                highlight: false
+              }
+            ].map((testimonial, i) => (
+              <div key={i} className="hover-lift" style={{
+                padding: '40px',
+                backgroundColor: 'white',
+                border: testimonial.highlight ? '2px solid #1f3529' : '1px solid rgba(0,0,0,0.06)',
+                borderRadius: '20px',
+                position: 'relative',
+                opacity: i === currentTestimonial ? 1 : 0.7,
+                transform: i === currentTestimonial ? 'scale(1.02)' : 'scale(1)',
+                transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
+              }}>
+                {testimonial.highlight && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-12px',
+                    right: '20px',
+                    backgroundColor: '#1f3529',
+                    color: 'white',
+                    padding: '6px 14px',
+                    borderRadius: '20px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    letterSpacing: '0.5px'
+                  }}>
+                    FEATURED
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: '3px', marginBottom: '24px' }}>
+                  {[...Array(testimonial.stars)].map((_, idx) => (
+                    <span key={idx} style={{ color: '#1f3529', fontSize: '22px' }}>★</span>
+                  ))}
+                </div>
+                <p style={{ fontSize: '16px', color: '#374151', marginBottom: '36px', lineHeight: '1.7', fontStyle: 'italic' }}>
+                  "{testimonial.text}"
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  <div style={{
+                    width: '52px',
+                    height: '52px',
+                    borderRadius: '50%',
+                    backgroundColor: '#ebe4d5',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '20px',
+                    fontWeight: 700,
+                    color: '#1f3529'
+                  }}>{testimonial.avatar}</div>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '15px', color: '#111827' }}>{testimonial.name}</div>
+                    <div style={{ fontSize: '13px', color: '#6b7280' }}>{testimonial.role}</div>
+                  </div>
                 </div>
               </div>
+            ))}
+          </div>
+
+          {/* Carousel Controls */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', marginTop: '48px' }}>
+            <button
+              onClick={() => setCurrentTestimonial((prev) => (prev === 0 ? 2 : prev - 1))}
+              className="hover-scale"
+              style={{
+                width: '44px',
+                height: '44px',
+                borderRadius: '50%',
+                border: '2px solid #1f3529',
+                backgroundColor: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.3s'
+              }}
+            >
+              <ChevronLeft style={{ height: '20px', width: '20px', color: '#1f3529' }} strokeWidth={2.5} />
+            </button>
+
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {[0, 1, 2].map((idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentTestimonial(idx)}
+                  style={{
+                    width: currentTestimonial === idx ? '32px' : '10px',
+                    height: '10px',
+                    borderRadius: '5px',
+                    backgroundColor: currentTestimonial === idx ? '#1f3529' : '#d1d5db',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s'
+                  }}
+                />
+              ))}
             </div>
-          ))}
+
+            <button
+              onClick={() => setCurrentTestimonial((prev) => (prev + 1) % 3)}
+              className="hover-scale"
+              style={{
+                width: '44px',
+                height: '44px',
+                borderRadius: '50%',
+                border: '2px solid #1f3529',
+                backgroundColor: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.3s'
+              }}
+            >
+              <ChevronRight style={{ height: '20px', width: '20px', color: '#1f3529' }} strokeWidth={2.5} />
+            </button>
+          </div>
         </div>
       </section>
 
@@ -949,193 +1226,141 @@ export default function Home() {
             letterSpacing: '-0.03em',
             color: '#1f3529'
           }}>Simple, Transparent Pricing</h2>
-          <p style={{ fontSize: '17px', color: '#4b5563', lineHeight: '1.7' }}>Choose the plan that works for you. Cancel anytime.</p>
+          <p style={{ fontSize: '17px', color: '#4b5563', lineHeight: '1.7', marginBottom: '40px' }}>Choose the plan that works for you. Cancel anytime.</p>
+
+          {/* Billing Toggle */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '12px',
+              backgroundColor: 'white',
+              padding: '4px',
+              borderRadius: '8px',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+            }}>
+              <button
+                onClick={() => setBillingPeriod('monthly')}
+                style={{
+                  padding: '8px 24px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  backgroundColor: billingPeriod === 'monthly' ? '#1f3529' : 'transparent',
+                  color: billingPeriod === 'monthly' ? 'white' : '#374151',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setBillingPeriod('annual')}
+                style={{
+                  padding: '8px 24px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  backgroundColor: billingPeriod === 'annual' ? '#1f3529' : 'transparent',
+                  color: billingPeriod === 'annual' ? 'white' : '#374151',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                Annual
+              </button>
+            </div>
+            {billingPeriod === 'annual' && (
+              <div style={{
+                backgroundColor: '#dcfce7',
+                color: '#166534',
+                padding: '6px 16px',
+                borderRadius: '20px',
+                fontSize: '13px',
+                fontWeight: 500
+              }}>
+                Save up to 17% with annual billing
+              </div>
+            )}
+          </div>
         </div>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-          gap: '28px',
-          maxWidth: '1080px',
-          margin: '0 auto',
-          alignItems: 'center'
-        }}>
-          {/* Free Plan */}
-          <div className="pricing-card" style={{
-            padding: '36px',
-            backgroundColor: 'white',
-            border: '1px solid rgba(0,0,0,0.1)',
-            borderRadius: '20px',
-            height: '100%',
-            opacity: pricingVisible ? 1 : 0,
-            transform: pricingVisible ? 'translateY(0)' : 'translateY(30px)',
-            transition: 'all 0.7s cubic-bezier(0.4, 0, 0.2, 1) 0s'
-          }}>
-            <div style={{ marginBottom: '36px' }}>
-              <h3 style={{
-                fontFamily: 'Playfair Display, Georgia, serif',
-                fontSize: '26px',
-                marginBottom: '18px',
-                letterSpacing: '-0.025em',
-                color: '#1f3529'
-              }}>Free</h3>
-              <div style={{ marginBottom: '10px' }}>
-                <span style={{ fontSize: '56px', fontFamily: 'Playfair Display, Georgia, serif', fontWeight: 700, color: '#1f3529' }}>$0</span>
-                <span style={{ color: '#6b7280', fontSize: '17px', fontWeight: 500 }}>/month</span>
-              </div>
-            </div>
-            <ul style={{ listStyle: 'none', padding: 0, marginBottom: '36px' }}>
-              {[
+        <PricingCarousel
+          billingPeriod={billingPeriod}
+          plans={[
+            {
+              name: 'Free',
+              price: '₹0',
+              description: 'Perfect for trying out',
+              button: 'Get Started Free',
+              onClick: () => router.push(user ? '/dashboard' : '/signup'),
+              loading: false,
+              featured: false,
+              features: [
                 '1 blog post/month',
                 '2 platform integrations',
                 'Basic analytics',
+                'Email support',
+                'Community access'
+              ]
+            },
+            {
+              name: 'Starter',
+              price: billingPeriod === 'monthly' ? '₹5,000' : '₹40,000',
+              priceINR: billingPeriod === 'monthly' ? 'or $60/month' : 'or $482/year',
+              description: 'For individuals',
+              button: 'Get Started',
+              onClick: () => router.push('/pricing'),
+              loading: false,
+              featured: false,
+              features: [
+                'Up to 2 platforms',
+                'Basic AI editor',
+                '10 scheduled posts',
+                'Basic analytics',
                 'Email support'
-              ].map((item, i) => (
-                <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', fontSize: '15px', color: '#374151', marginBottom: '14px' }}>
-                  <Check style={{ height: '18px', width: '18px', color: '#9ca3af', marginTop: '3px', flexShrink: 0 }} strokeWidth={2.5} />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-            <button className="hover-lift" style={{
-              width: '100%',
-              border: '2px solid #d1d5db',
-              color: '#374151',
-              backgroundColor: 'white',
-              borderRadius: '10px',
-              height: '48px',
-              fontWeight: 500,
-              fontSize: '15px',
-              cursor: 'pointer'
-            }}>
-              Get Started
-            </button>
-          </div>
-
-          {/* Creator Plan - Featured */}
-          <div className="pricing-card" style={{
-            padding: '36px',
-            backgroundColor: '#1f3529',
-            color: 'white',
-            border: 'none',
-            borderRadius: '20px',
-            boxShadow: '0 28px 56px -14px rgba(0, 0, 0, 0.28)',
-            transform: pricingVisible ? 'scale(1.05)' : 'scale(0.95)',
-            position: 'relative',
-            zIndex: 10,
-            height: '100%',
-            opacity: pricingVisible ? 1 : 0,
-            transition: 'all 0.7s cubic-bezier(0.4, 0, 0.2, 1) 0.1s'
-          }}>
-            <div style={{
-              position: 'absolute',
-              top: '-14px',
-              right: '20px',
-              backgroundColor: '#ebe4d5',
-              color: '#1f3529',
-              padding: '6px 16px',
-              borderRadius: '20px',
-              fontSize: '11px',
-              fontWeight: 700,
-              letterSpacing: '0.5px'
-            }}>
-              POPULAR
-            </div>
-            <div style={{ marginBottom: '36px' }}>
-              <h3 style={{
-                fontFamily: 'Playfair Display, Georgia, serif',
-                fontSize: '26px',
-                marginBottom: '18px',
-                letterSpacing: '-0.025em'
-              }}>Creator</h3>
-              <div style={{ marginBottom: '10px' }}>
-                <span style={{ fontSize: '56px', fontFamily: 'Playfair Display, Georgia, serif', fontWeight: 700 }}>$29</span>
-                <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '17px', fontWeight: 500 }}>/month</span>
-              </div>
-            </div>
-            <ul style={{ listStyle: 'none', padding: 0, marginBottom: '36px' }}>
-              {[
-                'AI-Powered Generation',
-                'Unlimited Posts',
-                'All Platforms',
-                'Priority Support',
-                'Team Collaboration'
-              ].map((item, i) => (
-                <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', fontSize: '15px', marginBottom: '14px' }}>
-                  <Check style={{ height: '18px', width: '18px', marginTop: '3px', flexShrink: 0 }} strokeWidth={2.5} />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-            <button className="btn-primary" style={{
-              width: '100%',
-              backgroundColor: 'white',
-              color: '#1f3529',
-              border: 'none',
-              borderRadius: '10px',
-              height: '48px',
-              fontWeight: 600,
-              fontSize: '15px',
-              cursor: 'pointer',
-              boxShadow: '0 2px 4px 0 rgba(0, 0, 0, 0.1)'
-            }}>
-              Start Free Trial
-            </button>
-          </div>
-
-          {/* Professional Plan */}
-          <div className="pricing-card" style={{
-            padding: '36px',
-            backgroundColor: 'white',
-            border: '1px solid rgba(0,0,0,0.1)',
-            borderRadius: '20px',
-            height: '100%',
-            opacity: pricingVisible ? 1 : 0,
-            transform: pricingVisible ? 'translateY(0)' : 'translateY(30px)',
-            transition: 'all 0.7s cubic-bezier(0.4, 0, 0.2, 1) 0.2s'
-          }}>
-            <div style={{ marginBottom: '36px' }}>
-              <h3 style={{
-                fontFamily: 'Playfair Display, Georgia, serif',
-                fontSize: '26px',
-                marginBottom: '18px',
-                letterSpacing: '-0.025em',
-                color: '#1f3529'
-              }}>Professional</h3>
-              <div style={{ marginBottom: '10px' }}>
-                <span style={{ fontSize: '56px', fontFamily: 'Playfair Display, Georgia, serif', fontWeight: 700, color: '#1f3529' }}>$59</span>
-                <span style={{ color: '#6b7280', fontSize: '17px', fontWeight: 500 }}>/month</span>
-              </div>
-            </div>
-            <ul style={{ listStyle: 'none', padding: 0, marginBottom: '36px' }}>
-              {[
+              ]
+            },
+            {
+              name: 'Creator',
+              price: billingPeriod === 'monthly' ? '₹15,000' : '₹1,50,000',
+              priceINR: billingPeriod === 'monthly' ? 'or $181/month' : 'or $1,807/year',
+              description: 'Most popular',
+              button: 'Start Free Trial',
+              onClick: () => router.push('/pricing'),
+              loading: false,
+              featured: true,
+              features: [
+                'Unlimited platforms',
+                'Advanced AI editor',
+                'Unlimited scheduled posts',
+                'Advanced analytics & SEO',
+                'Team collaboration (5 members)',
+                'Priority support'
+              ]
+            },
+            {
+              name: 'Professional',
+              price: billingPeriod === 'monthly' ? '₹20,000' : '₹1,80,000',
+              priceINR: billingPeriod === 'monthly' ? 'or $241/month' : 'or $2,169/year',
+              description: 'For enterprises',
+              button: 'Get Started',
+              onClick: () => router.push('/pricing'),
+              loading: false,
+              featured: false,
+              features: [
                 'Everything in Creator',
-                'Advanced Analytics',
-                'Custom Branding',
-                'API Access',
-                'Dedicated Support'
-              ].map((item, i) => (
-                <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', fontSize: '15px', color: '#374151', marginBottom: '14px' }}>
-                  <Check style={{ height: '18px', width: '18px', color: '#1f3529', marginTop: '3px', flexShrink: 0 }} strokeWidth={2.5} />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-            <button className="hover-lift" style={{
-              width: '100%',
-              border: '2px solid #d1d5db',
-              color: '#374151',
-              backgroundColor: 'white',
-              borderRadius: '10px',
-              height: '48px',
-              fontWeight: 500,
-              fontSize: '15px',
-              cursor: 'pointer'
-            }}>
-              Contact Sales
-            </button>
-          </div>
-        </div>
+                'Unlimited team members',
+                'White-label options',
+                'Custom integrations',
+                'Dedicated account manager',
+                '24/7 premium support'
+              ]
+            }
+          ]}
+        />
 
         <p style={{ textAlign: 'center', marginTop: '44px', fontSize: '15px', color: '#6b7280', fontWeight: 500 }}>
           Start with Medium/Substack/Beehiiv
@@ -1276,38 +1501,72 @@ export default function Home() {
 
           {/* Newsletter */}
           <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '56px', paddingBottom: '36px' }}>
-            <div style={{ maxWidth: '480px' }}>
-              <h4 style={{ fontWeight: 600, marginBottom: '14px', fontSize: '16px' }}>Subscribe to our newsletter</h4>
-              <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.65)', marginBottom: '18px', lineHeight: '1.6' }}>
-                Get the latest updates on new features and platform integrations.
+            <div style={{ maxWidth: '580px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
+                <h4 style={{ fontWeight: 600, fontSize: '18px', margin: 0 }}>Stay in the loop</h4>
+                <div style={{
+                  backgroundColor: 'rgba(255,255,255,0.15)',
+                  color: 'white',
+                  padding: '4px 10px',
+                  borderRadius: '12px',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  letterSpacing: '0.5px'
+                }}>
+                  WEEKLY
+                </div>
+              </div>
+              <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.65)', marginBottom: '20px', lineHeight: '1.6' }}>
+                Get weekly tips, feature updates, and exclusive content strategies from top creators.
               </p>
-              <div style={{ display: 'flex', gap: '10px' }}>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                 <input
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   style={{
                     flex: 1,
-                    padding: '12px 18px',
-                    borderRadius: '10px',
-                    backgroundColor: 'rgba(255,255,255,0.1)',
+                    minWidth: '200px',
+                    padding: '14px 20px',
+                    borderRadius: '12px',
+                    backgroundColor: 'rgba(255,255,255,0.12)',
                     border: '1px solid rgba(255,255,255,0.2)',
                     fontSize: '15px',
-                    color: 'white'
+                    color: 'white',
+                    outline: 'none',
+                    transition: 'all 0.3s'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.backgroundColor = 'rgba(255,255,255,0.18)'
+                    e.target.style.borderColor = 'rgba(255,255,255,0.4)'
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.backgroundColor = 'rgba(255,255,255,0.12)'
+                    e.target.style.borderColor = 'rgba(255,255,255,0.2)'
                   }}
                 />
                 <button className="btn-primary" style={{
                   backgroundColor: 'white',
                   color: '#1f3529',
-                  padding: '12px 28px',
-                  borderRadius: '10px',
+                  padding: '14px 32px',
+                  borderRadius: '12px',
                   fontWeight: 600,
                   fontSize: '15px',
                   border: 'none',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
                 }}>
                   Subscribe
+                  <ArrowRight style={{ height: '16px', width: '16px' }} strokeWidth={2.5} />
                 </button>
               </div>
+              <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', marginTop: '12px' }}>
+                No spam. Unsubscribe anytime.
+              </p>
             </div>
           </div>
 
@@ -1316,16 +1575,55 @@ export default function Home() {
             paddingTop: '36px',
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '18px',
+            gap: '24px',
             fontSize: '14px',
             color: 'rgba(255,255,255,0.5)'
           }}>
-            <p>© 2024 PublishType. All rights reserved.</p>
-            <div style={{ display: 'flex', gap: '28px' }}>
-              <Link href="#" className="hover-scale" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Privacy Policy</Link>
-              <Link href="#" className="hover-scale" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Terms of Service</Link>
+            {/* Social Media Links */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
+              {[
+                { icon: Twitter, label: 'Twitter', href: '#' },
+                { icon: Linkedin, label: 'LinkedIn', href: '#' },
+                { icon: Github, label: 'GitHub', href: '#' },
+                { icon: Mail, label: 'Email', href: 'mailto:contact@publishtype.com' }
+              ].map((social) => (
+                <Link
+                  key={social.label}
+                  href={social.href}
+                  className="hover-scale"
+                  style={{
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(255,255,255,0.1)',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textDecoration: 'none',
+                    transition: 'all 0.3s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)'
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'
+                  }}
+                >
+                  <social.icon style={{ height: '18px', width: '18px', color: 'rgba(255,255,255,0.8)' }} strokeWidth={2} />
+                </Link>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+              <p style={{ margin: 0 }}>© 2024 PublishType. All rights reserved.</p>
+              <div style={{ display: 'flex', gap: '28px' }}>
+                <Link href="#" className="hover-scale" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Privacy Policy</Link>
+                <Link href="#" className="hover-scale" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Terms of Service</Link>
+                <Link href="#" className="hover-scale" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Cookie Policy</Link>
+              </div>
             </div>
           </div>
         </div>

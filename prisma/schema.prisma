@@ -6,6 +6,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // ============================================
@@ -52,7 +53,7 @@ model User {
   images               Image[]
   articles             Article[]
   folders              Folder[]
-  usageStats           UsageStats?
+
   collaborations       ArticleCollaborator[]
 
   @@index([email])
@@ -171,7 +172,12 @@ model Article {
   // Stats
   wordCount       Int           @default(0)
   readingTime     Int           @default(0)
+  readTime        Int           @default(0)  // Minutes to read
   views           Int           @default(0)
+
+  // Publishing
+  isPublicOnPublishType Boolean      @default(false)  // Show on Publish Type public home page
+  coverImage      String?       // Cover image for blog card
 
   // AI metadata
   toneOfVoice     String?       // Professional, Casual, etc.
@@ -200,6 +206,8 @@ model Article {
   @@index([folderId])
   @@index([status])
   @@index([publishedAt])
+  @@index([userId, status, deletedAt]) // Composite index for common dashboard queries
+  @@index([status, isPublicOnPublishType]) // Index for public blog queries
   @@map("articles")
 }
 
@@ -282,6 +290,7 @@ model PlatformConnection {
 }
 
 enum Platform {
+  PUBLISHTYPE
   WORDPRESS
   MEDIUM
   GHOST
@@ -512,7 +521,7 @@ model Image {
 
 enum ImageSource {
   UPLOAD
-  AI_GENERATED
+
   STOCK_PEXELS
   STOCK_UNSPLASH
 }
@@ -704,29 +713,17 @@ enum ApprovalStatus {
 }
 
 // ============================================
-// USAGE TRACKING & LIMITS
+// NEWSLETTER SUBSCRIBERS
 // ============================================
 
-model UsageStats {
-  id                    String   @id @default(uuid())
-  userId                String   @unique
+model NewsletterSubscriber {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  isActive    Boolean  @default(true)
 
-  // Monthly limits based on plan
-  articlesCreatedThisMonth   Int @default(0)
-  aiGenerationsThisMonth     Int @default(0)
-  imagesGeneratedThisMonth   Int @default(0)
-  plagiarismChecksThisMonth  Int @default(0)
+  subscribedAt DateTime @default(now())
+  unsubscribedAt DateTime?
 
-  // Total counts
-  totalArticles         Int      @default(0)
-  totalPublished        Int      @default(0)
-  totalViews            Int      @default(0)
-
-  lastResetDate         DateTime @default(now())
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-
-  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("usage_stats")
+  @@index([email])
+  @@map("newsletter_subscribers")
 }

@@ -19,50 +19,29 @@ export async function GET(request: NextRequest) {
     const accessToken = authHeader.substring(7);
     const currentUser = await authService.getCurrentUser(accessToken);
 
-    // Get or create usage stats from database
-    let usageStats = await prisma.usageStats.findUnique({
-      where: { userId: currentUser.id },
-    });
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    if (!usageStats) {
-      // Create default stats
-      usageStats = await prisma.usageStats.create({
-        data: { userId: currentUser.id },
-      });
-    }
-
-    // Calculate real-time article counts by status
-    const [totalArticles, publishedCount, draftCount, scheduledCount, totalViews] = await Promise.all([
-      // Total articles (excluding deleted)
+    // Run ALL queries in parallel for maximum performance
+    const [articlesCreatedThisMonth, articleStats, totalViews] = await Promise.all([
+      // Count articles created this month
       prisma.article.count({
         where: {
           userId: currentUser.id,
+          createdAt: {
+            gte: startOfMonth,
+          },
           deletedAt: null,
         },
       }),
-      // Published articles
-      prisma.article.count({
+      // Single query to get all article counts by status using groupBy
+      prisma.article.groupBy({
+        by: ['status'],
         where: {
           userId: currentUser.id,
-          status: 'PUBLISHED',
           deletedAt: null,
         },
-      }),
-      // Draft articles
-      prisma.article.count({
-        where: {
-          userId: currentUser.id,
-          status: 'DRAFT',
-          deletedAt: null,
-        },
-      }),
-      // Scheduled articles
-      prisma.article.count({
-        where: {
-          userId: currentUser.id,
-          status: 'SCHEDULED',
-          deletedAt: null,
-        },
+        _count: true,
       }),
       // Total views across all articles
       prisma.article.aggregate({
@@ -76,9 +55,22 @@ export async function GET(request: NextRequest) {
       }),
     ]);
 
+    // Process the grouped results
+    let totalArticles = 0;
+    let publishedCount = 0;
+    let draftCount = 0;
+    let scheduledCount = 0;
+
+    articleStats.forEach((stat) => {
+      totalArticles += stat._count;
+      if (stat.status === 'PUBLISHED') publishedCount = stat._count;
+      else if (stat.status === 'DRAFT') draftCount = stat._count;
+      else if (stat.status === 'SCHEDULED') scheduledCount = stat._count;
+    });
+
     // Combine database stats with real-time counts
     const stats = {
-      ...usageStats,
+      articlesCreatedThisMonth,
       totalArticles,
       totalPublished: publishedCount,
       totalDrafts: draftCount,

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authService } from '@/lib/services/auth.service';
 import prisma from '@/lib/prisma';
-import { getPlanLimits, hasReachedLimit } from '@/lib/subscription/features';
+
+
 
 // GET /api/articles - List user's articles
 export async function GET(request: NextRequest) {
@@ -25,8 +26,18 @@ export async function GET(request: NextRequest) {
     const folderId = searchParams.get('folderId');
 
     const where: any = {
-      userId: currentUser.id,
       deletedAt: null,
+      OR: [
+        { userId: currentUser.id },
+        {
+          collaborators: {
+            some: {
+              userId: currentUser.id,
+              status: { in: ['ACCEPTED', 'PENDING'] }
+            }
+          }
+        }
+      ]
     };
 
     if (status) {
@@ -105,26 +116,6 @@ export async function POST(request: NextRequest) {
     const accessToken = authHeader.substring(7);
     const currentUser = await authService.getCurrentUser(accessToken);
 
-    // Check subscription limits
-    const planLimits = getPlanLimits(currentUser.subscriptionPlan);
-    const usageStats = await prisma.usageStats.findUnique({
-      where: { userId: currentUser.id },
-    });
-
-    if (usageStats && hasReachedLimit(
-      currentUser.subscriptionPlan,
-      'maxArticlesPerMonth',
-      usageStats.articlesCreatedThisMonth
-    )) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `You've reached your monthly article limit (${planLimits.maxArticlesPerMonth}). Please upgrade your plan.`,
-        },
-        { status: 403 }
-      );
-    }
-
     const body = await request.json();
     const { title, content, excerpt, folderId, toneOfVoice, contentFramework } = body;
 
@@ -158,20 +149,6 @@ export async function POST(request: NextRequest) {
         toneOfVoice,
         contentFramework,
         status: 'DRAFT',
-      },
-    });
-
-    // Update usage stats
-    await prisma.usageStats.upsert({
-      where: { userId: currentUser.id },
-      update: {
-        articlesCreatedThisMonth: { increment: 1 },
-        totalArticles: { increment: 1 },
-      },
-      create: {
-        userId: currentUser.id,
-        articlesCreatedThisMonth: 1,
-        totalArticles: 1,
       },
     });
 

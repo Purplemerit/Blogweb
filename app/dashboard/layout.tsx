@@ -1,5 +1,6 @@
 import { DashboardSidebar } from "@/components/layout/dashboard-sidebar"
 import { DashboardHeader } from "@/components/layout/dashboard-header"
+import { AuthGuard } from "@/components/AuthGuard"
 
 export default function DashboardLayout({
   children,
@@ -7,14 +8,19 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex h-screen" style={{ backgroundColor: '#f5f1e8' }}>
-      <DashboardSidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <DashboardHeader />
-        <main className="flex-1 overflow-y-auto" style={{ backgroundColor: '#f5f1e8' }}>
-          {children}
-        </main>
+    <AuthGuard>
+      <div className="flex h-screen" style={{ backgroundColor: '#f5f1e8' }}>
+        {/* Sidebar - hidden on mobile, shown on md+ */}
+        <div className="hidden md:block">
+          <DashboardSidebar />
+        </div>
+        <div className="flex flex-1 flex-col overflow-hidden w-full">
+          <DashboardHeader />
+          <main className="flex-1 overflow-y-auto p-4 md:p-6" style={{ backgroundColor: '#f5f1e8' }}>
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </AuthGuard>
   )
 }

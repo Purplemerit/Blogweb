@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
             <PenSquare className="h-8 w-8" />
-            <span className="text-2xl font-bold">BlogAI</span>
+            <span className="text-2xl font-bold">Publish Type</span>
           </Link>
         </div>
 
@@ -73,14 +73,17 @@ export default function ForgotPasswordPage() {
                     />
                   </svg>
                 </div>
-                <p className="text-sm text-neutral-600">
+                <p className="text-sm text-neutral-600 mb-2">
                   We've sent a password reset link to <strong>{email}</strong>
                 </p>
-                <p className="text-sm text-neutral-500">
+                <p className="text-sm text-neutral-500 mb-3">
+                  Click the link in your email to reset your password. The link will expire in 1 hour.
+                </p>
+                <p className="text-xs text-neutral-500">
                   Didn't receive the email? Check your spam folder or{" "}
                   <button
                     onClick={() => setIsSubmitted(false)}
-                    className="text-neutral-900 font-medium hover:underline"
+                    className="text-emerald-800 font-medium hover:underline"
                   >
                     try again
                   </button>
@@ -105,7 +108,7 @@ export default function ForgotPasswordPage() {
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button type="submit" className="w-full bg-emerald-800 hover:bg-emerald-900 text-white" disabled={isLoading}>
                   {isLoading ? "Sending..." : "Send reset link"}
                 </Button>
                 <Link href="/login">

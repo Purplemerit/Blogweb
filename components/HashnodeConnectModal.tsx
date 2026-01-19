@@ -70,7 +70,7 @@ export function HashnodeConnectModal({ open, onClose, onSuccess }: HashnodeConne
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">Connect Hashnode Account</DialogTitle>
           <DialogDescription className="text-sm text-neutral-600">
-            Connect your Hashnode blog to publish articles directly from BlogAI
+            Connect your Hashnode blog to publish articles directly from Publish Type
           </DialogDescription>
         </DialogHeader>
 
