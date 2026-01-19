@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { PenSquare, Github, Twitter, Linkedin } from "lucide-react"
+import { PenSquare } from "lucide-react"
 
 export function Footer() {
   return (
@@ -11,20 +11,9 @@ export function Footer() {
               <PenSquare className="h-6 w-6" />
               <span className="text-lg font-bold">Publish Type</span>
             </div>
-            <p className="text-sm text-neutral-600 mb-4">
+            <p className="text-sm text-neutral-600">
               AI-powered blog generation and multi-platform publishing platform.
             </p>
-            <div className="flex gap-4">
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-neutral-600 hover:text-neutral-900">
-                <Twitter className="h-5 w-5" />
-              </a>
-              <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-neutral-600 hover:text-neutral-900">
-                <Github className="h-5 w-5" />
-              </a>
-              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-neutral-600 hover:text-neutral-900">
-                <Linkedin className="h-5 w-5" />
-              </a>
-            </div>
           </div>
 
           <div>

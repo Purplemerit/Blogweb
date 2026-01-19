@@ -38,6 +38,7 @@ function IntegrationsContent() {
   const [showGhostModal, setShowGhostModal] = useState(false)
   const [showDevToModal, setShowDevToModal] = useState(false)
   const [showHashnodeModal, setShowHashnodeModal] = useState(false)
+  const [platformFilter, setPlatformFilter] = useState<'ALL' | 'CMS' | 'BLOGGING'>('ALL')
 
   useEffect(() => {
     // Handle OAuth callback messages
@@ -359,21 +360,36 @@ function IntegrationsContent() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-[15px] font-semibold text-neutral-900">Available Platforms</h2>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="h-8 text-[11px] font-medium">
+            <Button
+              variant={platformFilter === 'ALL' ? 'default' : 'outline'}
+              size="sm"
+              className="h-8 text-[11px] font-medium"
+              onClick={() => setPlatformFilter('ALL')}
+            >
               ALL
             </Button>
-            <Button variant="ghost" size="sm" className="h-8 text-[11px] font-medium">
+            <Button
+              variant={platformFilter === 'CMS' ? 'default' : 'outline'}
+              size="sm"
+              className="h-8 text-[11px] font-medium"
+              onClick={() => setPlatformFilter('CMS')}
+            >
               CMS
             </Button>
-            <Button variant="ghost" size="sm" className="h-8 text-[11px] font-medium">
+            <Button
+              variant={platformFilter === 'BLOGGING' ? 'default' : 'outline'}
+              size="sm"
+              className="h-8 text-[11px] font-medium"
+              onClick={() => setPlatformFilter('BLOGGING')}
+            >
               BLOGGING
             </Button>
           </div>
         </div>
 
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-          {/* WordPress.com - Functional */}
-          {!wpConnection && (
+          {/* WordPress.com - CMS */}
+          {!wpConnection && (platformFilter === 'ALL' || platformFilter === 'CMS') && (
             <Card className="border border-neutral-200 shadow-sm hover:border-blue-200 hover:shadow-md transition-all">
               <CardContent className="p-5">
                 <div className="flex items-start gap-3 mb-3">
@@ -410,8 +426,8 @@ function IntegrationsContent() {
             </Card>
           )}
 
-          {/* Dev.to - Functional */}
-          {!devtoConnection && (
+          {/* Dev.to - BLOGGING */}
+          {!devtoConnection && (platformFilter === 'ALL' || platformFilter === 'BLOGGING') && (
             <Card className="border border-neutral-200 shadow-sm hover:border-neutral-300 hover:shadow-md transition-all">
               <CardContent className="p-5">
                 <div className="flex items-start gap-3 mb-3">
@@ -440,8 +456,8 @@ function IntegrationsContent() {
             </Card>
           )}
 
-          {/* Ghost - Functional */}
-          {!ghostConnection && (
+          {/* Ghost - CMS */}
+          {!ghostConnection && (platformFilter === 'ALL' || platformFilter === 'CMS') && (
             <Card className="border border-neutral-200 shadow-sm hover:border-neutral-300 hover:shadow-md transition-all">
               <CardContent className="p-5">
                 <div className="flex items-start gap-3 mb-3">
@@ -470,8 +486,8 @@ function IntegrationsContent() {
             </Card>
           )}
 
-          {/* Hashnode - Functional */}
-          {!hashnodeConnection && (
+          {/* Hashnode - BLOGGING */}
+          {!hashnodeConnection && (platformFilter === 'ALL' || platformFilter === 'BLOGGING') && (
             <Card className="border border-neutral-200 shadow-sm hover:border-blue-200 hover:shadow-md transition-all">
               <CardContent className="p-5">
                 <div className="flex items-start gap-3 mb-3">
@@ -500,8 +516,8 @@ function IntegrationsContent() {
             </Card>
           )}
 
-          {/* Wix - Functional */}
-          {!wixConnection && (
+          {/* Wix - CMS */}
+          {!wixConnection && (platformFilter === 'ALL' || platformFilter === 'CMS') && (
             <Card className="border border-neutral-200 shadow-sm hover:border-orange-200 hover:shadow-md transition-all">
               <CardContent className="p-5">
                 <div className="flex items-start gap-3 mb-3">
@@ -538,7 +554,8 @@ function IntegrationsContent() {
             </Card>
           )}
 
-          {/* LinkedIn - Coming Soon */}
+          {/* LinkedIn - BLOGGING */}
+          {(platformFilter === 'ALL' || platformFilter === 'BLOGGING') && (
           <Card className="border border-neutral-200 shadow-sm opacity-60">
             <CardContent className="p-5">
               <div className="flex items-start gap-3 mb-3">
@@ -560,6 +577,7 @@ function IntegrationsContent() {
               </Button>
             </CardContent>
           </Card>
+          )}
         </div>
       </div>
 

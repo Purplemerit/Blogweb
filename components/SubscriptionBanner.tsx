@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/context/AuthContext"
 import { AlertCircle, Crown, Zap, Sparkles, ArrowRight } from "lucide-react"
 import Link from "next/link"
+import { PLAN_PRICING_DISPLAY } from "@/lib/hooks/useRazorpay"
 
 interface SubscriptionUsage {
   articlesThisMonth: number
@@ -65,14 +66,14 @@ export function SubscriptionBanner() {
   return (
     <Card className={`border-2 ${color.border} ${color.bg}`}>
       <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className={`h-10 w-10 rounded-full ${color.bg} flex items-center justify-center`}>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className={`h-10 w-10 flex-shrink-0 rounded-full ${color.bg} flex items-center justify-center`}>
               <Icon className={`h-5 w-5 ${color.text}`} />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className={`${color.bg} ${color.text} ${color.border} font-semibold`}>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="outline" className={`${color.bg} ${color.text} ${color.border} font-semibold text-xs`}>
                   {plan} PLAN
                 </Badge>
                 {plan === 'FREE' && showUpgrade && (
@@ -82,9 +83,9 @@ export function SubscriptionBanner() {
                 )}
               </div>
               {usage && (
-                <div className="text-xs text-gray-600 mt-1 flex items-center gap-4">
+                <div className="text-xs text-gray-600 mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
                   <span className={usage.articlesThisMonth >= usage.maxArticlesPerMonth ? 'text-red-600 font-semibold' : ''}>
-                    📝 {usage.articlesThisMonth}/{usage.maxArticlesPerMonth === -1 ? '∞' : usage.maxArticlesPerMonth} articles this month
+                    📝 {usage.articlesThisMonth}/{usage.maxArticlesPerMonth === -1 ? '∞' : usage.maxArticlesPerMonth} articles
                   </span>
                   <span>
                     💾 {usage.drafts}/{usage.maxDrafts === -1 ? '∞' : usage.maxDrafts} drafts
@@ -98,20 +99,20 @@ export function SubscriptionBanner() {
           </div>
 
           {plan === 'FREE' && (
-            <Link href="/pricing">
-              <Button size="sm" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                <Sparkles className="h-4 w-4 mr-2" />
-                Upgrade to STARTER - ₹5,000/mo
-                <ArrowRight className="h-4 w-4 ml-2" />
+            <Link href="/pricing" className="flex-shrink-0">
+              <Button size="sm" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 w-full md:w-auto text-xs md:text-sm">
+                <Sparkles className="h-4 w-4 mr-1.5" />
+                <span className="hidden sm:inline">Upgrade to STARTER - </span>₹{PLAN_PRICING_DISPLAY.STARTER.monthly.inr.toLocaleString('en-IN')}/mo
+                <ArrowRight className="h-4 w-4 ml-1.5" />
               </Button>
             </Link>
           )}
 
           {plan === 'STARTER' && (
-            <Link href="/pricing">
-              <Button size="sm" variant="outline">
-                <Crown className="h-4 w-4 mr-2" />
-                Upgrade to CREATOR - ₹15,000/mo
+            <Link href="/pricing" className="flex-shrink-0">
+              <Button size="sm" variant="outline" className="w-full md:w-auto text-xs md:text-sm">
+                <Crown className="h-4 w-4 mr-1.5" />
+                <span className="hidden sm:inline">Upgrade to CREATOR - </span>₹{PLAN_PRICING_DISPLAY.CREATOR.monthly.inr.toLocaleString('en-IN')}/mo
               </Button>
             </Link>
           )}

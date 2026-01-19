@@ -38,11 +38,15 @@ export const resetPasswordSchema = z.object({
 
 export const updateProfileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(50).optional(),
-  bio: z.string().max(500, 'Bio must be less than 500 characters').optional(),
-  avatar: z.string().url('Invalid avatar URL').optional().or(z.literal('')),
-  website: z.string().url('Invalid website URL').optional().or(z.literal('')),
-  twitterHandle: z.string().max(50).optional().or(z.literal('')),
-  linkedinUrl: z.string().url('Invalid LinkedIn URL').optional().or(z.literal('')),
+  bio: z.string().max(500, 'Bio must be less than 500 characters').optional().nullable(),
+  avatar: z.string().url('Invalid avatar URL').nullable().optional().or(z.literal('')),
+  website: z.string().refine((val) => !val || val === '' || z.string().url().safeParse(val).success, {
+    message: 'Invalid website URL. Must start with http:// or https://'
+  }).optional().nullable(),
+  twitterHandle: z.string().max(50).optional().nullable().or(z.literal('')),
+  linkedinUrl: z.string().refine((val) => !val || val === '' || z.string().url().safeParse(val).success, {
+    message: 'Invalid LinkedIn URL. Must start with http:// or https://'
+  }).optional().nullable(),
 });
 
 export const changePasswordSchema = z.object({

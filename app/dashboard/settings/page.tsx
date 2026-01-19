@@ -269,6 +269,60 @@ export default function SettingsPage() {
     }
   }
 
+  const handleExportData = () => {
+    // Simply redirect to the export page
+    router.push('/dashboard/export')
+  }
+
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm(
+      'Are you absolutely sure you want to delete your account? This action cannot be undone. All your articles, data, and settings will be permanently deleted.'
+    )
+
+    if (!confirmed) return
+
+    const doubleConfirm = window.confirm(
+      'This is your last chance. Type DELETE in the next prompt to confirm account deletion.'
+    )
+
+    if (!doubleConfirm) return
+
+    const finalConfirmation = prompt('Type DELETE (in capital letters) to confirm:')
+
+    if (finalConfirmation !== 'DELETE') {
+      toast.error('Account deletion cancelled')
+      return
+    }
+
+    try {
+      const token = localStorage.getItem('accessToken')
+
+      const response = await fetch('/api/user/account', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        toast.error(data.error || 'Failed to delete account')
+        return
+      }
+
+      toast.success('Account deleted successfully. Redirecting...')
+
+      setTimeout(() => {
+        localStorage.removeItem('accessToken')
+        localStorage.removeItem('refreshToken')
+        router.push('/')
+      }, 2000)
+    } catch (error) {
+      toast.error('Failed to delete account. Please try again.')
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -596,33 +650,43 @@ export default function SettingsPage() {
                   </p>
                 )}
 
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {/* Starter Plan */}
-                  <div className="border rounded-lg p-4 hover:border-emerald-800 transition-colors">
-                    <h5 className="font-semibold text-sm uppercase text-neutral-500">Starter</h5>
-                    <div className="mt-2">
-                      <span className="text-2xl font-bold">
-                        ${PLAN_PRICING_DISPLAY.STARTER[billingPeriod].usd}
+                  <div className="border rounded-lg p-5 hover:border-emerald-800 transition-colors bg-white shadow-sm">
+                    <h5 className="font-semibold text-sm uppercase text-neutral-500 mb-1">Starter</h5>
+                    <div className="mt-2 mb-1">
+                      <span className="text-3xl font-bold">
+                        ₹{(PLAN_PRICING_DISPLAY.STARTER[billingPeriod].inr / (billingPeriod === 'annual' ? 12 : 1)).toLocaleString('en-IN')}
                       </span>
                       <span className="text-sm text-neutral-500">/mo</span>
                     </div>
-                    <p className="text-xs text-neutral-500 mt-1">
-                      Rs. {PLAN_PRICING_DISPLAY.STARTER[billingPeriod].inr.toLocaleString('en-IN')}
-                      {billingPeriod === 'annual' ? '/year' : '/mo'}
+                    <p className="text-xs text-neutral-500 mb-1">
+                      ${PLAN_PRICING_DISPLAY.STARTER[billingPeriod].usd}/mo
                     </p>
-                    <ul className="mt-3 space-y-1 text-sm text-neutral-600">
+                    {billingPeriod === 'annual' && (
+                      <p className="text-xs text-green-600 font-medium mb-3">
+                        Billed ₹{PLAN_PRICING_DISPLAY.STARTER[billingPeriod].inr.toLocaleString('en-IN')} annually
+                      </p>
+                    )}
+                    <ul className="mt-4 space-y-2 text-sm text-neutral-600">
                       <li className="flex items-center gap-2">
-                        <Check className="h-3 w-3 text-emerald-600" /> 2 platforms
+                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> 20 articles/month
                       </li>
                       <li className="flex items-center gap-2">
-                        <Check className="h-3 w-3 text-emerald-600" /> Basic AI editor
+                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> 2 platform connections
                       </li>
                       <li className="flex items-center gap-2">
-                        <Check className="h-3 w-3 text-emerald-600" /> 10 scheduled posts
+                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> Basic AI writing assistant
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> 10 scheduled posts
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> Basic analytics
                       </li>
                     </ul>
                     <Button
-                      className="w-full mt-4"
+                      className="w-full mt-5 h-10"
                       variant="outline"
                       onClick={() => initiatePayment('STARTER', billingPeriod)}
                       disabled={paymentLoading === 'STARTER'}
@@ -630,77 +694,103 @@ export default function SettingsPage() {
                       {paymentLoading === 'STARTER' ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
-                        'Upgrade'
+                        'Upgrade to Starter'
                       )}
                     </Button>
                   </div>
 
                   {/* Creator Plan */}
-                  <div className="border-2 border-emerald-800 rounded-lg p-4 relative">
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-800 text-white text-xs px-2 py-0.5 rounded">
-                      Popular
+                  <div className="border-2 border-emerald-800 rounded-lg p-5 relative bg-emerald-50 shadow-md">
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-800 text-white text-xs px-3 py-1 rounded-full font-semibold">
+                      Most Popular
                     </div>
-                    <h5 className="font-semibold text-sm uppercase text-neutral-500">Creator</h5>
-                    <div className="mt-2">
-                      <span className="text-2xl font-bold">
-                        ${PLAN_PRICING_DISPLAY.CREATOR[billingPeriod].usd}
+                    <h5 className="font-semibold text-sm uppercase text-neutral-500 mb-1">Creator</h5>
+                    <div className="mt-2 mb-1">
+                      <span className="text-3xl font-bold">
+                        ₹{(PLAN_PRICING_DISPLAY.CREATOR[billingPeriod].inr / (billingPeriod === 'annual' ? 12 : 1)).toLocaleString('en-IN')}
                       </span>
                       <span className="text-sm text-neutral-500">/mo</span>
                     </div>
-                    <p className="text-xs text-neutral-500 mt-1">
-                      Rs. {PLAN_PRICING_DISPLAY.CREATOR[billingPeriod].inr.toLocaleString('en-IN')}
-                      {billingPeriod === 'annual' ? '/year' : '/mo'}
+                    <p className="text-xs text-neutral-500 mb-1">
+                      ${PLAN_PRICING_DISPLAY.CREATOR[billingPeriod].usd}/mo
                     </p>
-                    <ul className="mt-3 space-y-1 text-sm text-neutral-600">
+                    {billingPeriod === 'annual' && (
+                      <p className="text-xs text-green-600 font-medium mb-3">
+                        Billed ₹{PLAN_PRICING_DISPLAY.CREATOR[billingPeriod].inr.toLocaleString('en-IN')} annually
+                      </p>
+                    )}
+                    <ul className="mt-4 space-y-2 text-sm text-neutral-600">
                       <li className="flex items-center gap-2">
-                        <Check className="h-3 w-3 text-emerald-600" /> Unlimited platforms
+                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> Unlimited articles
                       </li>
                       <li className="flex items-center gap-2">
-                        <Check className="h-3 w-3 text-emerald-600" /> Advanced AI editor
+                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> Unlimited platforms
                       </li>
                       <li className="flex items-center gap-2">
-                        <Check className="h-3 w-3 text-emerald-600" /> Team collaboration
+                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> Advanced AI editor
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> Unlimited scheduling
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> Team collaboration
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> Advanced analytics
                       </li>
                     </ul>
                     <Button
-                      className="w-full mt-4 bg-emerald-800 hover:bg-emerald-900"
+                      className="w-full mt-5 bg-emerald-800 hover:bg-emerald-900 h-10"
                       onClick={() => initiatePayment('CREATOR', billingPeriod)}
                       disabled={paymentLoading === 'CREATOR'}
                     >
                       {paymentLoading === 'CREATOR' ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
-                        'Upgrade'
+                        'Upgrade to Creator'
                       )}
                     </Button>
                   </div>
 
                   {/* Professional Plan */}
-                  <div className="border rounded-lg p-4 hover:border-emerald-800 transition-colors">
-                    <h5 className="font-semibold text-sm uppercase text-neutral-500">Professional</h5>
-                    <div className="mt-2">
-                      <span className="text-2xl font-bold">
-                        ${PLAN_PRICING_DISPLAY.PROFESSIONAL[billingPeriod].usd}
+                  <div className="border rounded-lg p-5 hover:border-emerald-800 transition-colors bg-white shadow-sm sm:col-span-2 lg:col-span-1">
+                    <h5 className="font-semibold text-sm uppercase text-neutral-500 mb-1">Professional</h5>
+                    <div className="mt-2 mb-1">
+                      <span className="text-3xl font-bold">
+                        ₹{(PLAN_PRICING_DISPLAY.PROFESSIONAL[billingPeriod].inr / (billingPeriod === 'annual' ? 12 : 1)).toLocaleString('en-IN')}
                       </span>
                       <span className="text-sm text-neutral-500">/mo</span>
                     </div>
-                    <p className="text-xs text-neutral-500 mt-1">
-                      Rs. {PLAN_PRICING_DISPLAY.PROFESSIONAL[billingPeriod].inr.toLocaleString('en-IN')}
-                      {billingPeriod === 'annual' ? '/year' : '/mo'}
+                    <p className="text-xs text-neutral-500 mb-1">
+                      ${PLAN_PRICING_DISPLAY.PROFESSIONAL[billingPeriod].usd}/mo
                     </p>
-                    <ul className="mt-3 space-y-1 text-sm text-neutral-600">
+                    {billingPeriod === 'annual' && (
+                      <p className="text-xs text-green-600 font-medium mb-3">
+                        Billed ₹{PLAN_PRICING_DISPLAY.PROFESSIONAL[billingPeriod].inr.toLocaleString('en-IN')} annually
+                      </p>
+                    )}
+                    <ul className="mt-4 space-y-2 text-sm text-neutral-600">
                       <li className="flex items-center gap-2">
-                        <Check className="h-3 w-3 text-emerald-600" /> Everything in Creator
+                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> Everything in Creator
                       </li>
                       <li className="flex items-center gap-2">
-                        <Check className="h-3 w-3 text-emerald-600" /> White-label options
+                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> White-label options
                       </li>
                       <li className="flex items-center gap-2">
-                        <Check className="h-3 w-3 text-emerald-600" /> Dedicated support
+                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> Custom integrations
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> Priority support
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> API access
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> Dedicated account manager
                       </li>
                     </ul>
                     <Button
-                      className="w-full mt-4"
+                      className="w-full mt-5 h-10"
                       variant="outline"
                       onClick={() => initiatePayment('PROFESSIONAL', billingPeriod)}
                       disabled={paymentLoading === 'PROFESSIONAL'}
@@ -708,7 +798,7 @@ export default function SettingsPage() {
                       {paymentLoading === 'PROFESSIONAL' ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
-                        'Upgrade'
+                        'Upgrade to Professional'
                       )}
                     </Button>
                   </div>
@@ -733,19 +823,23 @@ export default function SettingsPage() {
             <CardDescription>Irreversible actions for your account</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex items-center justify-between p-4 border border-neutral-200 rounded-lg">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border border-neutral-200 rounded-lg">
               <div>
                 <p className="font-medium">Export Your Data</p>
                 <p className="text-sm text-neutral-600">Download all your articles and data</p>
               </div>
-              <Button variant="outline">Export</Button>
+              <Button variant="outline" onClick={handleExportData} className="w-full sm:w-auto">
+                Export
+              </Button>
             </div>
-            <div className="flex items-center justify-between p-4 border border-red-200 rounded-lg">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border border-red-200 rounded-lg">
               <div>
                 <p className="font-medium text-red-600">Delete Account</p>
                 <p className="text-sm text-neutral-600">Permanently delete your account and all data</p>
               </div>
-              <Button variant="destructive">Delete</Button>
+              <Button variant="destructive" onClick={handleDeleteAccount} className="w-full sm:w-auto">
+                Delete
+              </Button>
             </div>
           </CardContent>
         </Card>
