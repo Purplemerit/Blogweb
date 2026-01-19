@@ -10,6 +10,7 @@ import {
   TokenPayload,
 } from '@/lib/utils/jwt';
 import type { SignupInput, LoginInput } from '@/lib/utils/validation';
+import { emailService } from '@/lib/services/email.service';
 
 export class AuthService {
   async signup(data: SignupInput) {
@@ -76,20 +77,14 @@ export class AuthService {
       },
     });
 
-    // Create usage stats for new user
-    await prisma.usageStats.create({
-      data: {
-        userId: user.id,
-      },
-    });
-
-    // TODO: Send verification email
-    // await sendVerificationEmail(user.email, verificationToken);
+    // Send verification email
+    await emailService.sendVerificationEmail(user.email, verificationToken);
 
     return {
       user,
       accessToken,
       refreshToken,
+      verificationToken, // Include token for development/testing
       message: 'Account created successfully. Please verify your email.',
     };
   }
@@ -119,10 +114,10 @@ export class AuthService {
       throw new Error('Invalid credentials');
     }
 
-    // Check if email is verified (optional - you can disable this check)
-    // if (!user.emailVerified) {
-    //   throw new Error('Please verify your email first');
-    // }
+    // Check if email is verified
+    if (!user.emailVerified) {
+      throw new Error('Please verify your email before logging in. Check your inbox for the verification link.');
+    }
 
     // Generate tokens
     const tokenPayload: TokenPayload = {
@@ -220,11 +215,12 @@ export class AuthService {
       },
     });
 
-    // TODO: Send password reset email
-    // await sendPasswordResetEmail(user.email, resetToken);
+    // Send password reset email
+    await emailService.sendPasswordResetEmail(user.email, resetToken);
 
     return {
       message: 'If the email exists, a password reset link has been sent',
+      resetToken, // Include token for development/testing
     };
   }
 

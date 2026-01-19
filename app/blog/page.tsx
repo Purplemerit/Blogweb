@@ -1,75 +1,145 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import { PenTool, Calendar, User, ArrowRight } from "lucide-react"
+import { PenTool, Calendar, User, ArrowRight, Search, Loader2, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
+import { useAuth } from "@/lib/context/AuthContext"
 
-const blogPosts = [
-  {
-    id: 1,
-    title: "The Future of Content Creation: AI-Powered Publishing",
-    excerpt: "Explore how artificial intelligence is revolutionizing the way we create, edit, and distribute content across multiple platforms.",
-    author: "Sarah Mitchell",
-    date: "December 15, 2024",
-    category: "AI & Technology",
-    readTime: "5 min read",
-    image: "#d4e8d4"
-  },
-  {
-    id: 2,
-    title: "10 Tips for Growing Your Audience Across Multiple Platforms",
-    excerpt: "Learn proven strategies to expand your reach and engage with readers on Ghost, Substack, Medium, and LinkedIn simultaneously.",
-    author: "James Chen",
-    date: "December 12, 2024",
-    category: "Growth Strategy",
-    readTime: "8 min read",
-    image: "#f3e8d9"
-  },
-  {
-    id: 3,
-    title: "SEO Best Practices for Content Creators in 2024",
-    excerpt: "Master the latest SEO techniques to ensure your content ranks higher and reaches the right audience organically.",
-    author: "Emily Rodriguez",
-    date: "December 8, 2024",
-    category: "SEO",
-    readTime: "6 min read",
-    image: "#e8f4f8"
-  },
-  {
-    id: 4,
-    title: "How to Build a Consistent Publishing Schedule",
-    excerpt: "Discover the secrets to maintaining a regular content calendar without burning out, using smart scheduling tools.",
-    author: "Michael Thompson",
-    date: "December 5, 2024",
-    category: "Productivity",
-    readTime: "7 min read",
-    image: "#f5e6f3"
-  },
-  {
-    id: 5,
-    title: "The Power of Multi-Platform Content Distribution",
-    excerpt: "Why publishing on multiple platforms simultaneously can 10x your content's reach and impact on your target audience.",
-    author: "Sarah Mitchell",
-    date: "December 1, 2024",
-    category: "Strategy",
-    readTime: "5 min read",
-    image: "#fff5e6"
-  },
-  {
-    id: 6,
-    title: "Analytics That Matter: Tracking Your Content Performance",
-    excerpt: "Learn which metrics actually matter and how to use data-driven insights to improve your content strategy.",
-    author: "David Park",
-    date: "November 28, 2024",
-    category: "Analytics",
-    readTime: "9 min read",
-    image: "#e8f5e9"
+interface Article {
+  id: string
+  title: string
+  excerpt: string
+  slug: string
+  coverImage: string | null
+  publishedAt: string
+  readTime: number
+  wordCount: number
+  user: {
+    id: string
+    name: string
+    avatar: string | null
   }
-]
+}
 
-const categories = ["All", "AI & Technology", "Growth Strategy", "SEO", "Productivity", "Strategy", "Analytics"]
+interface PaginationData {
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+}
 
 export default function BlogPage() {
+  const { user } = useAuth()
+  const [articles, setArticles] = useState<Article[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pagination, setPagination] = useState<PaginationData | null>(null)
+  const [newsletterEmail, setNewsletterEmail] = useState("")
+  const [subscribing, setSubscribing] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  // Add loading animation
+  useEffect(() => {
+    const style = document.createElement('style')
+    style.textContent = `
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+    `
+    document.head.appendChild(style)
+    return () => {
+      document.head.removeChild(style)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchArticles(currentPage, searchQuery)
+  }, [currentPage])
+
+  const fetchArticles = async (page: number, search: string = "") => {
+    try {
+      setLoading(true)
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: "12",
+        ...(search && { search })
+      })
+
+      const response = await fetch(`/api/blogs/public?${params}`)
+      const data = await response.json()
+
+      if (data.success) {
+        setArticles(data.data.articles)
+        setPagination(data.data.pagination)
+      } else {
+        toast.error("Failed to load blog posts")
+      }
+    } catch (error) {
+      console.error("Error fetching articles:", error)
+      toast.error("Failed to load blog posts")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    setCurrentPage(1)
+    fetchArticles(1, searchQuery)
+  }
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+  }
+
+  const getRandomColor = () => {
+    const colors = ["#d4e8d4", "#f3e8d9", "#e8f4f8", "#f5e6f3", "#fff5e6", "#e8f5e9"]
+    return colors[Math.floor(Math.random() * colors.length)]
+  }
+
+  const handleNewsletterSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!newsletterEmail.trim()) {
+      toast.error("Please enter your email address")
+      return
+    }
+
+    try {
+      setSubscribing(true)
+      const response = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: newsletterEmail }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        toast.success(data.message)
+        setNewsletterEmail("")
+      } else {
+        toast.error(data.error || "Failed to subscribe")
+      }
+    } catch (error) {
+      console.error("Newsletter subscription error:", error)
+      toast.error("Failed to subscribe. Please try again.")
+    } finally {
+      setSubscribing(false)
+    }
+  }
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f5f1e8' }}>
       {/* Header */}
@@ -94,28 +164,141 @@ export default function BlogPage() {
             <span style={{ fontSize: '18px', fontWeight: 500, letterSpacing: '-0.025em' }}>PublishType</span>
           </Link>
 
-          <nav style={{ display: 'flex', alignItems: 'center', gap: '32px', fontSize: '14px' }} className="hidden md:flex">
+          <nav className="header-nav hide-mobile" style={{ fontSize: '14px' }}>
             <Link href="/" style={{ color: '#374151', textDecoration: 'none' }}>Home</Link>
             <Link href="/features" style={{ color: '#374151', textDecoration: 'none' }}>Features</Link>
             <Link href="/pricing" style={{ color: '#374151', textDecoration: 'none' }}>Pricing</Link>
             <Link href="/blog" style={{ color: '#374151', textDecoration: 'none', fontWeight: 500 }}>Blog</Link>
           </nav>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Link href="/login">
-              <Button variant="ghost" size="sm" style={{ fontSize: '14px', fontWeight: 400 }}>Sign In</Button>
-            </Link>
-            <Link href="/signup">
-              <Button size="sm" style={{ backgroundColor: '#1f3529', color: 'white', fontSize: '14px', fontWeight: 400, padding: '8px 20px' }}>
-                Sign Up
-              </Button>
-            </Link>
+          <div className="hide-mobile" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {user ? (
+              <Link href="/dashboard">
+                <Button size="sm" style={{ backgroundColor: '#1f3529', color: 'white', fontSize: '14px', fontWeight: 400, padding: '8px 20px' }}>
+                  Dashboard
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/login">
+                  <Button variant="ghost" size="sm" style={{ fontSize: '14px', fontWeight: 400 }}>Sign In</Button>
+                </Link>
+                <Link href="/signup">
+                  <Button size="sm" style={{ backgroundColor: '#1f3529', color: 'white', fontSize: '14px', fontWeight: 400, padding: '8px 20px' }}>
+                    Sign Up
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
+
+          {/* Mobile menu button */}
+          <button
+            className="mobile-menu-toggle"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            style={{
+              border: 'none',
+              background: 'transparent',
+              cursor: 'pointer',
+              padding: '8px'
+            }}
+          >
+            {mobileMenuOpen ? <X style={{ height: '24px', width: '24px' }} /> : <Menu style={{ height: '24px', width: '24px' }} />}
+          </button>
         </div>
+
+        {/* Mobile Navigation */}
+        {mobileMenuOpen && (
+          <div style={{
+            borderTop: '1px solid rgba(0,0,0,0.1)',
+            backgroundColor: 'white',
+            padding: '16px'
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <Link
+                href="/"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  padding: '12px',
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                  color: '#374151',
+                  fontSize: '16px',
+                  fontWeight: 500
+                }}
+              >
+                Home
+              </Link>
+              <Link
+                href="/features"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  padding: '12px',
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                  color: '#374151',
+                  fontSize: '16px',
+                  fontWeight: 500
+                }}
+              >
+                Features
+              </Link>
+              <Link
+                href="/pricing"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  padding: '12px',
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                  color: '#374151',
+                  fontSize: '16px',
+                  fontWeight: 500
+                }}
+              >
+                Pricing
+              </Link>
+              <Link
+                href="/blog"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  padding: '12px',
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                  color: '#374151',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  backgroundColor: '#f3f4f6'
+                }}
+              >
+                Blog
+              </Link>
+              <div style={{ paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {user ? (
+                  <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                    <Button size="sm" style={{ width: '100%', backgroundColor: '#1f3529', color: 'white', fontSize: '14px', fontWeight: 400, padding: '12px 20px' }}>
+                      Dashboard
+                    </Button>
+                  </Link>
+                ) : (
+                  <>
+                    <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="outline" size="sm" style={{ width: '100%', fontSize: '14px', fontWeight: 400, padding: '12px 20px' }}>Sign In</Button>
+                    </Link>
+                    <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
+                      <Button size="sm" style={{ width: '100%', backgroundColor: '#1f3529', color: 'white', fontSize: '14px', fontWeight: 400, padding: '12px 20px' }}>
+                        Sign Up
+                      </Button>
+                    </Link>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Hero Section */}
-      <section style={{ maxWidth: '1152px', margin: '0 auto', padding: '80px 32px 40px', textAlign: 'center' }}>
+      <section className="section-padding" style={{ maxWidth: '1152px', margin: '0 auto', textAlign: 'center', paddingBottom: '40px' }}>
         <p style={{
           fontSize: '11px',
           letterSpacing: '0.15em',
@@ -126,9 +309,8 @@ export default function BlogPage() {
         }}>
           INSIGHTS & RESOURCES
         </p>
-        <h1 style={{
+        <h1 className="text-section-title" style={{
           fontFamily: 'Playfair Display, Georgia, serif',
-          fontSize: '56px',
           lineHeight: '1.2',
           marginBottom: '20px',
           letterSpacing: '-0.025em'
@@ -139,181 +321,288 @@ export default function BlogPage() {
           Discover tips, strategies, and insights to help you create better content and grow your audience
         </p>
 
-        {/* Category Filter */}
-        <div style={{
+        {/* Search Bar */}
+        <form onSubmit={handleSearch} style={{
+          maxWidth: '600px',
+          margin: '0 auto 60px',
           display: 'flex',
-          gap: '12px',
-          justifyContent: 'center',
-          flexWrap: 'wrap',
-          marginBottom: '60px'
+          gap: '12px'
         }}>
-          {categories.map((category) => (
-            <button
-              key={category}
+          <div style={{ position: 'relative', flex: 1 }}>
+            <Search style={{
+              position: 'absolute',
+              left: '16px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              height: '18px',
+              width: '18px',
+              color: '#9ca3af'
+            }} />
+            <input
+              type="text"
+              placeholder="Search articles..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               style={{
-                padding: '8px 20px',
-                borderRadius: '20px',
-                border: category === 'All' ? '2px solid #1f3529' : '1px solid #d1d5db',
-                backgroundColor: category === 'All' ? '#1f3529' : 'white',
-                color: category === 'All' ? 'white' : '#374151',
-                fontSize: '14px',
-                fontWeight: 500,
-                cursor: 'pointer',
-                transition: 'all 0.2s'
+                width: '100%',
+                padding: '14px 20px 14px 48px',
+                borderRadius: '8px',
+                border: '1px solid #d1d5db',
+                backgroundColor: 'white',
+                fontSize: '15px',
+                outline: 'none'
               }}
-            >
-              {category}
-            </button>
-          ))}
-        </div>
+            />
+          </div>
+          <button
+            type="submit"
+            style={{
+              padding: '14px 32px',
+              backgroundColor: '#1f3529',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '15px',
+              fontWeight: 500,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            Search
+          </button>
+        </form>
       </section>
 
       {/* Blog Grid */}
-      <section style={{ maxWidth: '1152px', margin: '0 auto', padding: '0 32px 80px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '32px' }}>
-          {blogPosts.map((post) => (
-            <Link
-              key={post.id}
-              href={`/blog/${post.id}`}
-              style={{ textDecoration: 'none', color: 'inherit' }}
-            >
-              <article style={{
-                backgroundColor: 'white',
-                borderRadius: '12px',
-                overflow: 'hidden',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-                transition: 'transform 0.2s, box-shadow 0.2s',
-                cursor: 'pointer',
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-4px)'
-                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)'
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'
-              }}
-              >
-                {/* Image Placeholder */}
-                <div style={{
-                  width: '100%',
-                  height: '220px',
-                  backgroundColor: post.image,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '14px',
-                  color: '#6b7280'
-                }}>
-                  <span style={{ opacity: 0.5 }}>Featured Image</span>
-                </div>
-
-                <div style={{ padding: '28px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  {/* Category Badge */}
-                  <div style={{
-                    display: 'inline-block',
-                    alignSelf: 'flex-start',
-                    padding: '4px 12px',
-                    backgroundColor: '#f5f1e8',
-                    borderRadius: '12px',
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    color: '#1f3529',
-                    marginBottom: '16px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em'
-                  }}>
-                    {post.category}
-                  </div>
-
-                  <h2 style={{
-                    fontFamily: 'Playfair Display, Georgia, serif',
-                    fontSize: '24px',
-                    lineHeight: '1.3',
-                    marginBottom: '12px',
-                    letterSpacing: '-0.025em',
-                    color: '#0a0a0a'
-                  }}>
-                    {post.title}
-                  </h2>
-
-                  <p style={{
-                    fontSize: '15px',
-                    color: '#6b7280',
-                    lineHeight: '1.6',
-                    marginBottom: '20px',
-                    flex: 1
-                  }}>
-                    {post.excerpt}
-                  </p>
-
-                  {/* Meta Info */}
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '16px',
-                    fontSize: '13px',
-                    color: '#9ca3af',
-                    paddingTop: '16px',
-                    borderTop: '1px solid #f3f4f6'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <User style={{ height: '14px', width: '14px' }} />
-                      <span>{post.author}</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <Calendar style={{ height: '14px', width: '14px' }} />
-                      <span>{post.date}</span>
-                    </div>
-                    <span>·</span>
-                    <span>{post.readTime}</span>
-                  </div>
-                </div>
-              </article>
-            </Link>
-          ))}
-        </div>
-
-        {/* Load More Button */}
-        <div style={{ textAlign: 'center', marginTop: '64px' }}>
-          <button style={{
-            padding: '14px 32px',
-            backgroundColor: 'white',
-            color: '#1f3529',
-            border: '2px solid #1f3529',
-            borderRadius: '8px',
-            fontSize: '15px',
-            fontWeight: 500,
-            cursor: 'pointer',
-            display: 'inline-flex',
+      <section className="container-padding" style={{ maxWidth: '1152px', margin: '0 auto', paddingBottom: '80px' }}>
+        {loading ? (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
             alignItems: 'center',
-            gap: '8px'
+            minHeight: '400px',
+            flexDirection: 'column',
+            gap: '16px'
           }}>
-            Load More Posts
-            <ArrowRight style={{ height: '16px', width: '16px' }} />
-          </button>
-        </div>
+            <Loader2 style={{ height: '40px', width: '40px', color: '#1f3529', animation: 'spin 1s linear infinite' }} />
+            <p style={{ color: '#6b7280', fontSize: '15px' }}>Loading articles...</p>
+          </div>
+        ) : articles.length === 0 ? (
+          <div style={{
+            textAlign: 'center',
+            padding: '80px 32px',
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
+          }}>
+            <h3 style={{
+              fontFamily: 'Playfair Display, Georgia, serif',
+              fontSize: '28px',
+              marginBottom: '12px',
+              color: '#0a0a0a'
+            }}>No articles found</h3>
+            <p style={{ fontSize: '15px', color: '#6b7280', marginBottom: '24px' }}>
+              {searchQuery ? `No results for "${searchQuery}". Try a different search.` : 'No published articles yet. Check back soon!'}
+            </p>
+            {searchQuery && (
+              <button
+                onClick={() => {
+                  setSearchQuery("")
+                  fetchArticles(1, "")
+                }}
+                style={{
+                  padding: '12px 24px',
+                  backgroundColor: '#1f3529',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  cursor: 'pointer'
+                }}
+              >
+                Clear Search
+              </button>
+            )}
+          </div>
+        ) : (
+          <>
+            <div className="responsive-grid-3">
+              {articles.map((article) => (
+                <Link
+                  key={article.id}
+                  href={`/blog/${article.id}`}
+                  style={{ textDecoration: 'none', color: 'inherit' }}
+                >
+                  <article style={{
+                    backgroundColor: 'white',
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                    transition: 'transform 0.2s, box-shadow 0.2s',
+                    cursor: 'pointer',
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column'
+                  }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-4px)'
+                      e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)'
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'
+                    }}
+                  >
+                    {/* Cover Image */}
+                    {article.coverImage ? (
+                      <div style={{
+                        width: '100%',
+                        height: '220px',
+                        overflow: 'hidden'
+                      }}>
+                        <img
+                          src={article.coverImage}
+                          alt={article.title}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div style={{
+                        width: '100%',
+                        height: '220px',
+                        backgroundColor: getRandomColor(),
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '14px',
+                        color: '#6b7280'
+                      }}>
+                        <span style={{ opacity: 0.5 }}>No Cover Image</span>
+                      </div>
+                    )}
+
+                    <div style={{ padding: '28px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                      <h2 style={{
+                        fontFamily: 'Playfair Display, Georgia, serif',
+                        fontSize: '24px',
+                        lineHeight: '1.3',
+                        marginBottom: '12px',
+                        letterSpacing: '-0.025em',
+                        color: '#0a0a0a'
+                      }}>
+                        {article.title}
+                      </h2>
+
+                      <p style={{
+                        fontSize: '15px',
+                        color: '#6b7280',
+                        lineHeight: '1.6',
+                        marginBottom: '20px',
+                        flex: 1
+                      }}>
+                        {article.excerpt || 'No excerpt available'}
+                      </p>
+
+                      {/* Meta Info */}
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '16px',
+                        fontSize: '13px',
+                        color: '#9ca3af',
+                        paddingTop: '16px',
+                        borderTop: '1px solid #f3f4f6'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <User style={{ height: '14px', width: '14px' }} />
+                          <span>{article.user.name}</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <Calendar style={{ height: '14px', width: '14px' }} />
+                          <span>{formatDate(article.publishedAt)}</span>
+                        </div>
+                        <span>·</span>
+                        <span>{article.readTime} min read</span>
+                      </div>
+                    </div>
+                  </article>
+                </Link>
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {pagination && pagination.totalPages > 1 && (
+              <div style={{ textAlign: 'center', marginTop: '64px', display: 'flex', justifyContent: 'center', gap: '12px', alignItems: 'center' }}>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  style={{
+                    padding: '12px 24px',
+                    backgroundColor: currentPage === 1 ? '#e5e7eb' : 'white',
+                    color: currentPage === 1 ? '#9ca3af' : '#1f3529',
+                    border: '2px solid #1f3529',
+                    borderRadius: '8px',
+                    fontSize: '15px',
+                    fontWeight: 500,
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  Previous
+                </button>
+
+                <span style={{ fontSize: '15px', color: '#6b7280' }}>
+                  Page {currentPage} of {pagination.totalPages}
+                </span>
+
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(pagination.totalPages, prev + 1))}
+                  disabled={currentPage === pagination.totalPages}
+                  style={{
+                    padding: '12px 24px',
+                    backgroundColor: currentPage === pagination.totalPages ? '#e5e7eb' : 'white',
+                    color: currentPage === pagination.totalPages ? '#9ca3af' : '#1f3529',
+                    border: '2px solid #1f3529',
+                    borderRadius: '8px',
+                    fontSize: '15px',
+                    fontWeight: 500,
+                    cursor: currentPage === pagination.totalPages ? 'not-allowed' : 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  Next
+                  <ArrowRight style={{ height: '16px', width: '16px' }} />
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </section>
 
       {/* Newsletter Section */}
       <section style={{ backgroundColor: '#1f3529', color: 'white', padding: '80px 0' }}>
-        <div style={{ maxWidth: '768px', margin: '0 auto', padding: '0 32px', textAlign: 'center' }}>
-          <h2 style={{
+        <div className="container-padding" style={{ maxWidth: '768px', margin: '0 auto', textAlign: 'center' }}>
+          <h2 className="text-section-title" style={{
             fontFamily: 'Playfair Display, Georgia, serif',
-            fontSize: '40px',
             marginBottom: '16px',
             letterSpacing: '-0.025em'
           }}>Stay Updated</h2>
           <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', marginBottom: '32px' }}>
             Subscribe to our newsletter for the latest content creation tips and platform updates
           </p>
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', maxWidth: '500px', margin: '0 auto' }}>
+          <form onSubmit={handleNewsletterSubscribe} className="newsletter-form" style={{ justifyContent: 'center', margin: '0 auto' }}>
             <input
               type="email"
               placeholder="Enter your email"
+              value={newsletterEmail}
+              onChange={(e) => setNewsletterEmail(e.target.value)}
+              disabled={subscribing}
               style={{
                 flex: 1,
                 padding: '14px 20px',
@@ -321,23 +610,37 @@ export default function BlogPage() {
                 border: '1px solid rgba(255,255,255,0.2)',
                 backgroundColor: 'rgba(255,255,255,0.1)',
                 color: 'white',
-                fontSize: '15px'
+                fontSize: '15px',
+                outline: 'none'
               }}
             />
-            <button style={{
-              backgroundColor: 'white',
-              color: '#1f3529',
-              padding: '14px 32px',
-              borderRadius: '8px',
-              border: 'none',
-              fontSize: '15px',
-              fontWeight: 500,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap'
-            }}>
-              Subscribe
+            <button
+              type="submit"
+              disabled={subscribing}
+              style={{
+                backgroundColor: subscribing ? 'rgba(255,255,255,0.7)' : 'white',
+                color: '#1f3529',
+                padding: '14px 32px',
+                borderRadius: '8px',
+                border: 'none',
+                fontSize: '15px',
+                fontWeight: 500,
+                cursor: subscribing ? 'not-allowed' : 'pointer',
+                whiteSpace: 'nowrap',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+              {subscribing ? (
+                <>
+                  <Loader2 style={{ height: '16px', width: '16px', animation: 'spin 1s linear infinite' }} />
+                  Subscribing...
+                </>
+              ) : (
+                'Subscribe'
+              )}
             </button>
-          </div>
+          </form>
         </div>
       </section>
 

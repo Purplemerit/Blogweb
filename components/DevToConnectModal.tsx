@@ -70,7 +70,7 @@ export function DevToConnectModal({ open, onClose, onSuccess }: DevToConnectModa
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">Connect Dev.to Account</DialogTitle>
           <DialogDescription className="text-sm text-neutral-600">
-            Connect your Dev.to account to publish articles directly from BlogAI
+            Connect your Dev.to account to publish articles directly from Publish Type
           </DialogDescription>
         </DialogHeader>
 

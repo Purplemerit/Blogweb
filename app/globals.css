@@ -157,3 +157,502 @@ body {
   border-top: 2px solid #e5e7eb;
   margin: 2rem 0;
 }
+
+/* ============================================
+   RESPONSIVE UTILITIES
+   ============================================ */
+
+/* Responsive Grid for Cards - Prevents 2+1 layout */
+.responsive-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 1024px) {
+  .responsive-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+}
+
+@media (max-width: 900px) {
+  .responsive-grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .responsive-grid-3 {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+/* Responsive Text Sizes */
+.text-hero {
+  font-size: 72px;
+  line-height: 1.1;
+}
+
+.text-section-title {
+  font-size: 56px;
+  line-height: 1.2;
+}
+
+.text-card-title {
+  font-size: 26px;
+}
+
+@media (max-width: 768px) {
+  .text-hero {
+    font-size: 42px;
+  }
+
+  .text-section-title {
+    font-size: 36px;
+  }
+
+  .text-card-title {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 480px) {
+  .text-hero {
+    font-size: 32px;
+  }
+
+  .text-section-title {
+    font-size: 28px;
+  }
+
+  .text-card-title {
+    font-size: 20px;
+  }
+}
+
+/* Responsive Padding */
+.section-padding {
+  padding: 104px 32px;
+}
+
+.container-padding {
+  padding: 0 32px;
+}
+
+@media (max-width: 768px) {
+  .section-padding {
+    padding: 64px 20px;
+  }
+
+  .container-padding {
+    padding: 0 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .section-padding {
+    padding: 48px 16px;
+  }
+
+  .container-padding {
+    padding: 0 16px;
+  }
+}
+
+/* Hide on mobile/tablet */
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+/* Show only on mobile */
+.show-mobile {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .show-mobile {
+    display: block !important;
+  }
+}
+
+/* Responsive Feature Grid (2 columns) */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 64px;
+  align-items: center;
+}
+
+@media (max-width: 900px) {
+  .feature-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+}
+
+/* Responsive Stats */
+.stats-number {
+  font-size: 64px;
+}
+
+@media (max-width: 768px) {
+  .stats-number {
+    font-size: 48px;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-number {
+    font-size: 36px;
+  }
+}
+
+/* Pricing Cards - Equal sizing */
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+  align-items: stretch;
+}
+
+@media (max-width: 1024px) {
+  .pricing-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  .pricing-grid>* {
+    transform: none !important;
+  }
+}
+
+@media (max-width: 850px) {
+  .pricing-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  .pricing-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+}
+
+/* Responsive Button Group */
+.button-group {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+@media (max-width: 480px) {
+  .button-group {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .button-group>* {
+    width: 100%;
+  }
+}
+
+/* Responsive Header */
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+}
+
+@media (max-width: 768px) {
+  .header-nav {
+    display: none;
+  }
+}
+
+/* Newsletter Form Responsive */
+.newsletter-form {
+  display: flex;
+  gap: 12px;
+  max-width: 500px;
+}
+
+@media (max-width: 480px) {
+  .newsletter-form {
+    flex-direction: column;
+  }
+
+  .newsletter-form input,
+  .newsletter-form button {
+    width: 100%;
+  }
+}
+
+/* Footer Grid */
+.footer-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 48px;
+}
+
+@media (max-width: 900px) {
+  .footer-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    text-align: center;
+  }
+}
+
+/* Platform Icons Grid */
+.platform-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 56px 72px;
+}
+
+@media (max-width: 768px) {
+  .platform-grid {
+    gap: 32px 48px;
+  }
+}
+
+@media (max-width: 480px) {
+  .platform-grid {
+    gap: 24px 32px;
+  }
+}
+
+/* Testimonial Cards */
+.testimonial-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+}
+
+@media (max-width: 900px) {
+  .testimonial-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .testimonial-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Dashboard Sidebar */
+.dashboard-layout {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  min-height: 100vh;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-layout {
+    grid-template-columns: 200px 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-sidebar {
+    display: none;
+  }
+
+  .dashboard-sidebar.open {
+    display: block;
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 250px;
+    height: 100vh;
+    z-index: 100;
+  }
+}
+
+/* Dashboard Stats Cards */
+.dashboard-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 1200px) {
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .dashboard-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Responsive Table */
+.responsive-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* FAQ Grid */
+.faq-container {
+  max-width: 840px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .faq-container {
+    max-width: 100%;
+  }
+}
+
+/* Workflow Steps Grid */
+.workflow-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 40px;
+}
+
+@media (max-width: 900px) {
+  .workflow-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .workflow-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+/* Chart Container */
+.chart-container {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .chart-container {
+    max-width: 100%;
+  }
+}
+
+/* Comparison Table */
+.comparison-table {
+  min-width: 600px;
+}
+
+/* Mobile Menu Toggle */
+.mobile-menu-toggle {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .mobile-menu-toggle {
+    display: flex !important;
+  }
+}
+
+/* Show mobile with flex display */
+.show-mobile-flex {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .show-mobile-flex {
+    display: flex !important;
+  }
+}
+
+/* Pricing Cards Responsive */
+/* Mobile: Show 1 card at a time */
+@media (max-width: 640px) {
+  .pricing-card-item {
+    width: 100% !important;
+    max-width: 360px !important;
+  }
+}
+
+/* Tablet: Show 2 cards at a time, smaller size */
+@media (min-width: 641px) and (max-width: 900px) {
+  .pricing-card-item {
+    width: calc(50% - 12px) !important;
+    max-width: 280px !important;
+  }
+
+  .show-mobile {
+    display: none !important;
+  }
+}
+
+/* Desktop: Show all cards, hide carousel controls */
+@media (min-width: 901px) {
+  .pricing-card-item {
+    width: calc(25% - 18px) !important;
+    max-width: 300px !important;
+  }
+
+  .show-mobile-flex {
+    display: none !important;
+  }
+
+  .show-mobile {
+    display: none !important;
+  }
+}
+
+/* Smooth Animations */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Smooth scrolling for the entire page */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Prevent horizontal scroll on mobile */
+body {
+  overflow-x: hidden;
+}
+
+/* Editor responsive on mobile */
+@media (max-width: 768px) {
+  .ProseMirror {
+    min-height: 400px;
+    padding: 1rem;
+  }
+}

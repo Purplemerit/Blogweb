@@ -164,6 +164,65 @@ export class GeminiService {
     }
   }
 
+  async analyzeSEO(params: {
+    content: string;
+    title: string;
+    plan: string;
+  }): Promise<any> {
+    const { content, title, plan } = params;
+
+    let analysisDepth = 'basic';
+    if (plan === 'PROFESSIONAL') {
+      analysisDepth = 'expert';
+    } else if (plan === 'CREATOR') {
+      analysisDepth = 'advanced';
+    } else if (plan === 'STARTER') {
+      analysisDepth = 'good';
+    }
+
+    const prompt = `Analyze the SEO quality of this blog post. Provide a ${analysisDepth} analysis.
+
+Title: ${title}
+
+Content: ${content.substring(0, 2000)}
+
+Provide:
+1. SEO Score (0-100)
+2. ${analysisDepth === 'basic' ? '3-5 basic recommendations' : analysisDepth === 'good' ? '5-8 actionable recommendations' : analysisDepth === 'advanced' ? '10-15 detailed recommendations with explanations' : '15-20 expert-level recommendations with competitive insights'}
+3. Key issues found
+${analysisDepth !== 'basic' ? '4. Keyword opportunities\n5. Content structure analysis' : ''}
+${analysisDepth === 'advanced' || analysisDepth === 'expert' ? '6. Internal linking suggestions\n7. Schema markup recommendations' : ''}
+${analysisDepth === 'expert' ? '8. Competitive positioning\n9. Advanced technical SEO audit' : ''}
+
+Format as JSON with: score, recommendations (array), issues (array)${analysisDepth !== 'basic' ? ', keywords (array), structure (object)' : ''}`;
+
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+      });
+
+      if (!response.text) {
+        throw new Error('No content generated from AI');
+      }
+
+      // Try to parse as JSON, fallback to text
+      try {
+        const jsonMatch = response.text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          return JSON.parse(jsonMatch[0]);
+        }
+      } catch (e) {
+        // If JSON parsing fails, return as text
+      }
+
+      return response.text.trim();
+    } catch (error) {
+      console.error('Gemini API Error:', error);
+      throw new Error('Failed to analyze SEO');
+    }
+  }
+
   private buildContentPrompt(params: {
     title: string;
     keywords: string[];

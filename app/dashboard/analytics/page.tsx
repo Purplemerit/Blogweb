@@ -187,6 +187,7 @@ function AnalyticsContent() {
 
   const getPlatformName = (platform: string) => {
     const names: Record<string, string> = {
+      'PUBLISHTYPE': 'PublishType',
       'WORDPRESS': 'WordPress',
       'DEVTO': 'Dev.to',
       'HASHNODE': 'Hashnode',
@@ -198,6 +199,7 @@ function AnalyticsContent() {
 
   const getPlatformColor = (platform: string) => {
     const colors: Record<string, { bg: string, text: string, border: string, chart: string }> = {
+      'PUBLISHTYPE': { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', chart: '#10b981' },
       'WORDPRESS': { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', chart: '#3b82f6' },
       'DEVTO': { bg: 'bg-neutral-50', text: 'text-neutral-700', border: 'border-neutral-200', chart: '#525252' },
       'HASHNODE': { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', chart: '#2563eb' },

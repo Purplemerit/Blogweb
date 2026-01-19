@@ -7,8 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Save, CreditCard, Bell, Lock, User, Loader2 } from "lucide-react"
+import { Save, CreditCard, Bell, Lock, User, Loader2, Check, Sparkles } from "lucide-react"
 import { toast } from "sonner"
+import { useRazorpay, PLAN_PRICING_DISPLAY, PLAN_NAMES, PlanType, BillingPeriod } from "@/lib/hooks/useRazorpay"
 
 interface UserProfile {
   id: string
@@ -20,6 +21,10 @@ interface UserProfile {
   twitterHandle?: string | null
   linkedinUrl?: string | null
   emailVerified: boolean
+  subscriptionPlan?: string
+  subscriptionStatus?: string
+  subscriptionStartDate?: string
+  subscriptionEndDate?: string
 }
 
 interface UserSettings {
@@ -36,6 +41,8 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [changingPassword, setChangingPassword] = useState(false)
+  const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly')
+  const { loading: paymentLoading, initiatePayment } = useRazorpay()
 
   // Profile state
   const [profile, setProfile] = useState<UserProfile | null>(null)
@@ -536,18 +543,186 @@ export default function SettingsPage() {
             </div>
             <CardDescription>Manage your subscription and payment method</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
+            {/* Current Plan */}
             <div className="flex items-center justify-between p-4 bg-neutral-50 rounded-lg">
               <div>
                 <p className="font-medium">Current Plan</p>
-                <p className="text-sm text-neutral-600">Free Plan</p>
+                <p className="text-sm text-neutral-600">
+                  {PLAN_NAMES[profile?.subscriptionPlan as PlanType] || 'Free'} Plan
+                </p>
+                {profile?.subscriptionEndDate && (
+                  <p className="text-xs text-neutral-500 mt-1">
+                    {profile?.subscriptionStatus === 'ACTIVE' ? 'Renews' : 'Expires'} on {new Date(profile.subscriptionEndDate).toLocaleDateString()}
+                  </p>
+                )}
               </div>
-              <Badge>Active</Badge>
+              <Badge variant={profile?.subscriptionStatus === 'ACTIVE' ? 'default' : 'secondary'}>
+                {profile?.subscriptionStatus || 'Free'}
+              </Badge>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline">Upgrade Plan</Button>
-              <Button variant="outline">View Invoices</Button>
-            </div>
+
+            {/* Upgrade Options */}
+            {(!profile?.subscriptionPlan || profile?.subscriptionPlan === 'FREE') && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-amber-500" />
+                    Upgrade Your Plan
+                  </h4>
+                  <div className="flex items-center gap-2 bg-neutral-100 p-1 rounded-lg">
+                    <button
+                      onClick={() => setBillingPeriod('monthly')}
+                      className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                        billingPeriod === 'monthly' ? 'bg-white shadow-sm' : 'text-neutral-600'
+                      }`}
+                    >
+                      Monthly
+                    </button>
+                    <button
+                      onClick={() => setBillingPeriod('annual')}
+                      className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                        billingPeriod === 'annual' ? 'bg-white shadow-sm' : 'text-neutral-600'
+                      }`}
+                    >
+                      Annual
+                    </button>
+                  </div>
+                </div>
+
+                {billingPeriod === 'annual' && (
+                  <p className="text-sm text-green-600 bg-green-50 px-3 py-2 rounded-lg">
+                    Save up to 17% with annual billing
+                  </p>
+                )}
+
+                <div className="grid gap-4 md:grid-cols-3">
+                  {/* Starter Plan */}
+                  <div className="border rounded-lg p-4 hover:border-emerald-800 transition-colors">
+                    <h5 className="font-semibold text-sm uppercase text-neutral-500">Starter</h5>
+                    <div className="mt-2">
+                      <span className="text-2xl font-bold">
+                        ${PLAN_PRICING_DISPLAY.STARTER[billingPeriod].usd}
+                      </span>
+                      <span className="text-sm text-neutral-500">/mo</span>
+                    </div>
+                    <p className="text-xs text-neutral-500 mt-1">
+                      Rs. {PLAN_PRICING_DISPLAY.STARTER[billingPeriod].inr.toLocaleString('en-IN')}
+                      {billingPeriod === 'annual' ? '/year' : '/mo'}
+                    </p>
+                    <ul className="mt-3 space-y-1 text-sm text-neutral-600">
+                      <li className="flex items-center gap-2">
+                        <Check className="h-3 w-3 text-emerald-600" /> 2 platforms
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="h-3 w-3 text-emerald-600" /> Basic AI editor
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="h-3 w-3 text-emerald-600" /> 10 scheduled posts
+                      </li>
+                    </ul>
+                    <Button
+                      className="w-full mt-4"
+                      variant="outline"
+                      onClick={() => initiatePayment('STARTER', billingPeriod)}
+                      disabled={paymentLoading === 'STARTER'}
+                    >
+                      {paymentLoading === 'STARTER' ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        'Upgrade'
+                      )}
+                    </Button>
+                  </div>
+
+                  {/* Creator Plan */}
+                  <div className="border-2 border-emerald-800 rounded-lg p-4 relative">
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-800 text-white text-xs px-2 py-0.5 rounded">
+                      Popular
+                    </div>
+                    <h5 className="font-semibold text-sm uppercase text-neutral-500">Creator</h5>
+                    <div className="mt-2">
+                      <span className="text-2xl font-bold">
+                        ${PLAN_PRICING_DISPLAY.CREATOR[billingPeriod].usd}
+                      </span>
+                      <span className="text-sm text-neutral-500">/mo</span>
+                    </div>
+                    <p className="text-xs text-neutral-500 mt-1">
+                      Rs. {PLAN_PRICING_DISPLAY.CREATOR[billingPeriod].inr.toLocaleString('en-IN')}
+                      {billingPeriod === 'annual' ? '/year' : '/mo'}
+                    </p>
+                    <ul className="mt-3 space-y-1 text-sm text-neutral-600">
+                      <li className="flex items-center gap-2">
+                        <Check className="h-3 w-3 text-emerald-600" /> Unlimited platforms
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="h-3 w-3 text-emerald-600" /> Advanced AI editor
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="h-3 w-3 text-emerald-600" /> Team collaboration
+                      </li>
+                    </ul>
+                    <Button
+                      className="w-full mt-4 bg-emerald-800 hover:bg-emerald-900"
+                      onClick={() => initiatePayment('CREATOR', billingPeriod)}
+                      disabled={paymentLoading === 'CREATOR'}
+                    >
+                      {paymentLoading === 'CREATOR' ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        'Upgrade'
+                      )}
+                    </Button>
+                  </div>
+
+                  {/* Professional Plan */}
+                  <div className="border rounded-lg p-4 hover:border-emerald-800 transition-colors">
+                    <h5 className="font-semibold text-sm uppercase text-neutral-500">Professional</h5>
+                    <div className="mt-2">
+                      <span className="text-2xl font-bold">
+                        ${PLAN_PRICING_DISPLAY.PROFESSIONAL[billingPeriod].usd}
+                      </span>
+                      <span className="text-sm text-neutral-500">/mo</span>
+                    </div>
+                    <p className="text-xs text-neutral-500 mt-1">
+                      Rs. {PLAN_PRICING_DISPLAY.PROFESSIONAL[billingPeriod].inr.toLocaleString('en-IN')}
+                      {billingPeriod === 'annual' ? '/year' : '/mo'}
+                    </p>
+                    <ul className="mt-3 space-y-1 text-sm text-neutral-600">
+                      <li className="flex items-center gap-2">
+                        <Check className="h-3 w-3 text-emerald-600" /> Everything in Creator
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="h-3 w-3 text-emerald-600" /> White-label options
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="h-3 w-3 text-emerald-600" /> Dedicated support
+                      </li>
+                    </ul>
+                    <Button
+                      className="w-full mt-4"
+                      variant="outline"
+                      onClick={() => initiatePayment('PROFESSIONAL', billingPeriod)}
+                      disabled={paymentLoading === 'PROFESSIONAL'}
+                    >
+                      {paymentLoading === 'PROFESSIONAL' ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        'Upgrade'
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* If user has a paid plan */}
+            {profile?.subscriptionPlan && profile?.subscriptionPlan !== 'FREE' && (
+              <div className="flex gap-2">
+                <Button variant="outline">Manage Subscription</Button>
+                <Button variant="outline">View Invoices</Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 

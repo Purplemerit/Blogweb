@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authService } from '@/lib/services/auth.service';
 import { signupSchema } from '@/lib/utils/validation';
+import { ZodError } from 'zod';
+
+// Force reload
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,12 +38,16 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error: any) {
-    if (error.name === 'ZodError') {
+    console.error('Signup error:', error);
+
+    // Check if it's a Zod validation error
+    if (error instanceof ZodError) {
+      console.log('Zod validation errors:', error.issues);
       return NextResponse.json(
         {
           success: false,
           error: 'Validation failed',
-          details: error.errors,
+          details: error.issues,
         },
         { status: 400 }
       );

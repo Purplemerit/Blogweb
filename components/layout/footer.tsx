@@ -9,7 +9,7 @@ export function Footer() {
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
               <PenSquare className="h-6 w-6" />
-              <span className="text-lg font-bold">BlogAI</span>
+              <span className="text-lg font-bold">Publish Type</span>
             </div>
             <p className="text-sm text-neutral-600 mb-4">
               AI-powered blog generation and multi-platform publishing platform.
@@ -108,7 +108,7 @@ export function Footer() {
 
         <div className="mt-12 border-t border-neutral-200 pt-8">
           <p className="text-center text-sm text-neutral-600">
-            © {new Date().getFullYear()} BlogAI. All rights reserved.
+            © {new Date().getFullYear()} Publish Type. All rights reserved.
           </p>
         </div>
       </div>

@@ -1,9 +1,10 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { theme } from "@/lib/theme"
+import { useAuth } from "@/lib/context/AuthContext"
 import {
   LayoutDashboard,
   FileText,
@@ -15,6 +16,7 @@ import {
   Download,
   UserPlus,
   PenTool,
+  Crown,
 } from "lucide-react"
 
 const generalNavigation = [
@@ -39,6 +41,10 @@ const systemNavigation = [
 
 export function DashboardSidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+  const { user } = useAuth()
+
+  const isPaidUser = user?.subscriptionPlan && user.subscriptionPlan !== 'FREE'
 
   const renderNavSection = (title: string, items: typeof generalNavigation) => (
     <div className="mb-6 px-6">
@@ -174,22 +180,48 @@ export function DashboardSidebar() {
           <HelpCircle style={{ height: '18px', width: '18px' }} strokeWidth={1.5} />
           <span>Help & Docs</span>
         </Link>
-        <button style={{
-          width: '100%',
-          borderRadius: '8px',
-          backgroundColor: theme.colors.primary,
-          padding: '10px 16px',
-          fontSize: '14px',
-          fontWeight: 400,
-          color: theme.colors.text.inverse,
-          border: 'none',
-          cursor: 'pointer',
-          transition: 'all 200ms',
-        }}
-        className="hover:opacity-90"
-        >
-          Upgrade Pro
-        </button>
+        {!isPaidUser ? (
+          <button
+            onClick={() => router.push('/pricing')}
+            style={{
+              width: '100%',
+              borderRadius: '8px',
+              backgroundColor: theme.colors.primary,
+              padding: '10px 16px',
+              fontSize: '14px',
+              fontWeight: 400,
+              color: theme.colors.text.inverse,
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'all 200ms',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+            }}
+            className="hover:opacity-90"
+          >
+            <Crown style={{ height: '16px', width: '16px' }} />
+            Upgrade Pro
+          </button>
+        ) : (
+          <div style={{
+            width: '100%',
+            borderRadius: '8px',
+            background: 'linear-gradient(135deg, #1f3529 0%, #2d4a3a 100%)',
+            padding: '10px 16px',
+            fontSize: '13px',
+            fontWeight: 500,
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+          }}>
+            <Crown style={{ height: '14px', width: '14px', color: '#fbbf24' }} />
+            {user?.subscriptionPlan} Plan
+          </div>
+        )}
       </div>
     </div>
   )

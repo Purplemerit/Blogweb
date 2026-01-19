@@ -35,7 +35,12 @@
       "Bash(tasklist:*)",
       "Bash(npm run build:*)",
       "Bash(npx tsc:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(ls:*)",
+      "Bash(powershell:*)",
+      "Bash(curl:*)",
+      "Bash(cmd //c \"if exist .next \\(rmdir /s /q .next && echo .next folder deleted\\) else \\(echo No .next folder found\\)\")",
+      "Bash(cmd //c \"tasklist /FI \"\"IMAGENAME eq node.exe\"\"\")"
     ]
   }
 }

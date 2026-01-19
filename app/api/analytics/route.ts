@@ -20,8 +20,10 @@ export async function GET(request: NextRequest) {
     const articleId = searchParams.get('articleId');
     const platform = searchParams.get('platform');
 
-    // Build where clause
-    const where: any = {
+    // FETCH BOTH: PlatformAnalytics (external platforms) AND Analytics (PublishType)
+
+    // 1. Fetch PlatformAnalytics (external platforms like WordPress, Dev.to, etc.)
+    const whereExternal: any = {
       publishRecord: {
         platformConnection: {
           userId: currentUser.id,
@@ -30,16 +32,15 @@ export async function GET(request: NextRequest) {
     };
 
     if (articleId) {
-      where.publishRecord.articleId = articleId;
+      whereExternal.publishRecord.articleId = articleId;
     }
 
-    if (platform) {
-      where.publishRecord.platform = platform;
+    if (platform && platform !== 'PUBLISHTYPE') {
+      whereExternal.publishRecord.platform = platform;
     }
 
-    // Fetch analytics with related data
-    const analytics = await prisma.platformAnalytics.findMany({
-      where,
+    const externalAnalytics = await prisma.platformAnalytics.findMany({
+      where: whereExternal,
       include: {
         publishRecord: {
           include: {
@@ -64,6 +65,62 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    // 2. Fetch Analytics (PublishType - our own platform)
+    const wherePublishType: any = {
+      platform: 'PUBLISHTYPE',
+      article: {
+        userId: currentUser.id,
+      },
+    };
+
+    if (articleId) {
+      wherePublishType.articleId = articleId;
+    }
+
+    if (platform && platform !== 'PUBLISHTYPE') {
+      // If filtering by a specific non-PublishType platform, skip PublishType analytics
+      // Do nothing - we'll only show external analytics
+    }
+
+    const publishTypeAnalytics = (!platform || platform === 'PUBLISHTYPE')
+      ? await prisma.analytics.findMany({
+          where: wherePublishType,
+          include: {
+            article: {
+              select: {
+                id: true,
+                title: true,
+                slug: true,
+              },
+            },
+          },
+          orderBy: {
+            date: 'desc',
+          },
+        })
+      : [];
+
+    // Aggregate PublishType analytics by article (sum across all dates)
+    const publishTypeByArticle: Record<string, any> = {};
+    publishTypeAnalytics.forEach((a) => {
+      if (!publishTypeByArticle[a.articleId]) {
+        publishTypeByArticle[a.articleId] = {
+          articleId: a.articleId,
+          article: a.article,
+          totalViews: 0,
+          totalUniqueVisitors: 0,
+          totalClicks: 0,
+          totalShares: 0,
+          totalComments: 0,
+        };
+      }
+      publishTypeByArticle[a.articleId].totalViews += a.views;
+      publishTypeByArticle[a.articleId].totalUniqueVisitors += a.uniqueVisitors;
+      publishTypeByArticle[a.articleId].totalClicks += a.clicks;
+      publishTypeByArticle[a.articleId].totalShares += a.shares;
+      publishTypeByArticle[a.articleId].totalComments += a.comments;
+    });
+
     // Calculate totals
     const totals = {
       views: 0,
@@ -74,7 +131,8 @@ export async function GET(request: NextRequest) {
       bookmarks: 0,
     };
 
-    analytics.forEach((a) => {
+    // Add external analytics to totals
+    externalAnalytics.forEach((a) => {
       totals.views += a.views;
       totals.uniqueVisitors += a.uniqueVisitors;
       totals.likes += a.likes;
@@ -83,9 +141,19 @@ export async function GET(request: NextRequest) {
       totals.bookmarks += a.bookmarks;
     });
 
+    // Add PublishType analytics to totals
+    Object.values(publishTypeByArticle).forEach((a: any) => {
+      totals.views += a.totalViews;
+      totals.uniqueVisitors += a.totalUniqueVisitors;
+      totals.shares += a.totalShares;
+      totals.comments += a.totalComments;
+    });
+
     // Group by platform
     const byPlatform: Record<string, any> = {};
-    analytics.forEach((a) => {
+
+    // Add external platforms
+    externalAnalytics.forEach((a) => {
       const platform = a.publishRecord.platform;
       if (!byPlatform[platform]) {
         byPlatform[platform] = {
@@ -102,9 +170,22 @@ export async function GET(request: NextRequest) {
       byPlatform[platform].articles += 1;
     });
 
+    // Add PublishType platform
+    if (Object.keys(publishTypeByArticle).length > 0) {
+      byPlatform['PUBLISHTYPE'] = {
+        platform: 'PUBLISHTYPE',
+        totalViews: Object.values(publishTypeByArticle).reduce((sum: number, a: any) => sum + a.totalViews, 0),
+        totalLikes: 0, // PublishType doesn't have likes yet
+        totalComments: Object.values(publishTypeByArticle).reduce((sum: number, a: any) => sum + a.totalComments, 0),
+        articles: Object.keys(publishTypeByArticle).length,
+      };
+    }
+
     // Group by article
     const byArticle: Record<string, any> = {};
-    analytics.forEach((a) => {
+
+    // Add external analytics by article
+    externalAnalytics.forEach((a) => {
       const articleId = a.publishRecord.articleId;
       if (!byArticle[articleId]) {
         byArticle[articleId] = {
@@ -129,14 +210,38 @@ export async function GET(request: NextRequest) {
       });
     });
 
+    // Add PublishType analytics by article
+    Object.values(publishTypeByArticle).forEach((a: any) => {
+      if (!byArticle[a.articleId]) {
+        byArticle[a.articleId] = {
+          articleId: a.articleId,
+          articleTitle: a.article.title,
+          articleSlug: a.article.slug,
+          totalViews: 0,
+          totalLikes: 0,
+          totalComments: 0,
+          platforms: [],
+        };
+      }
+      byArticle[a.articleId].totalViews += a.totalViews;
+      byArticle[a.articleId].totalComments += a.totalComments;
+      byArticle[a.articleId].platforms.push({
+        platform: 'PUBLISHTYPE',
+        views: a.totalViews,
+        likes: 0,
+        comments: a.totalComments,
+        url: `/blog/${a.article.slug}`,
+      });
+    });
+
     return NextResponse.json({
       success: true,
       data: {
-        analytics,
+        analytics: externalAnalytics, // Keep for backwards compatibility
         totals,
         byPlatform: Object.values(byPlatform),
         byArticle: Object.values(byArticle),
-        lastSync: analytics[0]?.lastSyncAt || null,
+        lastSync: externalAnalytics[0]?.lastSyncAt || null,
       },
     });
   } catch (error: any) {

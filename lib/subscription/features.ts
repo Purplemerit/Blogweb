@@ -26,8 +26,6 @@ export interface PlanLimits {
   readabilityScore: boolean
 
   // Images
-  maxImagesPerMonth: number
-  aiImageGeneration: boolean
   stockImageAccess: boolean
 
   // Publishing
@@ -40,7 +38,6 @@ export interface PlanLimits {
   liveChat: boolean
 
   // Checks & Quality
-  plagiarismChecksPerMonth: number
   grammarCheck: boolean
   factChecking: boolean
   biasDetection: boolean
@@ -65,28 +62,26 @@ export interface PlanLimits {
 export const PLAN_FEATURES: Record<SubscriptionPlan, PlanLimits> = {
   FREE: {
     // Content Creation
-    maxArticlesPerMonth: 1000, // Increased for development (was 5)
+    maxArticlesPerMonth: 5,
     maxDrafts: 10,
     maxFolders: 3,
-    maxCollaborators: 0,
-    maxPlatformConnections: 1,
+    maxCollaborators: 1, // One invite per blog
+    maxPlatformConnections: 3,
 
     // AI Features
-    aiWritingAccess: true, // Basic GPT-4o Mini
+    aiWritingAccess: true,
     advancedAIEditor: false,
     customPromptTemplates: false,
     contentFrameworks: false,
 
     // SEO & Analytics
-    seoAnalysis: true, // Basic
+    seoAnalysis: true,
     advancedSEO: false,
     competitorAnalysis: false,
     contentGapAnalysis: false,
     readabilityScore: true,
 
     // Images
-    maxImagesPerMonth: 5,
-    aiImageGeneration: false,
     stockImageAccess: true,
 
     // Publishing
@@ -99,8 +94,7 @@ export const PLAN_FEATURES: Record<SubscriptionPlan, PlanLimits> = {
     liveChat: false,
 
     // Checks & Quality
-    plagiarismChecksPerMonth: 3,
-    grammarCheck: true, // Basic
+    grammarCheck: true,
     factChecking: false,
     biasDetection: false,
 
@@ -126,8 +120,8 @@ export const PLAN_FEATURES: Record<SubscriptionPlan, PlanLimits> = {
     maxArticlesPerMonth: 20,
     maxDrafts: 30,
     maxFolders: 10,
-    maxCollaborators: 1,
-    maxPlatformConnections: 2,
+    maxCollaborators: -1, // Unlimited
+    maxPlatformConnections: -1, // Unlimited
 
     // AI Features
     aiWritingAccess: true,
@@ -143,8 +137,6 @@ export const PLAN_FEATURES: Record<SubscriptionPlan, PlanLimits> = {
     readabilityScore: true,
 
     // Images
-    maxImagesPerMonth: 20,
-    aiImageGeneration: true,
     stockImageAccess: true,
 
     // Publishing
@@ -157,7 +149,6 @@ export const PLAN_FEATURES: Record<SubscriptionPlan, PlanLimits> = {
     liveChat: false,
 
     // Checks & Quality
-    plagiarismChecksPerMonth: 15,
     grammarCheck: true,
     factChecking: true,
     biasDetection: false,
@@ -182,10 +173,10 @@ export const PLAN_FEATURES: Record<SubscriptionPlan, PlanLimits> = {
   CREATOR: {
     // Content Creation
     maxArticlesPerMonth: 100,
-    maxDrafts: -1, // Unlimited
-    maxFolders: -1, // Unlimited
-    maxCollaborators: 5,
-    maxPlatformConnections: -1, // Unlimited
+    maxDrafts: -1,
+    maxFolders: -1,
+    maxCollaborators: -1,
+    maxPlatformConnections: -1,
 
     // AI Features
     aiWritingAccess: true,
@@ -201,12 +192,10 @@ export const PLAN_FEATURES: Record<SubscriptionPlan, PlanLimits> = {
     readabilityScore: true,
 
     // Images
-    maxImagesPerMonth: 100,
-    aiImageGeneration: true,
     stockImageAccess: true,
 
     // Publishing
-    scheduledPosts: -1, // Unlimited
+    scheduledPosts: -1,
     autoPublish: true,
     multiPlatformPublish: true,
 
@@ -215,7 +204,6 @@ export const PLAN_FEATURES: Record<SubscriptionPlan, PlanLimits> = {
     liveChat: true,
 
     // Checks & Quality
-    plagiarismChecksPerMonth: 50,
     grammarCheck: true,
     factChecking: true,
     biasDetection: true,
@@ -239,11 +227,11 @@ export const PLAN_FEATURES: Record<SubscriptionPlan, PlanLimits> = {
 
   PROFESSIONAL: {
     // Content Creation
-    maxArticlesPerMonth: -1, // Unlimited
-    maxDrafts: -1, // Unlimited
-    maxFolders: -1, // Unlimited
-    maxCollaborators: -1, // Unlimited
-    maxPlatformConnections: -1, // Unlimited
+    maxArticlesPerMonth: -1,
+    maxDrafts: -1,
+    maxFolders: -1,
+    maxCollaborators: -1,
+    maxPlatformConnections: -1,
 
     // AI Features
     aiWritingAccess: true,
@@ -259,12 +247,10 @@ export const PLAN_FEATURES: Record<SubscriptionPlan, PlanLimits> = {
     readabilityScore: true,
 
     // Images
-    maxImagesPerMonth: -1, // Unlimited
-    aiImageGeneration: true,
     stockImageAccess: true,
 
     // Publishing
-    scheduledPosts: -1, // Unlimited
+    scheduledPosts: -1,
     autoPublish: true,
     multiPlatformPublish: true,
 
@@ -273,7 +259,6 @@ export const PLAN_FEATURES: Record<SubscriptionPlan, PlanLimits> = {
     liveChat: true,
 
     // Checks & Quality
-    plagiarismChecksPerMonth: -1, // Unlimited
     grammarCheck: true,
     factChecking: true,
     biasDetection: true,
@@ -291,8 +276,8 @@ export const PLAN_FEATURES: Record<SubscriptionPlan, PlanLimits> = {
     customBranding: true,
     whiteLabel: true,
     abTesting: true,
-    multiLanguageSupport: -1, // Unlimited
-    versionHistory: -1, // Unlimited
+    multiLanguageSupport: -1,
+    versionHistory: -1,
   },
 }
 

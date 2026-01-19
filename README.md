@@ -1,4 +1,4 @@
-# 🚀 BlogAI - AI-Powered Blog Platform
+# 🚀 Publish Type - AI-Powered Blog Platform
 
 > A comprehensive AI-powered blog generation and multi-platform publishing SaaS platform built with Next.js 16.
 
