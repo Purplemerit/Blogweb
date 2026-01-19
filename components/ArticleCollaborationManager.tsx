@@ -270,7 +270,7 @@ export default function ArticleCollaborationManager() {
 
   const handleOpenArticle = () => {
     if (selectedArticle) {
-      window.location.href = `/dashboard/articles/${selectedArticle.id}/edit`;
+      window.location.href = `/dashboard/articles/${selectedArticle.id}`;
     }
   };
 

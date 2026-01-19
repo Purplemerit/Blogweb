@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { sendNewsletterNotification } from '@/lib/email';
 
 // POST /api/newsletter - Subscribe to newsletter
 export async function POST(request: NextRequest) {
@@ -49,6 +50,14 @@ export async function POST(request: NextRequest) {
           WHERE email = ${normalizedEmail}
         `;
 
+        // Send email notification to admin
+        try {
+          await sendNewsletterNotification(normalizedEmail);
+        } catch (emailError) {
+          console.error('Failed to send newsletter notification email:', emailError);
+          // Don't fail the subscription if email fails
+        }
+
         return NextResponse.json({
           success: true,
           message: 'Welcome back! Your subscription has been reactivated.',
@@ -61,6 +70,14 @@ export async function POST(request: NextRequest) {
       INSERT INTO newsletter_subscribers (id, email, "isActive", "subscribedAt")
       VALUES (gen_random_uuid(), ${normalizedEmail}, true, NOW())
     `;
+
+    // Send email notification to admin
+    try {
+      await sendNewsletterNotification(normalizedEmail);
+    } catch (emailError) {
+      console.error('Failed to send newsletter notification email:', emailError);
+      // Don't fail the subscription if email fails
+    }
 
     return NextResponse.json({
       success: true,

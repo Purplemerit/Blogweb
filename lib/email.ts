@@ -9,6 +9,94 @@ interface ContactEmailData {
   message: string
 }
 
+export async function sendNewsletterNotification(email: string) {
+  try {
+    // Notify admin about new newsletter subscription
+    await resend.emails.send({
+      from: 'PublishType Newsletter <onboarding@resend.dev>',
+      to: [process.env.ADMIN_EMAIL || 'your-email@example.com'],
+      subject: 'New Newsletter Subscription',
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body {
+              font-family: 'Arial', sans-serif;
+              line-height: 1.6;
+              color: #333;
+            }
+            .container {
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 20px;
+              background-color: #f5f1e8;
+            }
+            .header {
+              background-color: #1f3529;
+              color: white;
+              padding: 20px;
+              text-align: center;
+              border-radius: 8px 8px 0 0;
+            }
+            .content {
+              background-color: white;
+              padding: 30px;
+              border-radius: 0 0 8px 8px;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .email-box {
+              background-color: #f9f9f9;
+              padding: 15px;
+              border-left: 3px solid #1f3529;
+              border-radius: 4px;
+              margin: 20px 0;
+              font-size: 16px;
+              font-weight: bold;
+            }
+            .footer {
+              text-align: center;
+              margin-top: 20px;
+              padding-top: 20px;
+              border-top: 1px solid #e0e0e0;
+              color: #666;
+              font-size: 12px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1 style="margin: 0;">🎉 New Newsletter Subscription!</h1>
+            </div>
+            <div class="content">
+              <p>Great news! Someone just subscribed to your newsletter.</p>
+
+              <div class="email-box">
+                📧 ${email}
+              </div>
+
+              <p style="color: #666; margin-top: 20px;">
+                <strong>Subscribed at:</strong> ${new Date().toLocaleString()}
+              </p>
+
+              <div class="footer">
+                <p>This notification was sent from your PublishType newsletter system.</p>
+              </div>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    })
+
+    return { success: true }
+  } catch (error) {
+    console.error('Newsletter notification error:', error)
+    throw error
+  }
+}
+
 export async function sendContactEmail(data: ContactEmailData) {
   try {
     const { name, email, subject, message } = data
