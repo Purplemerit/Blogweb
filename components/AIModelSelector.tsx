@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Lock, Sparkles, Zap, Crown, Info } from "lucide-react"
+import { Lock, Info } from "lucide-react"
 import { useAuth } from "@/lib/context/AuthContext"
 import Link from "next/link"
 
@@ -103,16 +103,6 @@ export function AIModelSelector({ value, onChange, className }: AIModelSelectorP
     }
   }
 
-  const getPlanIcon = (badge: string) => {
-    switch (badge) {
-      case 'FREE': return <Zap className="h-3 w-3" />
-      case 'STARTER+': return <Sparkles className="h-3 w-3" />
-      case 'CREATOR+': return <Sparkles className="h-3 w-3" />
-      case 'PRO': return <Crown className="h-3 w-3" />
-      default: return null
-    }
-  }
-
   const getBadgeColor = (badge: string) => {
     switch (badge) {
       case 'FREE': return 'bg-gray-100 text-gray-700 border-gray-300'
@@ -120,6 +110,16 @@ export function AIModelSelector({ value, onChange, className }: AIModelSelectorP
       case 'CREATOR+': return 'bg-purple-100 text-purple-700 border-purple-300'
       case 'PRO': return 'bg-amber-100 text-amber-700 border-amber-300'
       default: return 'bg-gray-100 text-gray-700 border-gray-300'
+    }
+  }
+
+  const getPlanIcon = (badge: string) => {
+    switch (badge) {
+      case 'FREE': return '⭐'
+      case 'STARTER+': return '🚀'
+      case 'CREATOR+': return '👑'
+      case 'PRO': return '💎'
+      default: return '✨'
     }
   }
 
@@ -148,7 +148,7 @@ export function AIModelSelector({ value, onChange, className }: AIModelSelectorP
         >
           {models.map((model) => (
             <option key={model.id} value={model.id}>
-              {model.isLocked ? '🔒 ' : '✅ '}
+              {model.isLocked ? '⨉ ' : '✔ '}
               {getProviderIcon(model.provider)} {model.name} [{model.badge}]
             </option>
           ))}
@@ -162,8 +162,7 @@ export function AIModelSelector({ value, onChange, className }: AIModelSelectorP
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-sm font-medium text-gray-900">{selectedModelData.name}</span>
                   <Badge variant="outline" className={`text-xs ${getBadgeColor(selectedModelData.badge)}`}>
-                    {getPlanIcon(selectedModelData.badge)}
-                    <span className="ml-1">{selectedModelData.badge}</span>
+                    {selectedModelData.badge}
                   </Badge>
                 </div>
                 <p className="text-xs text-gray-600">{selectedModelData.description}</p>
@@ -230,41 +229,40 @@ export function AIModelSelector({ value, onChange, className }: AIModelSelectorP
                 <ul className="space-y-1 text-sm text-gray-600">
                   {upgradeInfo.requiredPlan === 'STARTER' && (
                     <>
-                      <li>✅ Access to GPT-4o Mini & Gemini Pro</li>
+                      <li>✅ Access to Gemini 1.5 Pro</li>
                       <li>✅ 20 articles/month (vs 5)</li>
                       <li>✅ Unlimited platform connections</li>
                       <li>✅ Multi-platform publishing</li>
                       <li>✅ Competitor SEO analysis</li>
-                      <li className="font-semibold text-blue-600 mt-2">Only ₹50/month</li>
+                      <li className="font-semibold text-blue-600 mt-2">Only ₹5,000/month</li>
                     </>
                   )}
                   {upgradeInfo.requiredPlan === 'CREATOR' && (
                     <>
-                      <li>✅ Access to GPT-4o & Claude 3.5 Sonnet</li>
+                      <li>✅ Access to Claude 3.5 Sonnet</li>
                       <li>✅ 100 articles/month</li>
                       <li>✅ Advanced AI editor</li>
                       <li>✅ Content gap analysis</li>
                       <li>✅ API access & webhooks</li>
-                      <li className="font-semibold text-purple-600 mt-2">Only ₹150/month</li>
+                      <li className="font-semibold text-purple-600 mt-2">Only ₹15,000/month</li>
                     </>
                   )}
                   {upgradeInfo.requiredPlan === 'PROFESSIONAL' && (
                     <>
-                      <li>✅ Access to ALL AI models</li>
+                      <li>✅ Access to GPT-4o (most powerful)</li>
                       <li>✅ Unlimited articles</li>
                       <li>✅ Comprehensive SEO analysis</li>
                       <li>✅ White label branding</li>
                       <li>✅ Dedicated account manager</li>
-                      <li className="font-semibold text-amber-600 mt-2">Only ₹200/month</li>
+                      <li className="font-semibold text-amber-600 mt-2">Contact for pricing</li>
                     </>
                   )}
                 </ul>
               </div>
 
               <div className="flex gap-2">
-                <Link href="/dashboard/settings/billing" className="flex-1">
+                <Link href="/pricing" className="flex-1">
                   <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                    <Sparkles className="h-4 w-4 mr-2" />
                     Upgrade Now
                   </Button>
                 </Link>
