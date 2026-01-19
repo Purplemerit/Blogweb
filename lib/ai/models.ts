@@ -49,25 +49,6 @@ export const AI_MODELS: AIModel[] = [
 
   // STARTER TIER
   {
-    id: 'gpt-4o-mini',
-    name: 'GPT-4o Mini',
-    provider: 'openai',
-    description: 'OpenAI\'s efficient model with improved reasoning',
-    requiredPlan: 'STARTER',
-    badge: 'STARTER+',
-    capabilities: {
-      contentGeneration: true,
-      seoAnalysis: true,
-      grammarCheck: true,
-      toneAdjustment: true,
-      factChecking: true,
-    },
-    pricing: {
-      costPer1kTokens: 0.15,
-      currency: 'USD',
-    },
-  },
-  {
     id: 'gemini-1.5-pro',
     name: 'Gemini 1.5 Pro',
     provider: 'google',
@@ -88,25 +69,6 @@ export const AI_MODELS: AIModel[] = [
   },
 
   // CREATOR TIER
-  {
-    id: 'gpt-4o',
-    name: 'GPT-4o',
-    provider: 'openai',
-    description: 'OpenAI\'s most capable model for premium content',
-    requiredPlan: 'CREATOR',
-    badge: 'CREATOR+',
-    capabilities: {
-      contentGeneration: true,
-      seoAnalysis: true,
-      grammarCheck: true,
-      toneAdjustment: true,
-      factChecking: true,
-    },
-    pricing: {
-      costPer1kTokens: 2.50,
-      currency: 'USD',
-    },
-  },
   {
     id: 'claude-3.5-sonnet',
     name: 'Claude 3.5 Sonnet',
@@ -129,10 +91,10 @@ export const AI_MODELS: AIModel[] = [
 
   // PROFESSIONAL TIER
   {
-    id: 'gpt-4-turbo',
-    name: 'GPT-4 Turbo',
+    id: 'gpt-4o',
+    name: 'GPT-4o',
     provider: 'openai',
-    description: 'Most powerful OpenAI model with 128k context',
+    description: 'OpenAI\'s most powerful model for premium content',
     requiredPlan: 'PROFESSIONAL',
     badge: 'PRO',
     capabilities: {
@@ -143,26 +105,7 @@ export const AI_MODELS: AIModel[] = [
       factChecking: true,
     },
     pricing: {
-      costPer1kTokens: 10.00,
-      currency: 'USD',
-    },
-  },
-  {
-    id: 'claude-3-opus',
-    name: 'Claude 3 Opus',
-    provider: 'anthropic',
-    description: 'Anthropic\'s most intelligent model for complex tasks',
-    requiredPlan: 'PROFESSIONAL',
-    badge: 'PRO',
-    capabilities: {
-      contentGeneration: true,
-      seoAnalysis: true,
-      grammarCheck: true,
-      toneAdjustment: true,
-      factChecking: true,
-    },
-    pricing: {
-      costPer1kTokens: 15.00,
+      costPer1kTokens: 5.00,
       currency: 'USD',
     },
   },
@@ -266,7 +209,7 @@ export const SEO_ANALYSIS_BY_PLAN: Record<SubscriptionPlan, SEOAnalysisConfig> =
     maxKeywords: 10,
   },
   CREATOR: {
-    model: 'gpt-4o',
+    model: 'claude-3.5-sonnet',
     features: {
       basicKeywordAnalysis: true,
       readabilityScore: true,
@@ -280,7 +223,7 @@ export const SEO_ANALYSIS_BY_PLAN: Record<SubscriptionPlan, SEOAnalysisConfig> =
     maxKeywords: 20,
   },
   PROFESSIONAL: {
-    model: 'gpt-4-turbo',
+    model: 'gpt-4o',
     features: {
       basicKeywordAnalysis: true,
       readabilityScore: true,

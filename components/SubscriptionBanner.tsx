@@ -98,20 +98,20 @@ export function SubscriptionBanner() {
           </div>
 
           {plan === 'FREE' && (
-            <Link href="/dashboard/settings/billing">
+            <Link href="/pricing">
               <Button size="sm" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
                 <Sparkles className="h-4 w-4 mr-2" />
-                Upgrade to STARTER - ₹50/mo
+                Upgrade to STARTER - ₹5,000/mo
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             </Link>
           )}
 
           {plan === 'STARTER' && (
-            <Link href="/dashboard/settings/billing">
+            <Link href="/pricing">
               <Button size="sm" variant="outline">
                 <Crown className="h-4 w-4 mr-2" />
-                Upgrade to CREATOR
+                Upgrade to CREATOR - ₹15,000/mo
               </Button>
             </Link>
           )}

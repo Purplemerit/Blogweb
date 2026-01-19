@@ -13,12 +13,25 @@ export async function GET(request: NextRequest) {
     const code = searchParams.get('code')
     const error = searchParams.get('error')
 
+    console.log('[OAuth Google Callback] Started', {
+      hasCode: !!code,
+      error,
+      env: {
+        hasClientId: !!GOOGLE_CLIENT_ID,
+        hasClientSecret: !!GOOGLE_CLIENT_SECRET,
+        appUrl: APP_URL,
+        redirectUri: GOOGLE_REDIRECT_URI,
+      }
+    })
+
     if (error) {
-      return NextResponse.redirect(`${process.env.APP_URL || 'http://localhost:3000'}/login?error=${error}`)
+      console.error('[OAuth Google Callback] OAuth error from Google:', error)
+      return NextResponse.redirect(`${APP_URL}/login?error=${error}`)
     }
 
     if (!code) {
-      return NextResponse.redirect(`${process.env.APP_URL || 'http://localhost:3000'}/login?error=no_code`)
+      console.error('[OAuth Google Callback] No code provided')
+      return NextResponse.redirect(`${APP_URL}/login?error=no_code`)
     }
 
     // Exchange code for access token
@@ -39,9 +52,14 @@ export async function GET(request: NextRequest) {
     const tokenData = await tokenResponse.json()
 
     if (!tokenResponse.ok) {
-      console.error('Google token exchange error:', tokenData)
-      return NextResponse.redirect(`${process.env.APP_URL || 'http://localhost:3000'}/login?error=token_exchange_failed`)
+      console.error('[OAuth Google Callback] Token exchange failed:', {
+        status: tokenResponse.status,
+        error: tokenData,
+      })
+      return NextResponse.redirect(`${APP_URL}/login?error=token_exchange_failed`)
     }
+
+    console.log('[OAuth Google Callback] Token exchange successful')
 
     // Get user info from Google
     const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
@@ -53,16 +71,26 @@ export async function GET(request: NextRequest) {
     const userInfo = await userInfoResponse.json()
 
     if (!userInfoResponse.ok) {
-      console.error('Google user info error:', userInfo)
-      return NextResponse.redirect(`${process.env.APP_URL || 'http://localhost:3000'}/login?error=user_info_failed`)
+      console.error('[OAuth Google Callback] User info fetch failed:', {
+        status: userInfoResponse.status,
+        error: userInfo,
+      })
+      return NextResponse.redirect(`${APP_URL}/login?error=user_info_failed`)
     }
 
+    console.log('[OAuth Google Callback] User info retrieved:', {
+      email: userInfo.email,
+      name: userInfo.name,
+    })
+
     // Check if user exists
+    console.log('[OAuth Google Callback] Checking if user exists:', userInfo.email)
     let user = await prisma.user.findUnique({
       where: { email: userInfo.email },
     })
 
     if (!user) {
+      console.log('[OAuth Google Callback] Creating new user')
       // Create new user
       user = await prisma.user.create({
         data: {
@@ -91,8 +119,11 @@ export async function GET(request: NextRequest) {
       })
     }
 
+    console.log('[OAuth Google Callback] User ready:', { userId: user.id, email: user.email })
+
     // Generate JWT tokens
     const { accessToken, refreshToken } = authService.generateTokens(user)
+    console.log('[OAuth Google Callback] Tokens generated')
 
     // Store refresh token
     await prisma.refreshToken.create({
@@ -102,17 +133,23 @@ export async function GET(request: NextRequest) {
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
       },
     })
+    console.log('[OAuth Google Callback] Refresh token stored')
 
     // Redirect to dashboard with tokens
-    const redirectUrl = new URL('/dashboard', process.env.APP_URL || 'http://localhost:3000')
+    const redirectUrl = new URL('/dashboard', APP_URL)
     redirectUrl.searchParams.set('accessToken', accessToken)
     redirectUrl.searchParams.set('refreshToken', refreshToken)
 
+    console.log('[OAuth Google Callback] Redirecting to:', redirectUrl.toString())
     return NextResponse.redirect(redirectUrl.toString())
   } catch (error: any) {
-    console.error('Google OAuth callback error:', error)
+    console.error('[OAuth Google Callback] FATAL ERROR:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+    })
     return NextResponse.redirect(
-      `${process.env.APP_URL || 'http://localhost:3000'}/login?error=oauth_failed`
+      `${APP_URL}/login?error=oauth_failed&details=${encodeURIComponent(error.message)}`
     )
   }
 }
