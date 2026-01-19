@@ -222,7 +222,7 @@ function AnalyticsContent() {
   return (
     <div className="p-8 bg-white min-h-screen">
       {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-[26px] font-bold text-neutral-900 mb-1 tracking-tight">
             Analytics Dashboard
@@ -236,29 +236,31 @@ function AnalyticsContent() {
             </p>
           )}
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2 md:gap-3 flex-wrap">
           <Button
             onClick={() => window.location.href = '/dashboard/export?tab=analytics'}
             variant="outline"
-            className="h-9 text-[13px]"
+            className="h-9 text-[13px] flex-1 md:flex-initial"
           >
-            <Download className="h-4 w-4 mr-2" />
-            Export Analytics
+            <Download className="h-4 w-4 md:mr-2" />
+            <span className="hidden md:inline">Export Analytics</span>
+            <span className="md:hidden">Export</span>
           </Button>
           <Button
             onClick={syncAnalytics}
             disabled={syncing}
-            className="bg-emerald-600 hover:bg-emerald-700 h-9 text-[13px]"
+            className="bg-emerald-600 hover:bg-emerald-700 h-9 text-[13px] flex-1 md:flex-initial"
           >
             {syncing ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Syncing...
+                <Loader2 className="h-4 w-4 md:mr-2 animate-spin" />
+                <span className="hidden md:inline">Syncing...</span>
               </>
             ) : (
               <>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Sync Analytics
+                <RefreshCw className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">Sync Analytics</span>
+                <span className="md:hidden">Sync</span>
               </>
             )}
           </Button>
@@ -267,20 +269,23 @@ function AnalyticsContent() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="bg-neutral-100 p-1">
-          <TabsTrigger value="overview" className="data-[state=active]:bg-white">
-            <FileText className="h-4 w-4 mr-2" />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="platforms" className="data-[state=active]:bg-white">
-            <Globe className="h-4 w-4 mr-2" />
-            Platform Analytics
-          </TabsTrigger>
-          <TabsTrigger value="compare" className="data-[state=active]:bg-white">
-            <BarChart3 className="h-4 w-4 mr-2" />
-            Compare
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto pb-2 -mx-8 px-8">
+          <TabsList className="bg-neutral-100 p-1 inline-flex w-full md:w-auto min-w-full md:min-w-0">
+            <TabsTrigger value="overview" className="data-[state=active]:bg-white flex-1 md:flex-initial text-xs md:text-sm">
+              <FileText className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Overview</span>
+            </TabsTrigger>
+            <TabsTrigger value="platforms" className="data-[state=active]:bg-white flex-1 md:flex-initial text-xs md:text-sm">
+              <Globe className="h-4 w-4 md:mr-2" />
+              <span className="hidden sm:inline">Platform</span>
+              <span className="hidden md:inline"> Analytics</span>
+            </TabsTrigger>
+            <TabsTrigger value="compare" className="data-[state=active]:bg-white flex-1 md:flex-initial text-xs md:text-sm">
+              <BarChart3 className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Compare</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">

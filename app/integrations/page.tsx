@@ -10,31 +10,37 @@ export default function IntegrationsPage() {
       name: "Dev.to",
       description: "Publish your articles directly to Dev.to",
       icon: "📝",
+      link: "/docs#devto",
     },
     {
       name: "Hashnode",
       description: "Cross-post to Hashnode's blogging platform",
       icon: "📚",
+      link: "/docs#hashnode",
     },
     {
       name: "Ghost",
       description: "Integrate with Ghost for professional blogging",
       icon: "👻",
+      link: "/docs#ghost",
     },
     {
       name: "WordPress.com",
       description: "Publish to WordPress.com sites",
       icon: "📕",
+      link: "/docs#wordpress",
     },
     {
       name: "Wix",
       description: "Integrate with Wix blogs",
       icon: "🔗",
+      link: "/docs#wix",
     },
     {
       name: "Medium",
       description: "Share your content on Medium",
       icon: "🎯",
+      link: "/docs#medium",
     },
   ]
 
@@ -67,9 +73,11 @@ export default function IntegrationsPage() {
               <div className="text-3xl mb-3">{integration.icon}</div>
               <h3 className="font-semibold text-lg mb-2">{integration.name}</h3>
               <p className="text-neutral-600 text-sm mb-4">{integration.description}</p>
-              <Button variant="outline" className="w-full">
-                Learn More
-              </Button>
+              <Link href={integration.link}>
+                <Button variant="outline" className="w-full">
+                  Learn More
+                </Button>
+              </Link>
             </div>
           ))}
         </div>

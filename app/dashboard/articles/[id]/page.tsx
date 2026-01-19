@@ -547,14 +547,14 @@ export default function ArticleEditorPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 md:gap-3">
               {lastSaved && (
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-gray-500 hidden md:inline">
                   Saved {lastSaved.toLocaleTimeString()}
                 </span>
               )}
               {hasUnsavedChanges && !saving && (
-                <span className="text-xs text-orange-600 font-medium">
+                <span className="text-xs text-orange-600 font-medium hidden md:inline">
                   Unsaved changes
                 </span>
               )}
@@ -562,27 +562,27 @@ export default function ArticleEditorPage() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setShowAISidebar(!showAISidebar)}
-                className="hover:bg-neutral-100 rounded-lg p-2"
+                className={`hover:bg-neutral-100 rounded-lg p-2 ${!showAISidebar ? 'bg-emerald-50 hover:bg-emerald-100 border border-emerald-200' : ''}`}
                 title={showAISidebar ? "Hide AI Assistant" : "Show AI Assistant"}
               >
-                {showAISidebar ? <ChevronRight className="h-5 w-5 text-neutral-700" /> : <ChevronLeft className="h-5 w-5 text-neutral-700" />}
+                {showAISidebar ? <ChevronRight className="h-5 w-5 text-neutral-700" /> : <Wand2 className="h-5 w-5 text-emerald-600" />}
               </Button>
               <Button
                 variant="outline"
                 onClick={() => handleSave()}
                 disabled={saving}
-                className="bg-white border-neutral-200 hover:bg-neutral-50 px-5 py-5 h-auto rounded-lg font-medium shadow-sm"
+                className="bg-white border-neutral-200 hover:bg-neutral-50 px-3 md:px-5 py-3 md:py-5 h-auto rounded-lg font-medium shadow-sm"
               >
-                <Save className="h-4 w-4 mr-2" />
-                {saving ? "Saving..." : "Save Draft"}
+                <Save className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">{saving ? "Saving..." : "Save Draft"}</span>
               </Button>
               <Button
                 onClick={handlePublishClick}
                 disabled={saving || articleId === "new"}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-5 h-auto rounded-lg font-medium shadow-sm disabled:bg-neutral-400"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 md:px-5 py-3 md:py-5 h-auto rounded-lg font-medium shadow-sm disabled:bg-neutral-400"
               >
-                <Send className="h-4 w-4 mr-2" />
-                Publish
+                <Send className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">Publish</span>
               </Button>
             </div>
           </div>

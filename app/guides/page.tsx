@@ -11,24 +11,28 @@ export default function GuidesPage() {
       description: "Learn how to create your first AI-powered blog post in minutes",
       icon: BookOpen,
       category: "Beginner",
+      link: "/docs#ai-generation",
     },
     {
       title: "Multi-Platform Publishing Guide",
       description: "Publish to multiple platforms simultaneously with one click",
       icon: Code,
       category: "Intermediate",
+      link: "/docs#multi-platform",
     },
     {
       title: "Optimizing Content for SEO",
       description: "Learn how to use Publish Type's SEO tools to rank higher",
       icon: FileText,
       category: "Advanced",
+      link: "/docs#seo",
     },
     {
       title: "Collaboration Features",
       description: "Work with team members on articles in real-time",
       icon: Video,
       category: "Intermediate",
+      link: "/docs#collaboration",
     },
   ]
 
@@ -68,9 +72,11 @@ export default function GuidesPage() {
                 </div>
                 <h3 className="font-semibold text-lg mb-2">{guide.title}</h3>
                 <p className="text-neutral-600 text-sm mb-4">{guide.description}</p>
-                <Button variant="outline" className="w-full">
-                  Read Guide
-                </Button>
+                <Link href={guide.link}>
+                  <Button variant="outline" className="w-full">
+                    Read Guide
+                  </Button>
+                </Link>
               </div>
             )
           })}

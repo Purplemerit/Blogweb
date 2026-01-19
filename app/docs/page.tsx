@@ -124,104 +124,40 @@ export default function DocsPage() {
             <div>
               <h3 className="font-semibold text-lg mb-3">Platform Integrations</h3>
               <ul className="space-y-2 text-gray-700">
-                <li>
-                  <Link href="#" className="hover:text-blue-600 hover:underline">
-                    → How to connect WordPress
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-blue-600 hover:underline">
-                    → Publishing to Medium
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-blue-600 hover:underline">
-                    → Setting up Dev.to integration
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-blue-600 hover:underline">
-                    → LinkedIn article publishing
-                  </Link>
-                </li>
+                <li>→ How to connect WordPress</li>
+                <li>→ Publishing to Medium</li>
+                <li>→ Setting up Dev.to integration</li>
+                <li>→ LinkedIn article publishing</li>
               </ul>
             </div>
 
             <div>
               <h3 className="font-semibold text-lg mb-3">AI Features</h3>
               <ul className="space-y-2 text-gray-700">
-                <li>
-                  <Link href="#" className="hover:text-blue-600 hover:underline">
-                    → Choosing the right AI model
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-blue-600 hover:underline">
-                    → Creating effective prompts
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-blue-600 hover:underline">
-                    → Using content frameworks
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-blue-600 hover:underline">
-                    → AI image generation
-                  </Link>
-                </li>
+                <li>→ Choosing the right AI model</li>
+                <li>→ Creating effective prompts</li>
+                <li>→ Using content frameworks</li>
+                <li>→ AI image generation</li>
               </ul>
             </div>
 
             <div>
               <h3 className="font-semibold text-lg mb-3">Content Optimization</h3>
               <ul className="space-y-2 text-gray-700">
-                <li>
-                  <Link href="#" className="hover:text-blue-600 hover:underline">
-                    → SEO best practices
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-blue-600 hover:underline">
-                    → Improving readability
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-blue-600 hover:underline">
-                    → Keyword optimization
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-blue-600 hover:underline">
-                    → Meta descriptions
-                  </Link>
-                </li>
+                <li>→ SEO best practices</li>
+                <li>→ Improving readability</li>
+                <li>→ Keyword optimization</li>
+                <li>→ Meta descriptions</li>
               </ul>
             </div>
 
             <div>
               <h3 className="font-semibold text-lg mb-3">Account & Billing</h3>
               <ul className="space-y-2 text-gray-700">
-                <li>
-                  <Link href="#" className="hover:text-blue-600 hover:underline">
-                    → Managing your subscription
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-blue-600 hover:underline">
-                    → Upgrading your plan
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-blue-600 hover:underline">
-                    → Payment methods
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-blue-600 hover:underline">
-                    → Canceling your subscription
-                  </Link>
-                </li>
+                <li>→ Managing your subscription</li>
+                <li>→ Upgrading your plan</li>
+                <li>→ Payment methods</li>
+                <li>→ Canceling your subscription</li>
               </ul>
             </div>
           </div>
