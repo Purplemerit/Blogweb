@@ -4,7 +4,8 @@ import { authService } from '@/lib/services/auth.service'
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || ''
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || ''
-const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/api/oauth/google/callback'
+const APP_URL = process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000'
+const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || `${APP_URL}/api/oauth/google/callback`
 
 export async function GET(request: NextRequest) {
   try {
