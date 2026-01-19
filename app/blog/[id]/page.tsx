@@ -4,7 +4,6 @@ import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Calendar, Clock, User, ArrowLeft, PenTool, Loader2 } from "lucide-react"
-import { NewsletterFooter } from "@/components/NewsletterFooter"
 
 interface Article {
   id: string
@@ -335,11 +334,6 @@ export default function BlogArticlePage() {
           </div>
         </div>
       </main>
-
-      {/* Newsletter and Footer */}
-      <div style={{ marginTop: '96px' }}>
-        <NewsletterFooter />
-      </div>
 
       {/* Article Content Styles */}
       <style jsx global>{`

@@ -22,6 +22,9 @@ export function Header() {
 
         {/* Desktop Navigation */}
         <div className="hidden lg:flex lg:items-center lg:gap-8">
+          <Link href="/" className="text-sm font-medium hover:text-neutral-600 transition-colors">
+            Home
+          </Link>
           <Link href="/features" className="text-sm font-medium hover:text-neutral-600 transition-colors">
             Features
           </Link>
@@ -72,6 +75,13 @@ export function Header() {
       {mobileMenuOpen && (
         <div className="lg:hidden border-t border-neutral-200 bg-white">
           <div className="space-y-1 px-4 py-4">
+            <Link
+              href="/"
+              className="block rounded-lg px-3 py-2 text-base font-medium hover:bg-neutral-50"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Home
+            </Link>
             <Link
               href="/features"
               className="block rounded-lg px-3 py-2 text-base font-medium hover:bg-neutral-50"

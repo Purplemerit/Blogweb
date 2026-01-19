@@ -26,7 +26,6 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tool
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/context/AuthContext"
-import { Header } from "@/components/layout/header"
 import { PricingCarousel } from "@/components/PricingCarousel"
 
 const chartData = [
@@ -147,7 +146,30 @@ export default function Home() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f5f1e8' }}>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f5f1e8 0%, #e8dcc8 50%, #f5f1e8 100%)', position: 'relative', overflow: 'hidden' }}>
+      {/* Animated background orbs */}
+      <div style={{
+        position: 'absolute',
+        top: '-10%',
+        right: '-5%',
+        width: '600px',
+        height: '600px',
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(31, 53, 41, 0.05) 0%, transparent 70%)',
+        animation: 'float 20s ease-in-out infinite',
+        zIndex: 0
+      }} />
+      <div style={{
+        position: 'absolute',
+        bottom: '-15%',
+        left: '-8%',
+        width: '500px',
+        height: '500px',
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(31, 53, 41, 0.04) 0%, transparent 70%)',
+        animation: 'float 25s ease-in-out infinite reverse',
+        zIndex: 0
+      }} />
       <style jsx>{`
         @keyframes fadeInUp {
           from {
@@ -381,9 +403,6 @@ export default function Home() {
           transform: translateX(-50%) translateY(-5px);
         }
       `}</style>
-
-      {/* Header */}
-      <Header />
 
       {/* Hero Section */}
       <section className="gradient-bg" style={{ maxWidth: '1152px', margin: '0 auto', padding: '104px 32px 72px', position: 'relative', overflow: 'hidden' }} ref={heroRef}>
@@ -1445,189 +1464,6 @@ export default function Home() {
           ))}
         </div>
       </section>
-
-      {/* Footer */}
-      <footer style={{ backgroundColor: '#1a3428', color: 'white', padding: '72px 0', marginTop: '56px' }}>
-        <div style={{ maxWidth: '1152px', margin: '0 auto', padding: '0 32px' }}>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: '56px',
-            marginBottom: '56px'
-          }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px' }}>
-                <PenTool style={{ height: '22px', width: '22px' }} strokeWidth={2} />
-                <span style={{ fontWeight: 600, fontSize: '19px' }}>PublishType</span>
-              </div>
-              <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.65)', lineHeight: '1.7', marginBottom: '28px' }}>
-                Publish once, reach everywhere. The modern content distribution platform for creators.
-              </p>
-            </div>
-
-            {[
-              {
-                title: 'Product',
-                links: ['Features', 'Pricing', 'Integrations', 'Changelog']
-              },
-              {
-                title: 'Resources',
-                links: ['Blog', 'Documentation', 'Help Center', 'Community']
-              },
-              {
-                title: 'Company',
-                links: ['About', 'Careers', 'Contact', 'Legal']
-              }
-            ].map((section, i) => (
-              <div key={i}>
-                <h4 style={{ fontWeight: 600, marginBottom: '18px', fontSize: '16px' }}>{section.title}</h4>
-                <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {section.links.map((link, j) => (
-                    <li key={j}>
-                      <Link href="#" className="hover-scale" style={{
-                        fontSize: '15px',
-                        color: 'rgba(255,255,255,0.65)',
-                        textDecoration: 'none',
-                        display: 'inline-block'
-                      }}>
-                        {link}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-
-          {/* Newsletter */}
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '56px', paddingBottom: '36px' }}>
-            <div style={{ maxWidth: '580px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
-                <h4 style={{ fontWeight: 600, fontSize: '18px', margin: 0 }}>Stay in the loop</h4>
-                <div style={{
-                  backgroundColor: 'rgba(255,255,255,0.15)',
-                  color: 'white',
-                  padding: '4px 10px',
-                  borderRadius: '12px',
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  letterSpacing: '0.5px'
-                }}>
-                  WEEKLY
-                </div>
-              </div>
-              <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.65)', marginBottom: '20px', lineHeight: '1.6' }}>
-                Get weekly tips, feature updates, and exclusive content strategies from top creators.
-              </p>
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                <input
-                  type="email"
-                  placeholder="your@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  style={{
-                    flex: 1,
-                    minWidth: '200px',
-                    padding: '14px 20px',
-                    borderRadius: '12px',
-                    backgroundColor: 'rgba(255,255,255,0.12)',
-                    border: '1px solid rgba(255,255,255,0.2)',
-                    fontSize: '15px',
-                    color: 'white',
-                    outline: 'none',
-                    transition: 'all 0.3s'
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.backgroundColor = 'rgba(255,255,255,0.18)'
-                    e.target.style.borderColor = 'rgba(255,255,255,0.4)'
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.backgroundColor = 'rgba(255,255,255,0.12)'
-                    e.target.style.borderColor = 'rgba(255,255,255,0.2)'
-                  }}
-                />
-                <button className="btn-primary" style={{
-                  backgroundColor: 'white',
-                  color: '#1f3529',
-                  padding: '14px 32px',
-                  borderRadius: '12px',
-                  fontWeight: 600,
-                  fontSize: '15px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}>
-                  Subscribe
-                  <ArrowRight style={{ height: '16px', width: '16px' }} strokeWidth={2.5} />
-                </button>
-              </div>
-              <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', marginTop: '12px' }}>
-                No spam. Unsubscribe anytime.
-              </p>
-            </div>
-          </div>
-
-          <div style={{
-            borderTop: '1px solid rgba(255,255,255,0.1)',
-            paddingTop: '36px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '24px',
-            fontSize: '14px',
-            color: 'rgba(255,255,255,0.5)'
-          }}>
-            {/* Social Media Links */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
-              {[
-                { icon: Twitter, label: 'Twitter', href: '#' },
-                { icon: Linkedin, label: 'LinkedIn', href: '#' },
-                { icon: Github, label: 'GitHub', href: '#' },
-                { icon: Mail, label: 'Email', href: 'mailto:contact@publishtype.com' }
-              ].map((social) => (
-                <Link
-                  key={social.label}
-                  href={social.href}
-                  className="hover-scale"
-                  style={{
-                    width: '42px',
-                    height: '42px',
-                    borderRadius: '50%',
-                    backgroundColor: 'rgba(255,255,255,0.1)',
-                    border: '1px solid rgba(255,255,255,0.15)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    textDecoration: 'none',
-                    transition: 'all 0.3s'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)'
-                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'
-                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'
-                  }}
-                >
-                  <social.icon style={{ height: '18px', width: '18px', color: 'rgba(255,255,255,0.8)' }} strokeWidth={2} />
-                </Link>
-              ))}
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-              <p style={{ margin: 0 }}>© 2024 PublishType. All rights reserved.</p>
-              <div style={{ display: 'flex', gap: '28px' }}>
-                <Link href="#" className="hover-scale" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Privacy Policy</Link>
-                <Link href="#" className="hover-scale" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Terms of Service</Link>
-                <Link href="#" className="hover-scale" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Cookie Policy</Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

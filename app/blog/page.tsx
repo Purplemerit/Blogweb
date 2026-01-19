@@ -643,54 +643,6 @@ export default function BlogPage() {
           </form>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer style={{ backgroundColor: '#1a3428', color: 'white', padding: '64px 0' }}>
-        <div style={{ maxWidth: '1152px', margin: '0 auto', padding: '0 32px' }}>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '48px',
-            marginBottom: '48px'
-          }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                <PenTool style={{ height: '20px', width: '20px' }} strokeWidth={2} />
-                <span style={{ fontWeight: 500, fontSize: '18px' }}>PublishType</span>
-              </div>
-              <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', lineHeight: '1.6' }}>
-                Publish once, reach everywhere.
-              </p>
-            </div>
-
-            <div>
-              <h4 style={{ fontWeight: 500, marginBottom: '16px', fontSize: '15px' }}>Product</h4>
-              <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <li><Link href="/features" style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>Features</Link></li>
-                <li><Link href="/pricing" style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>Pricing</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 style={{ fontWeight: 500, marginBottom: '16px', fontSize: '15px' }}>Company</h4>
-              <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <li><Link href="#" style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>About</Link></li>
-                <li><Link href="/blog" style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>Blog</Link></li>
-              </ul>
-            </div>
-          </div>
-
-          <div style={{
-            borderTop: '1px solid rgba(255,255,255,0.1)',
-            paddingTop: '32px',
-            textAlign: 'center',
-            fontSize: '13px',
-            color: 'rgba(255,255,255,0.5)'
-          }}>
-            <p>© 2024 PublishType. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }
