@@ -11,12 +11,16 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     const checkAuth = () => {
       const accessToken = localStorage.getItem('accessToken');
 
-      if (!accessToken) {
-        // Redirect to login page
+      // Check if tokens are in URL params (OAuth callback)
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlAccessToken = urlParams.get('accessToken');
+
+      if (!accessToken && !urlAccessToken) {
+        // No token in localStorage or URL, redirect to login
         const currentPath = window.location.pathname;
         router.replace(`/login?redirect=${encodeURIComponent(currentPath)}`);
       } else {
-        // Token exists, allow rendering
+        // Token exists (either in localStorage or URL), allow rendering
         setIsLoading(false);
       }
     };
