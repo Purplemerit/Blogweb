@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/lib/context/AuthContext"
 import { PLAN_NAMES } from "@/lib/subscription/features"
 import { SubscriptionBanner } from "@/components/SubscriptionBanner"
+import { DashboardSkeleton } from "@/components/SkeletonLoader"
 import {
   Plus,
   TrendingUp,
@@ -109,17 +110,34 @@ function DashboardContent() {
       const token = localStorage.getItem('accessToken')
       if (!token) return
 
-      // Fetch articles and stats in PARALLEL for faster loading
-      const [articlesResponse, statsResponse] = await Promise.all([
-        fetch('/api/articles?limit=10', {
-          headers: { 'Authorization': `Bearer ${token}` },
-        }),
-        fetch('/api/user/stats', {
-          headers: { 'Authorization': `Bearer ${token}` },
-        })
-      ])
+      // Progressive loading: Fetch stats first (smaller payload), then articles
+      // This makes the dashboard feel faster as critical stats appear immediately
+      const statsPromise = fetch('/api/user/stats', {
+        headers: { 'Authorization': `Bearer ${token}` },
+      })
 
-      // Process articles response
+      const articlesPromise = fetch('/api/articles?limit=5', {
+        headers: { 'Authorization': `Bearer ${token}` },
+      })
+
+      // Load stats first to show something quickly
+      const statsResponse = await statsPromise
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json()
+        setStats({
+          totalArticles: statsData.data.totalArticles || 0,
+          totalPublished: statsData.data.totalPublished || 0,
+          totalViews: statsData.data.totalViews || 0,
+          articlesThisWeek: statsData.data.articlesCreatedThisMonth || 0,
+          drafts: statsData.data.totalDrafts || 0,
+          scheduled: statsData.data.totalScheduled || 0,
+        })
+        // Show stats immediately while articles are loading
+        setLoadingData(false)
+      }
+
+      // Then load articles
+      const articlesResponse = await articlesPromise
       if (articlesResponse.ok) {
         const articlesData = await articlesResponse.json()
         const fetchedArticles = articlesData.data.articles || []
@@ -138,21 +156,6 @@ function DashboardContent() {
           }))
         setRecentActivity(activity)
       }
-
-      // Process stats response
-      if (statsResponse.ok) {
-        const statsData = await statsResponse.json()
-        setStats({
-          totalArticles: statsData.data.totalArticles || 0,
-          totalPublished: statsData.data.totalPublished || 0,
-          totalViews: statsData.data.totalViews || 0,
-          articlesThisWeek: statsData.data.articlesCreatedThisMonth || 0,
-          drafts: statsData.data.totalDrafts || 0,
-          scheduled: statsData.data.totalScheduled || 0,
-        })
-      }
-
-      setLoadingData(false)
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
       setLoadingData(false)
@@ -202,15 +205,12 @@ function DashboardContent() {
     )
   }
 
-  if (loading || loadingData) {
-    return (
-      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#f5f1e8' }}>
-        <div className="text-center">
-          <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4" style={{ color: '#1f3529' }} />
-          <p className="text-sm text-neutral-600">Loading your dashboard...</p>
-        </div>
-      </div>
-    )
+  if (loading) {
+    return <DashboardSkeleton />
+  }
+
+  if (loadingData) {
+    return <DashboardSkeleton />
   }
 
   const completionRate = stats.totalArticles > 0 ? (stats.totalPublished / stats.totalArticles) * 100 : 0
@@ -449,11 +449,7 @@ function DashboardContent() {
 
 export default function DashboardPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-neutral-600" />
-      </div>
-    }>
+    <Suspense fallback={<DashboardSkeleton />}>
       <DashboardContent />
     </Suspense>
   )

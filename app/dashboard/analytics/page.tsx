@@ -598,19 +598,27 @@ function AnalyticsContent() {
           <div>
             <h2 className="text-[15px] font-semibold text-neutral-900 mb-4">By Platform</h2>
             <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-              {byPlatform.map((platform) => (
-                <Card
-                  key={platform.platform}
-                  className="border border-neutral-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                  onClick={() => router.push(`/dashboard/analytics/${platform.platform.toLowerCase()}`)}
-                >
-                  <CardContent className="p-5">
-                    <div className="mb-4 flex items-center justify-between">
-                      <Badge variant="outline" className={`${getPlatformColor(platform.platform).bg} ${getPlatformColor(platform.platform).text} ${getPlatformColor(platform.platform).border} text-[11px] font-medium`}>
-                        {getPlatformName(platform.platform)}
-                      </Badge>
-                      <ExternalLink className="h-4 w-4 text-neutral-400" />
-                    </div>
+              {byPlatform.map((platform) => {
+                const isPublishType = platform.platform.toUpperCase() === 'PUBLISHTYPE'
+                return (
+                  <Card
+                    key={platform.platform}
+                    className={`border border-neutral-200 shadow-sm transition-shadow ${
+                      isPublishType ? 'cursor-default' : 'hover:shadow-md cursor-pointer'
+                    }`}
+                    onClick={() => {
+                      if (!isPublishType) {
+                        router.push(`/dashboard/analytics/${platform.platform.toLowerCase()}`)
+                      }
+                    }}
+                  >
+                    <CardContent className="p-5">
+                      <div className="mb-4 flex items-center justify-between">
+                        <Badge variant="outline" className={`${getPlatformColor(platform.platform).bg} ${getPlatformColor(platform.platform).text} ${getPlatformColor(platform.platform).border} text-[11px] font-medium`}>
+                          {getPlatformName(platform.platform)}
+                        </Badge>
+                        {!isPublishType && <ExternalLink className="h-4 w-4 text-neutral-400" />}
+                      </div>
                     <div className="space-y-3">
                       <div>
                         <div className="text-[20px] font-bold text-neutral-900">
@@ -633,7 +641,8 @@ function AnalyticsContent() {
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+                )
+              })}
             </div>
           </div>
 

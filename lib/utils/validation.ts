@@ -1,8 +1,14 @@
 import { z } from 'zod';
+import { validateEmail } from './email-validator';
 
 export const signupSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(50),
-  email: z.string().email('Invalid email address'),
+  email: z.string().email('Invalid email address').refine((email) => {
+    const validation = validateEmail(email);
+    return validation.valid;
+  }, {
+    message: 'Temporary or disposable email addresses are not allowed. Please use a permanent email address from a trusted provider (Gmail, Outlook, Yahoo, etc.).',
+  }),
   password: z
     .string()
     .min(8, 'Password must be at least 8 characters')

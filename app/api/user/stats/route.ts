@@ -83,7 +83,12 @@ export async function GET(request: NextRequest) {
         success: true,
         data: stats,
       },
-      { status: 200 }
+      {
+        status: 200,
+        headers: {
+          'Cache-Control': 'private, max-age=30, stale-while-revalidate=60',
+        },
+      }
     );
   } catch (error: any) {
     return NextResponse.json(
