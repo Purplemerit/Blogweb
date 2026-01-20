@@ -35,9 +35,8 @@ export function PricingCarousel({ plans, billingPeriod }: PricingCarouselProps) 
   // Determine how many cards to show based on screen size
   const getCardsToShow = () => {
     if (screenSize < 640) return 1 // Mobile: 1 card
-    if (screenSize < 900) return 2 // Tablet: 2 cards
-    if (screenSize < 1200) return 3 // Small Desktop: 3 cards
-    return plans.length // Large Desktop: Show all cards in grid
+    if (screenSize < 1024) return 2 // Tablet: 2 cards
+    return 3 // Desktop: Always 3 cards
   }
 
   const cardsToShow = getCardsToShow()
@@ -59,33 +58,33 @@ export function PricingCarousel({ plans, billingPeriod }: PricingCarouselProps) 
   return (
     <div className="relative w-full">
       {/* Carousel Container */}
-      <div className="flex items-center justify-center gap-4 md:gap-6">
-        {/* Left Arrow - Only show on mobile/tablet */}
+      <div className="flex items-center justify-center gap-3 md:gap-6">
+        {/* Left Arrow */}
         {showControls && (
           <button
             onClick={handlePrev}
             disabled={currentIndex === 0}
-            className="flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full border-2 flex items-center justify-center bg-white transition-all duration-300 hover:shadow-lg disabled:opacity-30 disabled:cursor-not-allowed"
+            className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 hover:shadow-xl disabled:opacity-40 disabled:cursor-not-allowed"
             style={{
-              borderColor: currentIndex === 0 ? '#d1d5db' : '#1f3529',
+              backgroundColor: currentIndex === 0 ? '#f3f4f6' : '#1f3529',
+              border: 'none',
             }}
             aria-label="Previous plans"
           >
             <ChevronLeft
-              className="w-5 h-5 md:w-6 md:h-6"
-              style={{ color: currentIndex === 0 ? '#d1d5db' : '#1f3529' }}
+              className="w-6 h-6"
+              style={{ color: currentIndex === 0 ? '#9ca3af' : 'white' }}
               strokeWidth={2.5}
             />
           </button>
         )}
 
         {/* Cards Container */}
-        <div className="flex-1 overflow-hidden" style={{ maxWidth: showControls ? '1200px' : '100%' }}>
+        <div className="flex-1 overflow-hidden mx-auto" style={{ maxWidth: '1200px' }}>
           <div
-            className="flex transition-transform duration-500 ease-out"
+            className="flex transition-transform duration-500 ease-out gap-4 md:gap-6"
             style={{
-              transform: `translateX(-${currentIndex * (100 / cardsToShow)}%)`,
-              gap: screenSize < 640 ? '16px' : '20px',
+              transform: `translateX(-${currentIndex * (100 / cardsToShow + (screenSize < 640 ? 4 : screenSize < 1024 ? 3 : 2))}%)`,
             }}
           >
             {plans.map((plan, idx) => (
@@ -93,11 +92,9 @@ export function PricingCarousel({ plans, billingPeriod }: PricingCarouselProps) 
                 key={idx}
                 className="flex-shrink-0 transition-all duration-300"
                 style={{
-                  width: `calc(${100 / cardsToShow}% - ${
-                    screenSize < 640 ? 12 : 16
-                  }px)`,
-                  minWidth: screenSize < 640 ? '280px' : '260px',
-                  maxWidth: screenSize < 640 ? '360px' : '320px',
+                  width: cardsToShow === 1 ? 'calc(100% - 0px)' :
+                         cardsToShow === 2 ? 'calc(50% - 12px)' :
+                         'calc(33.333% - 16px)',
                 }}
               >
                 <div
@@ -106,23 +103,22 @@ export function PricingCarousel({ plans, billingPeriod }: PricingCarouselProps) 
                     backgroundColor: plan.featured ? '#1f3529' : 'white',
                     border: plan.featured ? '2px solid #1f3529' : '1px solid #e5e7eb',
                     boxShadow: plan.featured
-                      ? '0 25px 50px -12px rgba(31, 53, 41, 0.25)'
+                      ? '0 20px 40px -12px rgba(31, 53, 41, 0.2)'
                       : '0 4px 12px rgba(0,0,0,0.08)',
-                    padding: screenSize < 640 ? '32px 24px' : '40px 32px',
+                    padding: '32px 24px',
                     position: 'relative',
-                    transform: plan.featured ? 'scale(1.05)' : 'scale(1)',
                   }}
                   onMouseEnter={(e) => {
-                    if (!plan.featured) {
-                      e.currentTarget.style.boxShadow = '0 20px 40px -12px rgba(0,0,0,0.15)';
-                      e.currentTarget.style.transform = 'translateY(-4px)';
-                    }
+                    e.currentTarget.style.boxShadow = plan.featured
+                      ? '0 25px 50px -12px rgba(31, 53, 41, 0.3)'
+                      : '0 20px 40px -12px rgba(0,0,0,0.15)';
+                    e.currentTarget.style.transform = 'translateY(-4px)';
                   }}
                   onMouseLeave={(e) => {
-                    if (!plan.featured) {
-                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
-                      e.currentTarget.style.transform = 'translateY(0)';
-                    }
+                    e.currentTarget.style.boxShadow = plan.featured
+                      ? '0 20px 40px -12px rgba(31, 53, 41, 0.2)'
+                      : '0 4px 12px rgba(0,0,0,0.08)';
+                    e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 >
                   {/* Popular Badge */}
@@ -178,7 +174,7 @@ export function PricingCarousel({ plans, billingPeriod }: PricingCarouselProps) 
                     <span
                       style={{
                         fontFamily: 'Playfair Display, Georgia, serif',
-                        fontSize: screenSize < 640 ? '36px' : '40px',
+                        fontSize: '40px',
                         fontWeight: 600,
                         letterSpacing: '-0.025em',
                         color: plan.featured ? 'white' : '#1f3529',
@@ -190,6 +186,7 @@ export function PricingCarousel({ plans, billingPeriod }: PricingCarouselProps) 
                       style={{
                         fontSize: '13px',
                         color: plan.featured ? 'rgba(255,255,255,0.7)' : '#6b7280',
+                        marginLeft: '4px',
                       }}
                     >
                       {getBillingText()}
@@ -270,37 +267,38 @@ export function PricingCarousel({ plans, billingPeriod }: PricingCarouselProps) 
           </div>
         </div>
 
-        {/* Right Arrow - Only show on mobile/tablet */}
+        {/* Right Arrow */}
         {showControls && (
           <button
             onClick={handleNext}
             disabled={currentIndex === maxIndex}
-            className="flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full border-2 flex items-center justify-center bg-white transition-all duration-300 hover:shadow-lg disabled:opacity-30 disabled:cursor-not-allowed"
+            className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 hover:shadow-xl disabled:opacity-40 disabled:cursor-not-allowed"
             style={{
-              borderColor: currentIndex === maxIndex ? '#d1d5db' : '#1f3529',
+              backgroundColor: currentIndex === maxIndex ? '#f3f4f6' : '#1f3529',
+              border: 'none',
             }}
             aria-label="Next plans"
           >
             <ChevronRight
-              className="w-5 h-5 md:w-6 md:h-6"
-              style={{ color: currentIndex === maxIndex ? '#d1d5db' : '#1f3529' }}
+              className="w-6 h-6"
+              style={{ color: currentIndex === maxIndex ? '#9ca3af' : 'white' }}
               strokeWidth={2.5}
             />
           </button>
         )}
       </div>
 
-      {/* Carousel Indicators - Only show on mobile/tablet */}
+      {/* Carousel Indicators */}
       {showControls && maxIndex > 0 && (
         <div className="flex gap-2 justify-center mt-8">
           {Array.from({ length: maxIndex + 1 }).map((_, idx) => (
             <button
               key={idx}
               onClick={() => setCurrentIndex(idx)}
-              className="transition-all duration-300 rounded-full border-none cursor-pointer"
+              className="transition-all duration-300 rounded-full border-none cursor-pointer hover:opacity-80"
               style={{
-                width: currentIndex === idx ? '32px' : '10px',
-                height: '10px',
+                width: currentIndex === idx ? '24px' : '8px',
+                height: '8px',
                 backgroundColor: currentIndex === idx ? '#1f3529' : '#d1d5db',
               }}
               aria-label={`Go to slide ${idx + 1}`}
