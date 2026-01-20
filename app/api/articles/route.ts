@@ -48,6 +48,9 @@ export async function GET(request: NextRequest) {
       where.folderId = folderId;
     }
 
+    // Check if publishRecords are needed (only for non-dashboard views)
+    const includePublishRecords = !searchParams.get('limit') || parseInt(searchParams.get('limit') || '10') > 10;
+
     const [articles, total] = await Promise.all([
       prisma.article.findMany({
         where,
@@ -67,32 +70,41 @@ export async function GET(request: NextRequest) {
           scheduleAt: true,
           createdAt: true,
           updatedAt: true,
-          publishRecords: {
-            select: {
-              platform: true,
-              url: true,
+          ...(includePublishRecords && {
+            publishRecords: {
+              select: {
+                platform: true,
+                url: true,
+              },
+              where: {
+                status: 'PUBLISHED',
+              },
             },
-            where: {
-              status: 'PUBLISHED',
-            },
-          },
+          }),
         },
       }),
       prisma.article.count({ where }),
     ]);
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        articles,
-        pagination: {
-          total,
-          limit,
-          offset,
-          hasMore: offset + limit < total,
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          articles,
+          pagination: {
+            total,
+            limit,
+            offset,
+            hasMore: offset + limit < total,
+          },
         },
       },
-    });
+      {
+        headers: {
+          'Cache-Control': 'private, max-age=30, stale-while-revalidate=60',
+        },
+      }
+    );
   } catch (error: any) {
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch articles' },

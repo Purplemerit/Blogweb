@@ -13,6 +13,9 @@ import type { SignupInput, LoginInput } from '@/lib/utils/validation';
 import { emailService } from '@/lib/services/email.service';
 
 export class AuthService {
+  // Simple in-memory cache for user data (expires after 30 seconds)
+  private userCache = new Map<string, { user: any; expiresAt: number }>();
+
   async signup(data: SignupInput) {
     // Check if email already exists
     const existingUser = await prisma.user.findUnique({
@@ -314,6 +317,12 @@ export class AuthService {
     try {
       const payload = verifyAccessToken(accessToken);
 
+      // Check cache first
+      const cached = this.userCache.get(payload.userId);
+      if (cached && cached.expiresAt > Date.now()) {
+        return cached.user;
+      }
+
       const user = await prisma.user.findUnique({
         where: { id: payload.userId },
         select: {
@@ -335,6 +344,22 @@ export class AuthService {
 
       if (!user) {
         throw new Error('User not found');
+      }
+
+      // Cache user data for 30 seconds
+      this.userCache.set(payload.userId, {
+        user,
+        expiresAt: Date.now() + 30000,
+      });
+
+      // Clean up expired cache entries periodically
+      if (this.userCache.size > 100) {
+        const now = Date.now();
+        for (const [key, value] of this.userCache.entries()) {
+          if (value.expiresAt < now) {
+            this.userCache.delete(key);
+          }
+        }
       }
 
       return user;

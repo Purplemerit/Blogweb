@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     try {
       const token = localStorage.getItem('accessToken')
 
@@ -64,13 +64,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     fetchUser()
   }, [])
 
-  const login = async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
@@ -93,9 +93,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       toast.error(error.message || 'An error occurred')
       throw error
     }
-  }
+  }, [fetchUser, router])
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       const token = localStorage.getItem('accessToken')
 
@@ -118,14 +118,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null)
       router.push('/login')
     }
-  }
+  }, [router])
 
-  const refetchUser = async () => {
+  const refetchUser = useCallback(async () => {
     await fetchUser()
-  }
+  }, [fetchUser])
+
+  const value = useMemo(
+    () => ({ user, loading, login, logout, refetchUser }),
+    [user, loading, login, logout, refetchUser]
+  )
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, refetchUser }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   )

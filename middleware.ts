@@ -3,6 +3,13 @@ import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const response = NextResponse.next();
+
+  // Add performance headers for static assets
+  if (pathname.startsWith('/_next/static')) {
+    response.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+    return response;
+  }
 
   // Protected API routes that require authentication
   const protectedApiRoutes = [
@@ -37,7 +44,8 @@ export function middleware(request: NextRequest) {
     );
 
     if (isPublicRoute) {
-      return NextResponse.next();
+      response.headers.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+      return response;
     }
 
     // Check if it's a protected route
@@ -61,15 +69,14 @@ export function middleware(request: NextRequest) {
   // For dashboard routes, we can't check localStorage from middleware (server-side)
   // So we'll inject a script that checks auth client-side
   if (pathname.startsWith('/dashboard')) {
-    const response = NextResponse.next();
-
     // Add a header that dashboard pages can check
     response.headers.set('x-middleware-auth-required', 'true');
-
+    // Disable caching for dashboard pages
+    response.headers.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');
     return response;
   }
 
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {
