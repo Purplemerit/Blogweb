@@ -155,7 +155,7 @@ export default function SignupPage() {
           textAlign: 'center'
         }}>
           {isSignupComplete ? (
-            <div style={{ py: '40px' }}>
+            <div style={{ paddingTop: '40px', paddingBottom: '40px' }}>
               <div style={{ width: '80px', height: '80px', backgroundColor: 'rgba(34, 197, 94, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 32px', color: '#22c55e' }}>
                 <CheckCircle2 size={40} strokeWidth={2.5} />
               </div>

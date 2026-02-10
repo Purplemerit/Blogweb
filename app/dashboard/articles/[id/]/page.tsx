@@ -422,9 +422,7 @@ export default function ArticleEditorPage() {
                     open={showPublishModal}
                     onClose={() => setShowPublishModal(false)}
                     articleId={article.id}
-                    title={title}
-                    content={content}
-                    excerpt={excerpt}
+                    articleTitle={title}
                 />
             )}
         </div>
