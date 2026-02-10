@@ -3,10 +3,9 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
+import { Plus, Check, Loader2 } from "lucide-react"
 import { useAuth } from "@/lib/context/AuthContext"
 import { toast } from "sonner"
-import { PricingCarousel } from "@/components/PricingCarousel"
 
 // Declare Razorpay on window
 declare global {
@@ -17,58 +16,24 @@ declare global {
 
 export default function PricingPage() {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly')
+  const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [loading, setLoading] = useState<string | null>(null)
   const { user } = useAuth()
   const router = useRouter()
 
-  // INR pricing (matches Razorpay values - actual charges)
+  // Business logic from original pricing page
   const pricingINR = {
-    starter: {
-      monthly: 5000,      // ₹5,000 (500000 paise in Razorpay)
-      annual: 40000       // ₹40,000 (4000000 paise in Razorpay)
-    },
-    creator: {
-      monthly: 15000,     // ₹15,000 (1500000 paise in Razorpay)
-      annual: 150000      // ₹1,50,000 (15000000 paise in Razorpay)
-    },
-    professional: {
-      monthly: 20000,     // ₹20,000 (2000000 paise in Razorpay)
-      annual: 180000      // ₹1,80,000 (18000000 paise in Razorpay)
-    }
+    basic: { monthly: 1565, annual: 15650 },
+    business: { monthly: 1565, annual: 15650 },
+    enterprise: { monthly: 1565, annual: 15650 }
   }
 
-  // USD pricing (converted from INR at ~83 INR = 1 USD)
-  const pricing = {
-    starter: {
-      monthly: 60.24,    // ₹5,000 ≈ $60.24
-      annual: 481.93     // ₹40,000 ≈ $481.93
-    },
-    creator: {
-      monthly: 180.72,   // ₹15,000 ≈ $180.72
-      annual: 1807.23    // ₹1,50,000 ≈ $1,807.23
-    },
-    professional: {
-      monthly: 240.96,   // ₹20,000 ≈ $240.96
-      annual: 2168.67    // ₹1,80,000 ≈ $2,168.67
-    }
-  }
-
-  const getPrice = (plan: keyof typeof pricing) => {
-    return billingPeriod === 'monthly' ? pricing[plan].monthly : pricing[plan].annual
-  }
-
-  const getPriceINR = (plan: keyof typeof pricingINR) => {
-    return billingPeriod === 'monthly' ? pricingINR[plan].monthly : pricingINR[plan].annual
-  }
-
-  // Load Razorpay script
   const loadRazorpayScript = (): Promise<boolean> => {
     return new Promise((resolve) => {
       if (window.Razorpay) {
         resolve(true)
         return
       }
-
       const script = document.createElement('script')
       script.src = 'https://checkout.razorpay.com/v1/checkout.js'
       script.onload = () => resolve(true)
@@ -77,18 +42,15 @@ export default function PricingPage() {
     })
   }
 
-  // Handle payment
-  const handlePayment = async (plan: 'STARTER' | 'CREATOR' | 'PROFESSIONAL') => {
+  const handlePayment = async (planKey: 'BASIC' | 'BUSINESS' | 'ENTERPRISE') => {
     if (!user) {
       toast.error('Please login to subscribe')
-      router.push('/login?redirect=/pricing')
+      router.push(`/login?redirect=/pricing`)
       return
     }
 
-    setLoading(plan)
-
+    setLoading(planKey)
     try {
-      // Load Razorpay script
       const scriptLoaded = await loadRazorpayScript()
       if (!scriptLoaded) {
         toast.error('Failed to load payment gateway')
@@ -96,7 +58,6 @@ export default function PricingPage() {
         return
       }
 
-      // Create order
       const token = localStorage.getItem('accessToken')
       const response = await fetch('/api/payments/create-order', {
         method: 'POST',
@@ -105,29 +66,26 @@ export default function PricingPage() {
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
-          plan,
+          plan: planKey,
           billingPeriod,
         }),
       })
 
       const data = await response.json()
-
       if (!data.success) {
         toast.error(data.error || 'Failed to create order')
         setLoading(null)
         return
       }
 
-      // Configure Razorpay options
       const options = {
         key: data.data.keyId,
         amount: data.data.amount,
         currency: data.data.currency,
         name: 'PublishType',
-        description: `${plan} Plan - ${billingPeriod === 'annual' ? 'Annual' : 'Monthly'} Subscription`,
+        description: `${planKey} Plan - ${billingPeriod === 'annual' ? 'Annual' : 'Monthly'} Subscription`,
         order_id: data.data.orderId,
         handler: async function (response: any) {
-          // Verify payment
           try {
             const verifyResponse = await fetch('/api/payments/verify', {
               method: 'POST',
@@ -143,13 +101,10 @@ export default function PricingPage() {
             })
 
             const verifyData = await verifyResponse.json()
-
             if (verifyData.success) {
               toast.success('Payment successful! Your subscription is now active.')
-              // Redirect to dashboard
               router.push('/dashboard')
-              // Refresh auth context
-              window.location.reload()
+              setTimeout(() => window.location.reload(), 1000)
             } else {
               toast.error(verifyData.error || 'Payment verification failed')
             }
@@ -162,20 +117,12 @@ export default function PricingPage() {
           name: data.data.prefill.name,
           email: data.data.prefill.email,
         },
-        theme: {
-          color: '#1f3529',
-        },
-        modal: {
-          ondismiss: function () {
-            setLoading(null)
-          },
-        },
+        theme: { color: '#FF7A33' },
+        modal: { ondismiss: () => setLoading(null) },
       }
 
-      // Open Razorpay checkout
       const razorpay = new window.Razorpay(options)
       razorpay.open()
-
     } catch (error: any) {
       console.error('Payment error:', error)
       toast.error('Failed to initiate payment')
@@ -183,382 +130,231 @@ export default function PricingPage() {
     }
   }
 
+  const handleStart = () => {
+    if (user) {
+      router.push('/dashboard')
+    } else {
+      router.push('/signup')
+    }
+  }
+
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f5f1e8' }}>
-      {/* Hero Section */}
-      <section className="section-padding" style={{ maxWidth: '1152px', margin: '0 auto', textAlign: 'center', paddingBottom: '40px', paddingTop: '80px' }}>
-        <h1 className="text-section-title" style={{
-          fontFamily: 'Playfair Display, Georgia, serif',
-          lineHeight: '1.2',
-          marginBottom: '16px',
-          letterSpacing: '-0.025em'
-        }}>
-          Simple, Transparent Pricing
-        </h1>
-        <p style={{ fontSize: '16px', color: '#6b7280', marginBottom: '40px' }}>
-          Choose the perfect plan for your content creation needs
-        </p>
+    <div style={{ minHeight: '100vh', backgroundColor: '#fff' }}>
 
-        {/* Billing Toggle */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', marginBottom: '60px' }}>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '12px',
-            backgroundColor: 'white',
-            padding: '4px',
-            borderRadius: '8px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-          }}>
-            <button
-              onClick={() => setBillingPeriod('monthly')}
-              style={{
-                padding: '8px 24px',
-                borderRadius: '6px',
-                border: 'none',
-                backgroundColor: billingPeriod === 'monthly' ? '#1f3529' : 'transparent',
-                color: billingPeriod === 'monthly' ? 'white' : '#374151',
-                fontSize: '14px',
-                fontWeight: 500,
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setBillingPeriod('annual')}
-              style={{
-                padding: '8px 24px',
-                borderRadius: '6px',
-                border: 'none',
-                backgroundColor: billingPeriod === 'annual' ? '#1f3529' : 'transparent',
-                color: billingPeriod === 'annual' ? 'white' : '#374151',
-                fontSize: '14px',
-                fontWeight: 500,
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-            >
-              Annual
-            </button>
-          </div>
-          {billingPeriod === 'annual' && (
-            <div style={{
-              backgroundColor: '#dcfce7',
-              color: '#166534',
-              padding: '6px 16px',
-              borderRadius: '20px',
-              fontSize: '13px',
-              fontWeight: 500
-            }}>
-              Save up to 17% with annual billing
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Pricing Cards Carousel */}
-      <section className="container-padding" style={{ maxWidth: '1400px', margin: '0 auto', paddingBottom: '80px' }}>
-        <PricingCarousel
-          billingPeriod={billingPeriod}
-          plans={[
-            {
-              name: 'FREE',
-              price: '$0',
-              description: 'Perfect for trying out PublishType',
-              button: 'GET STARTED FREE',
-              onClick: () => {
-                if (user) {
-                  router.push('/dashboard')
-                } else {
-                  router.push('/signup')
-                }
-              },
-              loading: false,
-              featured: false,
-              features: [
-                'Up to 1 platform',
-                'Basic editor',
-                '5 scheduled posts',
-                'Basic analytics',
-                'Community support'
-              ]
-            },
-            {
-              name: 'STARTER',
-              price: '₹' + getPriceINR('starter'),
-              priceINR: `or $${getPrice('starter').toFixed(2)}${billingPeriod === 'annual' ? '/year' : '/month'}`,
-              description: 'Perfect for individuals just getting started',
-              button: 'GET STARTED',
-              onClick: () => handlePayment('STARTER'),
-              loading: loading === 'STARTER',
-              featured: false,
-              features: [
-                'Up to 2 platforms',
-                'Basic AI editor',
-                '10 scheduled posts',
-                'Basic analytics',
-                'Email support'
-              ]
-            },
-            {
-              name: 'CREATOR',
-              price: '₹' + getPriceINR('creator'),
-              priceINR: `or $${getPrice('creator').toFixed(2)}${billingPeriod === 'annual' ? '/year' : '/month'}`,
-              description: 'For growing creators and small teams',
-              button: 'START FREE TRIAL',
-              onClick: () => handlePayment('CREATOR'),
-              loading: loading === 'CREATOR',
-              featured: true,
-              features: [
-                'Unlimited platforms',
-                'Advanced AI editor',
-                'Unlimited scheduled posts',
-                'Advanced analytics & SEO',
-                'Team collaboration (5 members)',
-                'Priority support'
-              ]
-            },
-            {
-              name: 'PROFESSIONAL',
-              price: '₹' + getPriceINR('professional'),
-              priceINR: `or $${getPrice('professional').toFixed(2)}${billingPeriod === 'annual' ? '/year' : '/month'}`,
-              description: 'For established creators and larger teams',
-              button: 'GET STARTED',
-              onClick: () => handlePayment('PROFESSIONAL'),
-              loading: loading === 'PROFESSIONAL',
-              featured: false,
-              features: [
-                'Everything in Creator',
-                'Unlimited team members',
-                'White-label options',
-                'Custom integrations',
-                'Dedicated account manager',
-                '24/7 premium support'
-              ]
-            }
-          ]}
-        />
-      </section>
-
-      {/* Custom Solution Banner */}
-      
-      {/* Detailed Comparison Table */}
-      <section style={{ backgroundColor: 'white', padding: '80px 0' }}>
-        <div className="container-padding" style={{ maxWidth: '1152px', margin: '0 auto' }}>
-          <h2 className="text-section-title" style={{
-            fontFamily: 'Playfair Display, Georgia, serif',
-            textAlign: 'center',
+      {/* Hero & Pricing Section */}
+      <section style={{
+        backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.92)), url("/design/BG%2023-01%202.png")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        padding: '120px 24px 80px',
+        textAlign: 'center'
+      }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+          <h1 style={{
+            fontSize: 'clamp(38px, 6vw, 64px)',
+            fontWeight: 800,
             marginBottom: '16px',
-            letterSpacing: '-0.025em'
-          }}>Detailed Comparison</h2>
-          <p style={{ textAlign: 'center', color: '#6b7280', marginBottom: '48px', fontSize: '15px' }}>
-            See exactly what's included in each plan
+            color: '#1a1a1a',
+            lineHeight: '1.2'
+          }}>
+            Simple, Transparent <span style={{ fontStyle: 'italic', fontWeight: 300, color: '#666', fontFamily: '"Playfair Display", serif' }}>Pricing</span>
+          </h1>
+          <p style={{ color: '#666', fontSize: '15px', marginBottom: '40px', maxWidth: '600px', margin: '0 auto 40px' }}>
+            Choose the plan that fits your needs. No hidden fees, cancel anytime.
           </p>
 
-          <div className="responsive-table-wrapper">
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
-                  <th style={{ textAlign: 'left', padding: '16px', fontWeight: 600, fontSize: '13px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Feature</th>
-                  <th style={{ textAlign: 'center', padding: '16px', fontWeight: 600, fontSize: '13px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Free</th>
-                  <th style={{ textAlign: 'center', padding: '16px', fontWeight: 600, fontSize: '13px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Starter</th>
-                  <th style={{ textAlign: 'center', padding: '16px', fontWeight: 600, fontSize: '13px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Creator</th>
-                  <th style={{ textAlign: 'center', padding: '16px', fontWeight: 600, fontSize: '13px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Professional</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
-                  <td style={{ padding: '16px', fontWeight: 500 }}>{billingPeriod === 'monthly' ? 'Monthly Price' : 'Monthly Price (Billed Annually)'}</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151' }}>₹0</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151' }}>₹{getPriceINR('starter').toLocaleString('en-IN')}</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151', fontWeight: 600 }}>₹{getPriceINR('creator').toLocaleString('en-IN')}</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151' }}>₹{getPriceINR('professional').toLocaleString('en-IN')}</td>
-                </tr>
-                <tr style={{ borderBottom: '1px solid #f3f4f6', backgroundColor: '#fafafa' }}>
-                  <td style={{ padding: '16px', fontWeight: 500 }}>Platform Connections</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151' }}>1</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151' }}>2</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151' }}>Unlimited</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151' }}>Unlimited</td>
-                </tr>
-                <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
-                  <td style={{ padding: '16px', fontWeight: 500 }}>Scheduled Posts</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151' }}>5/month</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151' }}>10/month</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151' }}>Unlimited</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151' }}>Unlimited</td>
-                </tr>
-                <tr style={{ borderBottom: '1px solid #f3f4f6', backgroundColor: '#fafafa' }}>
-                  <td style={{ padding: '16px', fontWeight: 500 }}>AI Editor</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#9ca3af' }}>-</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151' }}>Basic</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151' }}>Advanced</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151' }}>Advanced</td>
-                </tr>
-                <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
-                  <td style={{ padding: '16px', fontWeight: 500 }}>Analytics & Insights</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#9ca3af' }}>-</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151' }}>Basic</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151' }}>Advanced</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151' }}>Advanced</td>
-                </tr>
-                <tr style={{ borderBottom: '1px solid #f3f4f6', backgroundColor: '#fafafa' }}>
-                  <td style={{ padding: '16px', fontWeight: 500 }}>SEO Optimization</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#9ca3af' }}>-</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#9ca3af' }}>-</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#1f3529' }}>Yes</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#1f3529' }}>Yes</td>
-                </tr>
-                <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
-                  <td style={{ padding: '16px', fontWeight: 500 }}>Team Members</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151' }}>1</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151' }}>1</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151' }}>5</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151' }}>Unlimited</td>
-                </tr>
-                <tr style={{ borderBottom: '1px solid #f3f4f6', backgroundColor: '#fafafa' }}>
-                  <td style={{ padding: '16px', fontWeight: 500 }}>Content Library</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151' }}>10 items</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151' }}>100 items</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151' }}>Unlimited</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151' }}>Unlimited</td>
-                </tr>
-                <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
-                  <td style={{ padding: '16px', fontWeight: 500 }}>Collaboration Tools</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#9ca3af' }}>-</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#9ca3af' }}>-</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#1f3529' }}>Yes</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#1f3529' }}>Yes</td>
-                </tr>
-                <tr style={{ borderBottom: '1px solid #f3f4f6', backgroundColor: '#fafafa' }}>
-                  <td style={{ padding: '16px', fontWeight: 500 }}>Priority Support</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#9ca3af' }}>-</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#9ca3af' }}>-</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#1f3529' }}>Yes</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#1f3529' }}>Yes</td>
-                </tr>
-                <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
-                  <td style={{ padding: '16px', fontWeight: 500 }}>White-label Options</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#9ca3af' }}>-</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#9ca3af' }}>-</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#9ca3af' }}>-</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#1f3529' }}>Yes</td>
-                </tr>
-                <tr style={{ borderBottom: '1px solid #f3f4f6', backgroundColor: '#fafafa' }}>
-                  <td style={{ padding: '16px', fontWeight: 500 }}>Custom Integrations</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#9ca3af' }}>-</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#9ca3af' }}>-</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#9ca3af' }}>-</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#1f3529' }}>Yes</td>
-                </tr>
-                <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
-                  <td style={{ padding: '16px', fontWeight: 500 }}>Dedicated Account Manager</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#9ca3af' }}>-</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#9ca3af' }}>-</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#9ca3af' }}>-</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#1f3529' }}>Yes</td>
-                </tr>
-                <tr style={{ backgroundColor: '#fafafa' }}>
-                  <td style={{ padding: '16px', fontWeight: 500 }}>Support Response Time</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151' }}>Email only</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151' }}>48 hours</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151' }}>24 hours</td>
-                  <td style={{ textAlign: 'center', padding: '16px', color: '#374151' }}>Same day</td>
-                </tr>
-              </tbody>
-            </table>
+          {/* Pricing Toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', marginBottom: '64px', fontSize: '14px', fontWeight: 600 }}>
+            <span style={{ color: '#1a1a1a' }}>Monthly</span>
+            <div
+              onClick={() => setBillingPeriod(billingPeriod === 'monthly' ? 'annual' : 'monthly')}
+              style={{
+                width: '48px',
+                height: '24px',
+                backgroundColor: '#eee',
+                borderRadius: '50px',
+                padding: '2px',
+                cursor: 'pointer',
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: billingPeriod === 'monthly' ? 'flex-start' : 'flex-end',
+                transition: 'all 0.2s'
+              }}>
+              <div style={{ width: '20px', height: '20px', backgroundColor: 'white', borderRadius: '50%', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}></div>
+            </div>
+            <span style={{ color: '#999' }}>Annual <span style={{ color: '#FF7A33', marginLeft: '4px' }}>-20%</span></span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              { id: 'STARTER', name: 'Starter Plan', monthlyPrice: '₹5,000', annualPrice: '₹40,000', featured: false, bgColor: '#FFF9F6', textColor: '#1a1a1a' },
+              { id: 'CREATOR', name: 'Creator Plan', monthlyPrice: '₹15,000', annualPrice: '₹150,000', featured: true, bgColor: '#FF7A33', textColor: 'white' },
+              { id: 'PROFESSIONAL', name: 'Professional Plan', monthlyPrice: '₹20,000', annualPrice: '₹180,000', featured: false, bgColor: '#FFF9F6', textColor: '#1a1a1a' }
+            ].map((p, i) => (
+              <div key={i} style={{
+                backgroundColor: 'white',
+                borderRadius: '32px',
+                overflow: 'hidden',
+                border: '1px solid #f0f0f0',
+                display: 'flex',
+                flexDirection: 'column',
+                textAlign: 'left',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.02)'
+              }}>
+                <div style={{
+                  backgroundColor: p.bgColor,
+                  padding: '40px 32px',
+                  color: p.textColor,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '24px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '8px',
+                      backgroundColor: p.featured ? 'rgba(255,255,255,0.3)' : '#FF7A33',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <div className="grid grid-cols-2 gap-0.5" style={{ width: '16px' }}>
+                        {[1, 2, 3, 4].map(j => <div key={j} style={{ width: '6px', height: '6px', border: `1.5px solid white`, borderRadius: '1px' }}></div>)}
+                      </div>
+                    </div>
+                    <span style={{ fontSize: '16px', fontWeight: 700 }}>{p.name}</span>
+                  </div>
+
+                  <div style={{ fontSize: '32px', fontWeight: 800 }}>
+                    {billingPeriod === 'annual' ? p.annualPrice : p.monthlyPrice}<span style={{ fontSize: '15px', fontWeight: 500, opacity: 0.8 }}>/{billingPeriod === 'annual' ? 'Year' : 'Month'}</span>
+                  </div>
+
+                  <button
+                    onClick={() => handlePayment(p.id as any)}
+                    disabled={loading === p.id}
+                    style={{
+                      width: '100%',
+                      padding: '14px',
+                      borderRadius: '50px',
+                      border: p.featured ? 'none' : '1px solid #ddd',
+                      backgroundColor: 'white',
+                      color: '#1a1a1a',
+                      fontWeight: 600,
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+                    }}>
+                    {loading === p.id ? <Loader2 className="animate-spin" width={18} /> : 'Get Started'}
+                  </button>
+                </div>
+
+                <div style={{ padding: '40px 32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {[
+                    '15,000 words/month',
+                    '5 blog templates',
+                    '15 images/month',
+                    'Basic SEO tools',
+                    'Email support'
+                  ].map(f => (
+                    <div key={f} style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#1a1a1a', fontWeight: 500 }}>
+                      <Check style={{ width: '18px', height: '18px', color: '#1a1a1a' }} strokeWidth={2.5} />
+                      <span>{f}</span>
+                    </div>
+                  ))}
+                  <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #f0f0f0', fontSize: '14px', fontWeight: 700, color: '#1a1a1a' }}>
+                    Perfect for Individuals.
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{
+            marginTop: '80px',
+            backgroundColor: 'white',
+            borderRadius: '100px',
+            padding: '16px 32px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
+            border: '1px solid #f0f0f0',
+            textAlign: 'left'
+          }}>
+            <div>
+              <h4 style={{ fontSize: '20px', fontWeight: 800, color: '#1a1a1a', marginBottom: '4px' }}>Need a custom solution?</h4>
+              <p style={{ color: '#666', fontSize: '14px' }}>Contact us for enterprise-grade features, custom integrations, and dedicated support.</p>
+            </div>
+            <button style={{
+              backgroundColor: '#FF7A33', color: 'white', padding: '12px 32px', borderRadius: '50px', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '14px'
+            }}>Contact Us</button>
           </div>
         </div>
       </section>
 
       {/* FAQ Section */}
-      <section style={{ backgroundColor: '#2c4a3a', color: 'white', padding: '80px 0' }}>
-        <div style={{ maxWidth: '1152px', margin: '0 auto', padding: '0 32px' }}>
-          <h2 style={{
-            fontFamily: 'Playfair Display, Georgia, serif',
-            fontSize: '40px',
-            textAlign: 'center',
-            marginBottom: '48px',
-            letterSpacing: '-0.025em'
-          }}>Frequently Asked Questions</h2>
-
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '32px',
-            maxWidth: '900px',
-            margin: '0 auto'
-          }}>
-            <div>
-              <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>
-                Can I change plans later?
-              </h3>
-              <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)', lineHeight: '1.6' }}>
-                Yes! You can upgrade or downgrade your plan at any time. Changes will be reflected in your next billing cycle.
-              </p>
-            </div>
-
-            <div>
-              <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>
-                Is there a free trial?
-              </h3>
-              <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)', lineHeight: '1.6' }}>
-                We offer a 14-day free trial on all Creator and Professional plans. No credit card required to start.
-              </p>
-            </div>
-
-            <div>
-              <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>
-                What payment methods do you accept?
-              </h3>
-              <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)', lineHeight: '1.6' }}>
-                We accept all major credit/debit cards, UPI, Net Banking, and wallets via Razorpay.
-              </p>
-            </div>
-
-            <div>
-              <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>
-                Can I cancel anytime?
-              </h3>
-              <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)', lineHeight: '1.6' }}>
-                Yes, you can cancel your subscription at any time. You'll continue to have access until the end of your billing period.
-              </p>
-            </div>
-
-            <div>
-              <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>
-                Do you offer refunds?
-              </h3>
-              <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)', lineHeight: '1.6' }}>
-                We offer a 30-day money-back guarantee on all plans if you're not satisfied with the service.
-              </p>
-            </div>
-
-            <div>
-              <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>
-                What about data security?
-              </h3>
-              <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)', lineHeight: '1.6' }}>
-                All data is encrypted and stored securely. Payments are processed by Razorpay with PCI DSS compliance.
-              </p>
-            </div>
+      <section style={{ padding: '100px 24px', backgroundColor: '#fff' }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+          <h2 style={{ fontSize: 'clamp(32px, 5vw, 48px)', fontWeight: 800, textAlign: 'left', marginBottom: '60px', color: '#1a1a1a' }}>
+            Frequently Asked <span style={{ fontStyle: 'italic', fontWeight: 300, color: '#666', fontFamily: '"Playfair Display", serif' }}>Questions</span>
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+            {[
+              "What is AIMy Blogs?",
+              "Do I need writing experience to use AIMy Blogs?",
+              "Can I publish directly to WordPress or Medium?",
+              "Does AIMy Blogs support SEO optimization?",
+              "Can I generate blog images using AIMy Blogs?",
+              "Can I rewrite or improve my existing blog content?"
+            ].map((q, idx) => (
+              <div key={idx} style={{ borderBottom: '1.5px solid #f0f0f0', padding: '24px 0' }}>
+                <button
+                  onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                  style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: 'none', backgroundColor: 'transparent', padding: '0', fontSize: '20px', fontWeight: 700, cursor: 'pointer', textAlign: 'left', color: '#1a1a1a' }}
+                >
+                  <span>{idx + 1}. {q}</span>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', border: '2px solid #ddd', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666' }}>
+                    <Plus style={{ width: '18px', height: '18px', transform: openFaq === idx ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s' }} />
+                  </div>
+                </button>
+                {openFaq === idx && (
+                  <div style={{ paddingTop: '20px', color: '#666', fontSize: '16px', lineHeight: '1.6', maxWidth: '80%' }}>
+                    AIMy Blogs is designed to help you create high-quality content effortlessly. Our AI assistant guides you through the entire process.
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Loader animation keyframes */}
-      <style jsx global>{`
-        @keyframes spin {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
-        }
-      `}</style>
+      {/* Bottom CTA Section */}
+      <section style={{ padding: '100px 24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <h2 style={{ fontSize: 'clamp(32px, 5vw, 42px)', fontWeight: 800, color: '#1a1a1a', marginBottom: '20px' }}>
+            Ready to elevate your content ?
+          </h2>
+          <p style={{ color: '#666', marginBottom: '40px', fontSize: '16px' }}>
+            Join thousands of creators and brands automating their growth today.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+            <button
+              onClick={() => handleStart()}
+              style={{
+                backgroundColor: '#FF7A33', color: 'white', padding: '18px 56px', borderRadius: '50px', border: 'none', fontSize: '15px', fontWeight: 800, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.5px', boxShadow: '0 8px 25px rgba(255, 122, 51, 0.3)'
+              }}>
+              GET STARTED NOW
+            </button>
+            <p style={{ fontSize: '13px', color: '#999' }}>No credit card required for free plan</p>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }

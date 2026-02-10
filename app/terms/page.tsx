@@ -1,121 +1,152 @@
+"use client"
+
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Book, CheckSquare, ShieldCheck, Scale, FileText, HelpCircle, Mail } from "lucide-react"
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100">
-      <div className="container mx-auto px-4 py-12 max-w-4xl">
-        <Link href="/">
-          <Button variant="ghost" className="mb-6">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Home
-          </Button>
-        </Link>
+    <div style={{ backgroundColor: '#fff', minHeight: '100vh', color: '#1a1a1a' }}>
 
-        <h1 className="text-4xl font-bold mb-8">Terms of Service</h1>
+      {/* Hero Section */}
+      <section style={{
+        backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.92)), url("/design/BG%2023-01%202.png")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        padding: '120px 24px 80px',
+        textAlign: 'center'
+      }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+          <p style={{
+            fontSize: '12px',
+            fontWeight: 800,
+            color: '#FF7A33',
+            textTransform: 'uppercase',
+            letterSpacing: '0.2em',
+            marginBottom: '16px'
+          }}>Legal Center</p>
+          <h1 style={{
+            fontSize: 'clamp(38px, 6vw, 64px)',
+            fontWeight: 800,
+            marginBottom: '16px',
+            color: '#1a1a1a',
+            lineHeight: '1.2'
+          }}>
+            Terms of <span style={{ fontStyle: 'italic', fontWeight: 300, color: '#666', fontFamily: '"Playfair Display", serif' }}>Service</span>
+          </h1>
+          <p style={{ color: '#666', fontSize: '15px', maxWidth: '600px', margin: '0 auto' }}>
+            Our rules of engagement for using the PublishType platform.
+          </p>
+        </div>
+      </section>
 
-        <div className="bg-white rounded-lg shadow-sm p-8 space-y-6">
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">1. Acceptance of Terms</h2>
-            <p className="text-gray-700 leading-relaxed">
-              By accessing and using Publish Type, you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to these Terms of Service, please do not use our service.
-            </p>
-          </section>
+      {/* Content Section */}
+      <section style={{ padding: '0 24px 120px' }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
 
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">2. Description of Service</h2>
-            <p className="text-gray-700 leading-relaxed">
-              Publish Type provides an AI-powered content creation and publishing platform that allows users to write, edit, and publish articles across multiple platforms.
-            </p>
-          </section>
+          <div style={{ padding: '60px 0' }}>
+            <Link href="/" style={{ color: '#FF7A33', textDecoration: 'none', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '40px' }}>
+              <ArrowLeft size={16} /> Back to Home
+            </Link>
 
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">3. User Accounts</h2>
-            <p className="text-gray-700 leading-relaxed mb-4">
-              To use certain features of our service, you must register for an account. You agree to:
-            </p>
-            <ul className="list-disc list-inside text-gray-700 space-y-2 ml-4">
-              <li>Provide accurate and complete information</li>
-              <li>Maintain the security of your password</li>
-              <li>Be responsible for all activities under your account</li>
-              <li>Notify us immediately of any unauthorized use</li>
-            </ul>
-          </section>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '80px' }}>
 
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">4. Content Ownership</h2>
-            <p className="text-gray-700 leading-relaxed">
-              You retain all rights to the content you create using Publish Type. We do not claim ownership of your content. However, you grant us a license to host, store, and display your content as necessary to provide our services.
-            </p>
-          </section>
+              <section>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(255,122,51,0.1)', color: '#FF7A33', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <CheckSquare size={20} />
+                  </div>
+                  <h2 style={{ fontSize: '28px', fontWeight: 800 }}>1. Acceptance of Terms</h2>
+                </div>
+                <p style={{ fontSize: '17px', lineHeight: '1.8', color: '#444' }}>
+                  By accessing and using PublishType, you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to these Terms of Service, please do not use our service. Our AI assistant and publishing tools are subject to regular updates which are covered under this agreement.
+                </p>
+              </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">5. Acceptable Use</h2>
-            <p className="text-gray-700 leading-relaxed mb-4">
-              You agree not to use Publish Type to:
-            </p>
-            <ul className="list-disc list-inside text-gray-700 space-y-2 ml-4">
-              <li>Violate any laws or regulations</li>
-              <li>Infringe upon the rights of others</li>
-              <li>Distribute spam or malicious content</li>
-              <li>Attempt to gain unauthorized access to our systems</li>
-              <li>Create content that is illegal, harmful, or offensive</li>
-            </ul>
-          </section>
+              <section>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(255,122,51,0.1)', color: '#FF7A33', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <ShieldCheck size={20} />
+                  </div>
+                  <h2 style={{ fontSize: '28px', fontWeight: 800 }}>2. Subscription & Billing</h2>
+                </div>
+                <p style={{ fontSize: '17px', lineHeight: '1.8', color: '#444', marginBottom: '24px' }}>
+                  Some features of PublishType require a paid subscription. By choosing a plan, you agree to:
+                </p>
+                <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {[
+                    'Automatic billing via Razorpay at the start of each period.',
+                    'Notification of any price changes with at least 30 days notice.',
+                    'Responsibility for all activities occurring under your account.',
+                    'Cancellation terms as specified in your account dashboard settings.'
+                  ].map((item, i) => (
+                    <li key={i} style={{ display: 'flex', gap: '12px', fontSize: '17px', lineHeight: '1.6', color: '#444' }}>
+                      <div style={{ color: '#FF7A33', marginTop: '4px' }}>•</div>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">6. Subscription and Payments</h2>
-            <p className="text-gray-700 leading-relaxed">
-              Some features require a paid subscription. Subscription fees are billed in advance and are non-refundable except as required by law. We reserve the right to change our pricing with 30 days notice.
-            </p>
-          </section>
+              <section>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(255,122,51,0.1)', color: '#FF7A33', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Book size={20} />
+                  </div>
+                  <h2 style={{ fontSize: '28px', fontWeight: 800 }}>3. Content Ownership</h2>
+                </div>
+                <p style={{ fontSize: '17px', lineHeight: '1.8', color: '#444' }}>
+                  You retain full ownership and intellectual property rights over the content you create and publish using our platform. PublishType does not claim ownership over any articles, blogs, or social media posts generated or published through our service.
+                </p>
+              </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">7. Termination</h2>
-            <p className="text-gray-700 leading-relaxed">
-              We reserve the right to suspend or terminate your account if you violate these terms. You may cancel your account at any time through your account settings.
-            </p>
-          </section>
+              <section>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(255,122,51,0.1)', color: '#FF7A33', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Scale size={20} />
+                  </div>
+                  <h2 style={{ fontSize: '28px', fontWeight: 800 }}>4. Acceptable Use</h2>
+                </div>
+                <p style={{ fontSize: '17px', lineHeight: '1.8', color: '#444' }}>
+                  You agree to use the service only for lawful purposes. Prohibited activities include but are not limited to: distributing malware, generating illegal content, and attempting to circumvent platform security or API rate limits.
+                </p>
+              </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">8. Disclaimer of Warranties</h2>
-            <p className="text-gray-700 leading-relaxed">
-              Publish Type is provided "as is" without warranties of any kind. We do not guarantee that our service will be uninterrupted, secure, or error-free.
-            </p>
-          </section>
+              <section>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(255,122,51,0.1)', color: '#FF7A33', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <FileText size={20} />
+                  </div>
+                  <h2 style={{ fontSize: '28px', fontWeight: 800 }}>5. Limitation of Liability</h2>
+                </div>
+                <p style={{ fontSize: '17px', lineHeight: '1.8', color: '#444' }}>
+                  PublishType is provided "as is" without any warranties. We shall not be liable for any damages resulting from the use or inability to use our cross-platform publishing tools or AI generation features.
+                </p>
+              </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">9. Limitation of Liability</h2>
-            <p className="text-gray-700 leading-relaxed">
-              Publish Type shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of our service.
-            </p>
-          </section>
+              <section>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(255,122,51,0.1)', color: '#FF7A33', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Mail size={20} />
+                  </div>
+                  <h2 style={{ fontSize: '28px', fontWeight: 800 }}>6. Contact Information</h2>
+                </div>
+                <p style={{ fontSize: '17px', lineHeight: '1.8', color: '#444', marginBottom: '16px' }}>
+                  For any legal inquiries or questions regarding these Terms, please contact:
+                </p>
+                <a href="mailto:legal@publishtype.com" style={{ fontSize: '18px', fontWeight: 800, color: '#FF7A33', textDecoration: 'none' }}>
+                  legal@publishtype.com
+                </a>
+              </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">10. Changes to Terms</h2>
-            <p className="text-gray-700 leading-relaxed">
-              We reserve the right to modify these terms at any time. We will notify users of any material changes via email or through our service.
-            </p>
-          </section>
+            </div>
 
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">11. Contact Information</h2>
-            <p className="text-gray-700 leading-relaxed">
-              For questions about these Terms of Service, please contact us at:
-            </p>
-            <p className="text-gray-700 mt-2">
-              Email: <a href="mailto:legal@publishtype.com" className="text-blue-600 hover:underline">legal@publishtype.com</a>
-            </p>
-          </section>
-
-          <div className="pt-6 border-t mt-8">
-            <p className="text-sm text-gray-500">
-              Last Updated: January 19, 2026
-            </p>
+            <div style={{ marginTop: '100px', paddingTop: '40px', borderTop: '1px solid #eee', color: '#999', fontSize: '14px' }}>
+              Last Updated: February 05, 2026
+            </div>
           </div>
         </div>
-      </div>
+      </section>
+
     </div>
   )
 }

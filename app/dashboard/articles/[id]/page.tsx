@@ -26,6 +26,33 @@ import {
   Settings,
   FileText,
   X,
+  Undo2,
+  Redo2,
+  Type,
+  Bold,
+  Italic,
+  Underline,
+  Quote,
+  Link as LinkIcon,
+  List as ListIcon,
+  Video,
+  Maximize2,
+  MoreVertical,
+  Sun,
+  Moon,
+  Eye,
+  Trash2,
+  Globe,
+  Plus,
+  ArrowUpRight,
+  UploadCloud,
+  Clock,
+  CheckCircle2,
+  Calendar,
+  Lock,
+  Tag,
+  FolderOpen,
+  ChevronDown,
 } from "lucide-react"
 import { toast } from "sonner"
 import { marked } from "marked"
@@ -132,6 +159,15 @@ export default function ArticleEditorPage() {
   const [selectedSEOModel, setSelectedSEOModel] = useState("")
   const [seoAnalyzing, setSeoAnalyzing] = useState(false)
   const [seoAnalysis, setSeoAnalysis] = useState<any>(null)
+  const [featuredImage, setFeaturedImage] = useState<string | null>(null)
+  const [seoScore, setSeoScore] = useState(85)
+  const [focusKeywords, setFocusKeywords] = useState<string[]>(["Minimalist", "Wedding"])
+  const [readingTime, setReadingTime] = useState(1)
+
+  // Publication fields
+  const [articleStatus, setArticleStatus] = useState("Draft")
+  const [publishDate, setPublishDate] = useState("")
+  const [urlSlug, setUrlSlug] = useState("")
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -189,6 +225,10 @@ export default function ArticleEditorPage() {
         setFocusKeyword(articleData.focusKeyword || "")
         setToneOfVoice(articleData.toneOfVoice || "professional")
         setContentFramework(articleData.contentFramework || "standard")
+        setArticleStatus(articleData.status || "DRAFT")
+        setPublishDate(articleData.scheduleAt ? new Date(articleData.scheduleAt).toISOString().split('T')[0] : "")
+        setUrlSlug(articleData.slug || "")
+        setFeaturedImage(articleData.featuredImage || null)
         setHasUnsavedChanges(false)
 
         // Check if user is owner or collaborator
@@ -243,6 +283,9 @@ export default function ArticleEditorPage() {
         focusKeyword,
         toneOfVoice,
         contentFramework,
+        slug: urlSlug,
+        scheduleAt: publishDate || null,
+        featuredImage,
         ...(status && { status }),
       }
 
@@ -483,11 +526,8 @@ export default function ArticleEditorPage() {
       if (data.success) {
         // Add generated image to the list - handle both data.result and direct data
         const imageData = data.data.result || data.data
-        console.log('Generated image data:', imageData)
         setGeneratedImages(prev => [imageData, ...prev])
         toast.success("Image generated successfully")
-
-        // Clear the prompt for next generation
         setImagePrompt("")
       } else {
         toast.error(data.error || "Failed to generate image")
@@ -547,6 +587,44 @@ export default function ArticleEditorPage() {
     return plainText.split(/\s+/).filter(Boolean).length
   }
 
+  const handleAddKeyword = (keyword: string) => {
+    if (keyword.trim() && !focusKeywords.includes(keyword.trim())) {
+      setFocusKeywords([...focusKeywords, keyword.trim()])
+    }
+  }
+
+  const handleRemoveKeyword = (keyword: string) => {
+    setFocusKeywords(focusKeywords.filter(kw => kw !== keyword))
+  }
+
+  const handleDeleteArticle = async () => {
+    if (!confirm('Are you sure you want to delete this article? This action cannot be undone.')) {
+      return
+    }
+
+    try {
+      const token = localStorage.getItem("accessToken")
+      const response = await fetch(`/api/articles/${articleId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        toast.success("Article deleted successfully")
+        router.push("/dashboard/articles")
+      } else {
+        toast.error(data.error || "Failed to delete article")
+      }
+    } catch (error) {
+      console.error("Error deleting article:", error)
+      toast.error("Failed to delete article")
+    }
+  }
+
   if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -559,577 +637,629 @@ export default function ArticleEditorPage() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#f5f1e8]">
-      {/* Main Editor */}
-      <div className={`flex-1 flex flex-col transition-all ${showAISidebar ? "md:mr-96" : "mr-0"}`}>
-        {/* Top Bar */}
-        <div className="border-b border-neutral-200 bg-white shadow-sm px-6 py-4">
-          <div className="flex items-center justify-between max-w-7xl mx-auto">
-            <div className="flex items-center gap-5">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => router.push("/dashboard/articles")}
-                className="hover:bg-neutral-100 rounded-lg p-2"
-              >
-                <ArrowLeft className="h-5 w-5 text-neutral-700" />
-              </Button>
-              <div className="flex items-center gap-4">
-                {article?.status && (
-                  <Badge variant="outline" className="px-3 py-1.5 rounded-lg font-medium text-xs">
-                    {article.status}
-                  </Badge>
-                )}
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-neutral-50 rounded-lg">
-                  <span className="text-sm font-semibold text-neutral-900">{getWordCount()}</span>
-                  <span className="text-sm text-neutral-500">words</span>
-                </div>
-              </div>
-            </div>
+    <div style={{
+      minHeight: '100vh',
+      backgroundColor: '#f8f9fa',
+      backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url("/design/BG%2023-01%202.png")',
+      backgroundSize: 'cover',
+      backgroundAttachment: 'fixed',
+      backgroundPosition: 'center',
+      fontFamily: 'Inter, sans-serif',
+      color: '#1a1a1a'
+    }}>
+      <style jsx global>{`
+        /* Tablet and below */
+        @media (max-width: 1024px) {
+          .main-content-grid {
+            grid-template-columns: 1fr !important;
+            height: auto !important;
+            overflow-y: auto !important;
+            min-height: 100vh !important;
+          }
+          .sidebar-aside {
+            border-left: none !important;
+            border-top: 1px solid rgba(0,0,0,0.05) !important;
+            height: auto !important;
+            min-height: auto !important;
+            max-height: none !important;
+            overflow-y: visible !important;
+            position: relative !important;
+          }
+          .editor-area-wrapper {
+            padding: 24px 20px !important;
+            height: auto !important;
+            min-height: auto !important;
+          }
+          .header-nav {
+            padding: 0 16px !important;
+          }
+          .header-center-logo {
+            display: none !important;
+          }
+          .ai-panel-floating {
+            right: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            border-radius: 0 !important;
+            z-index: 1000 !important;
+          }
+        }
 
-            <div className="flex items-center gap-2 md:gap-3">
-              {lastSaved && (
-                <span className="text-xs text-gray-500 hidden md:inline">
-                  Saved {lastSaved.toLocaleTimeString()}
-                </span>
-              )}
-              {hasUnsavedChanges && !saving && (
-                <span className="text-xs text-orange-600 font-medium hidden md:inline">
-                  Unsaved changes
-                </span>
-              )}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowAISidebar(!showAISidebar)}
-                className={`hover:bg-neutral-100 rounded-lg p-2 ${!showAISidebar ? 'bg-emerald-50 hover:bg-emerald-100 border border-emerald-200' : ''}`}
-                title={showAISidebar ? "Hide AI Assistant" : "Show AI Assistant"}
-              >
-                {showAISidebar ? <ChevronRight className="h-5 w-5 text-neutral-700" /> : <Wand2 className="h-5 w-5 text-emerald-600" />}
-              </Button>
-              {canEdit(userRole) && (
-                <>
-                  <Button
-                    variant="outline"
-                    onClick={() => handleSave()}
-                    disabled={saving}
-                    className="bg-white border-neutral-200 hover:bg-neutral-50 px-3 md:px-5 py-3 md:py-5 h-auto rounded-lg font-medium shadow-sm"
-                  >
-                    <Save className="h-4 w-4 md:mr-2" />
-                    <span className="hidden md:inline">{saving ? "Saving..." : "Save Draft"}</span>
-                  </Button>
-                  <Button
-                    onClick={handlePublishClick}
-                    disabled={saving || articleId === "new"}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 md:px-5 py-3 md:py-5 h-auto rounded-lg font-medium shadow-sm disabled:bg-neutral-400"
-                  >
-                    <Send className="h-4 w-4 md:mr-2" />
-                    <span className="hidden md:inline">Publish</span>
-                  </Button>
-                </>
-              )}
+        /* Mobile landscape and below */
+        @media (max-width: 768px) {
+          .header-nav {
+            height: 60px !important;
+            padding: 0 12px !important;
+          }
+          .main-content-grid {
+            padding-top: 60px !important;
+          }
+          .editor-area-wrapper {
+            padding: 16px 12px !important;
+            min-height: 50vh !important;
+          }
+          .sidebar-aside {
+            padding: 20px 16px !important;
+            padding-bottom: 40px !important;
+          }
+          .featured-image-zone {
+            max-height: 250px !important;
+            margin-bottom: 24px !important;
+          }
+          .article-title-input {
+            font-size: clamp(24px, 5vw, 42px) !important;
+            padding: 16px 0 !important;
+          }
+          .config-section {
+            gap: 12px !important;
+            padding: 20px !important;
+          }
+          .ai-tab-button {
+            font-size: 11px !important;
+            padding: 8px 12px !important;
+          }
+        }
+
+        /* Mobile portrait */
+        @media (max-width: 480px) {
+          .header-nav {
+            height: 56px !important;
+            padding: 0 8px !important;
+          }
+          .main-content-grid {
+            padding-top: 56px !important;
+          }
+          .header-nav h1 {
+            font-size: 12px !important;
+            max-width: 120px !important;
+          }
+          .header-nav button {
+            font-size: 11px !important;
+            padding: 0 12px !important;
+            height: 32px !important;
+          }
+          .editor-area-wrapper {
+            padding: 12px 8px !important;
+            min-height: 40vh !important;
+          }
+          .article-title-input {
+            font-size: clamp(20px, 6vw, 32px) !important;
+            padding: 12px 0 !important;
+          }
+          .featured-image-zone {
+            max-height: 200px !important;
+            margin-bottom: 20px !important;
+            border-radius: 16px !important;
+          }
+          .sidebar-aside {
+            padding: 16px 12px !important;
+            padding-bottom: 60px !important;
+            gap: 16px !important;
+          }
+          .config-section {
+            padding: 16px !important;
+            border-radius: 16px !important;
+          }
+          .config-input {
+            font-size: 12px !important;
+          }
+          .ai-panel-floating {
+            padding: 16px !important;
+          }
+          .ai-tab-button {
+            font-size: 10px !important;
+            padding: 6px 10px !important;
+          }
+        }
+
+        /* Hide scrollbars but keep functionality */
+        .editor-area-wrapper::-webkit-scrollbar,
+        .sidebar-aside::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
+
+      {/* Top Navigation Bar */}
+      <header className="header-nav" style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '72px',
+        backgroundColor: 'rgba(255, 255, 255, 0.85)',
+        backdropFilter: 'blur(10px)',
+        borderBottom: '1px solid rgba(0,0,0,0.05)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 24px',
+        zIndex: 100
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button
+            onClick={() => router.push("/dashboard/articles")}
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '50%',
+              backgroundColor: '#fff',
+              border: '1px solid #eee',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer'
+            }}
+          >
+            <ArrowLeft size={16} color="#1a1a1a" />
+          </button>
+          <div className="hidden sm:block">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h1 style={{ fontSize: '14px', fontWeight: 800, color: '#1a1a1a', margin: 0, whiteSpace: 'nowrap', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {title || "Untitled Article"}
+              </h1>
+              <Badge variant="outline" style={{ fontSize: '9px', height: '16px', padding: '0 4px', backgroundColor: '#fff', color: '#FF7A33', borderColor: '#FF7A33', fontWeight: 800 }}>
+                {article?.status || "DRAFT"}
+              </Badge>
             </div>
           </div>
         </div>
 
-        {/* Editor Content */}
-        <div className="flex-1 overflow-y-auto bg-white">
-          <div className="max-w-6xl mx-auto py-8 px-8">
-            <Input
-              placeholder="Article Title"
+        <div className="header-center-logo" style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ width: '24px', height: '24px', backgroundColor: '#FF7A33', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Sparkles size={14} color="white" />
+          </div>
+          <span style={{ fontWeight: 900, fontSize: '18px', letterSpacing: '-0.5px', color: '#1a1a1a' }}>PUBLISHTYPE</span>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="hidden md:flex" style={{ alignItems: 'center', gap: '6px', color: '#666', fontSize: '11px', fontWeight: 600, marginRight: '8px' }}>
+            {saving ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} color="#10b981" />}
+            <span>{saving ? 'Saving...' : 'Saved'}</span>
+          </div>
+
+          <Button
+            onClick={handlePublishClick}
+            disabled={saving || articleId === "new"}
+            style={{
+              backgroundColor: '#FF7A33',
+              color: 'white',
+              border: 'none',
+              borderRadius: '10px',
+              padding: '0 16px',
+              height: '36px',
+              fontWeight: 800,
+              fontSize: '13px',
+              cursor: 'pointer',
+              boxShadow: '0 4px 10px rgba(255, 122, 51, 0.2)'
+            }}
+          >
+            Publish
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowAISidebar(!showAISidebar)}
+            style={{
+              borderRadius: '10px',
+              width: '36px',
+              height: '36px',
+              backgroundColor: showAISidebar ? '#f0f0f0' : 'transparent',
+              color: showAISidebar ? '#FF7A33' : '#666'
+            }}
+          >
+            <Sparkles size={18} />
+          </Button>
+        </div>
+      </header>
+
+      {/* Main Container */}
+      <div className="main-content-grid" style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 380px',
+        paddingTop: '72px',
+        maxWidth: '1600px',
+        margin: '0 auto',
+        height: '100vh',
+        overflow: 'hidden'
+      }}>
+
+        {/* Left Side: Editor Area */}
+        <div className="editor-area-wrapper" style={{
+          padding: '32px 48px',
+          overflowY: 'auto',
+          backgroundColor: 'transparent',
+          scrollbarWidth: 'none'
+        }}>
+
+          <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+            {/* Featured Image Zone */}
+            <div
+              className="featured-image-zone"
+              onClick={() => { }}
+              style={{
+                width: '100%',
+                height: 'auto',
+                aspectRatio: '16/9',
+                maxHeight: '400px',
+                backgroundColor: '#fff',
+                borderRadius: '24px',
+                border: '2px dashed #eee',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '40px',
+                cursor: 'pointer',
+                overflow: 'hidden',
+                position: 'relative',
+                transition: 'all 0.2s ease',
+                backgroundImage: featuredImage ? `url(${featuredImage})` : 'url("/design/laptop_mockup_bg.png")',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            >
+              {!featuredImage && (
+                <div style={{
+                  position: 'absolute',
+                  inset: 0,
+                  backgroundColor: 'rgba(255,255,255,0.7)',
+                  backdropFilter: 'blur(2px)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '20px',
+                  textAlign: 'center'
+                }}>
+                  <div style={{
+                    width: '56px',
+                    height: '56px',
+                    borderRadius: '16px',
+                    backgroundColor: '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 8px 30px rgba(0,0,0,0.04)',
+                    marginBottom: '12px'
+                  }}>
+                    <UploadCloud size={24} color="#FF7A33" />
+                  </div>
+                  <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#1a1a1a', marginBottom: '4px' }}>Upload Featured Image:</h3>
+                  <p className="hidden sm:block" style={{ color: '#666', fontSize: '13px', fontWeight: 600 }}>Drag & drop or click to browse</p>
+                </div>
+              )}
+            </div>
+
+            {/* Title Input */}
+            <textarea
+              className="article-title-input"
+              placeholder="Post Title..."
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              disabled={!canEdit(userRole)}
-              className="text-5xl font-bold border-none focus-visible:ring-0 px-0 mb-8 text-neutral-900 placeholder:text-neutral-300 disabled:opacity-60 disabled:cursor-not-allowed"
+              rows={1}
+              style={{
+                width: '100%',
+                backgroundColor: 'transparent',
+                border: 'none',
+                fontSize: 'clamp(32px, 5vw, 48px)',
+                fontWeight: 900,
+                color: '#1a1a1a',
+                outline: 'none',
+                marginBottom: '24px',
+                letterSpacing: '-1.5px',
+                lineHeight: '1.2',
+                resize: 'none',
+                overflow: 'hidden',
+                padding: '20px 0'
+              }}
+              onInput={(e: any) => {
+                e.target.style.height = 'auto';
+                e.target.style.height = e.target.scrollHeight + 'px';
+              }}
             />
-            {!canEdit(userRole) && userRole && (
-              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <p className="text-sm text-yellow-800">
-                  🔒 You have <strong>{userRole}</strong> access to this article. You can view but cannot edit.
-                </p>
-              </div>
-            )}
-            <RichTextEditor
-              content={content}
-              onChange={setContent}
-              placeholder="Start writing your article..."
-              onSave={() => handleSave()}
-              editable={canEdit(userRole)}
-            />
-          </div>
-        </div>
-      </div>
 
-      {/* AI Sidebar - Desktop: Fixed right sidebar, Mobile: Full screen overlay */}
-      {showAISidebar && (
-        <>
-          {/* Mobile Backdrop */}
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
-            onClick={() => setShowAISidebar(false)}
-          />
-
-          {/* Sidebar Content */}
-          <div className="w-full md:w-96 border-l border-neutral-200 bg-white overflow-hidden fixed right-0 top-0 bottom-0 shadow-xl flex flex-col z-50 md:z-auto">
-          {/* Header */}
-          <div className="p-4 md:p-6 border-b border-neutral-200 bg-gradient-to-r from-emerald-50 to-teal-50">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base md:text-lg font-bold text-neutral-900 flex items-center gap-2">
-                <Wand2 className="h-5 w-5 text-emerald-600" />
-                AI Assistant
-              </h2>
-              {/* Close button for mobile */}
-              <button
-                onClick={() => setShowAISidebar(false)}
-                className="md:hidden p-2 hover:bg-neutral-100 rounded-lg transition-colors"
-                aria-label="Close AI Assistant"
-              >
-                <X className="h-5 w-5 text-neutral-700" />
-              </button>
-            </div>
-
-            {/* Tabs */}
-            <div className="flex gap-2">
-              <button
-                onClick={() => setActiveAITab('content')}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-                  activeAITab === 'content'
-                    ? 'bg-emerald-600 text-white shadow-md'
-                    : 'bg-white text-neutral-600 hover:bg-neutral-50 border border-neutral-200'
-                }`}
-              >
-                <FileText className="h-4 w-4" />
-                Content
-              </button>
-              <button
-                onClick={() => setActiveAITab('images')}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-                  activeAITab === 'images'
-                    ? 'bg-purple-600 text-white shadow-md'
-                    : 'bg-white text-neutral-600 hover:bg-neutral-50 border border-neutral-200'
-                }`}
-              >
-                <ImageIcon className="h-4 w-4" />
-                Images
-              </button>
-              <button
-                onClick={() => setActiveAITab('seo')}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-                  activeAITab === 'seo'
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'bg-white text-neutral-600 hover:bg-neutral-50 border border-neutral-200'
-                }`}
-              >
-                <Target className="h-4 w-4" />
-                SEO
-              </button>
-            </div>
-          </div>
-
-          {/* Content Area */}
-          <div className="flex-1 overflow-y-auto">
-            {/* CONTENT TAB */}
-            {activeAITab === 'content' && (
-              <div className="p-6 space-y-5">
-                {/* AI Model Selector */}
-                <div className="bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-200 p-4 rounded-xl">
-                  <h3 className="text-xs font-bold text-neutral-900 uppercase tracking-wide mb-3 flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-purple-600" />
-                    AI Model
-                  </h3>
-                  <AIModelSelector
-                    value={selectedAIModel}
-                    onChange={setSelectedAIModel}
-                    className="w-full"
-                  />
-                </div>
-
-                {/* Writing Settings */}
-                <div className="bg-neutral-50 border border-neutral-200 p-4 rounded-xl space-y-4">
-                  <h3 className="text-xs font-bold text-neutral-900 uppercase tracking-wide flex items-center gap-2">
-                    <Settings className="h-4 w-4 text-neutral-600" />
-                    Settings
-                  </h3>
-                  <div>
-                    <label className="text-xs font-medium mb-2 block text-neutral-700">Tone of Voice</label>
-                    <select
-                      value={toneOfVoice}
-                      onChange={(e) => setToneOfVoice(e.target.value)}
-                      className="w-full px-3 py-2.5 border border-neutral-200 rounded-lg bg-white text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                    >
-                      <option value="professional">Professional</option>
-                      <option value="casual">Casual</option>
-                      <option value="friendly">Friendly</option>
-                      <option value="authoritative">Authoritative</option>
-                      <option value="conversational">Conversational</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-medium mb-2 block text-neutral-700">Content Framework</label>
-                    <select
-                      value={contentFramework}
-                      onChange={(e) => setContentFramework(e.target.value)}
-                      className="w-full px-3 py-2.5 border border-neutral-200 rounded-lg bg-white text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                    >
-                      <option value="standard">Standard</option>
-                      <option value="problem-agitate-solve">Problem-Agitate-Solve</option>
-                      <option value="how-to">How-To</option>
-                      <option value="listicle">Listicle</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Quick Actions */}
-                <div className="space-y-3">
-                  <h3 className="text-xs font-bold text-neutral-900 uppercase tracking-wide flex items-center gap-2">
-                    <Wand2 className="h-4 w-4 text-emerald-600" />
-                    Generate
-                  </h3>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-center bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white border-0 px-4 py-6 h-auto rounded-lg font-semibold shadow-md hover:shadow-lg transition-all"
-                    onClick={handleGenerateContent}
-                    disabled={generateContentLoading}
-                  >
-                    {generateContentLoading ? (
-                      <>
-                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-5 w-5 mr-2" />
-                        Generate Full Article
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-center bg-white border-2 border-emerald-200 hover:bg-emerald-50 hover:border-emerald-600 text-emerald-700 px-4 py-4 h-auto rounded-lg font-semibold"
-                    onClick={handleGenerateOutline}
-                    disabled={generateOutlineLoading}
-                  >
-                    {generateOutlineLoading ? (
-                      <>
-                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <List className="h-5 w-5 mr-2" />
-                        Generate Outline
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* IMAGES TAB */}
-            {activeAITab === 'images' && (
-              <div className="p-6 space-y-5">
-                {/* AI Model Selector for Images */}
-                <div className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 p-4 rounded-xl">
-                  <h3 className="text-xs font-bold text-neutral-900 uppercase tracking-wide mb-3 flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-purple-600" />
-                    AI Model for Images
-                  </h3>
-                  <AIModelSelector
-                    value={selectedImageModel}
-                    onChange={setSelectedImageModel}
-                    className="w-full"
-                  />
-                  <p className="text-xs text-neutral-600 mt-2">
-                    💡 Free models generate placeholder images. Premium models create real AI images.
+            {/* Content Editor */}
+            <div style={{ minHeight: '400px', fontSize: '18px', lineHeight: '1.8', color: '#1a1a1a' }}>
+              {!canEdit(userRole) && userRole && (
+                <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-xs md:text-sm text-yellow-800 font-medium">
+                    🔒 Read-only mode ({userRole}).
                   </p>
                 </div>
+              )}
+              <RichTextEditor
+                content={content}
+                onChange={setContent}
+                placeholder="Start typing your story..."
+                editable={canEdit(userRole)}
+                onSave={() => handleSave()}
+              />
+            </div>
 
-                {/* Image Prompt */}
-                <div className="space-y-3">
-                  <label className="text-xs font-bold text-neutral-900 uppercase tracking-wide block">
-                    Describe Your Image
-                  </label>
+            {/* Editor Footer Stats */}
+            <div style={{
+              marginTop: '60px',
+              paddingTop: '20px',
+              borderTop: '1px solid rgba(0,0,0,0.05)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              color: '#999',
+              fontSize: '12px',
+              fontWeight: 600,
+              paddingBottom: '40px'
+            }}>
+              <span>{getWordCount()} words</span>
+              <span>{readingTime} min read</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Side: Configuration Sidebar */}
+        <aside className="sidebar-aside" style={{
+          backgroundColor: '#fff',
+          borderLeft: '1px solid rgba(0,0,0,0.05)',
+          padding: '24px',
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '24px',
+          scrollbarWidth: 'none'
+        }}>
+          {/* Section: Publication */}
+          <ConfigSection title="Publication">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <ConfigInput
+                label="STATUS"
+                type="select"
+                options={['DRAFT', 'PUBLISHED', 'SCHEDULED']}
+                value={articleStatus}
+                onChange={setArticleStatus}
+              />
+              <ConfigInput
+                label="PUBLISH DATE"
+                type="date"
+                placeholder="yyyy-mm-dd"
+                value={publishDate}
+                onChange={setPublishDate}
+              />
+              <ConfigInput
+                label="URL SLUG"
+                type="text"
+                placeholder="minimalist-event-design"
+                value={urlSlug}
+                onChange={setUrlSlug}
+              />
+            </div>
+          </ConfigSection>
+
+          {/* Section: SEO */}
+          <ConfigSection title="SEO" badge={`${seoScore}/100`}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <LabelText text="META DESCRIPTION" />
+                <textarea
+                  placeholder="Enter meta description..."
+                  value={metaDescription}
+                  onChange={(e) => setMetaDescription(e.target.value)}
+                  style={{
+                    width: '100%',
+                    height: '100px',
+                    padding: '12px',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(0,0,0,0.06)',
+                    fontSize: '13px',
+                    lineHeight: '1.6',
+                    resize: 'none',
+                    backgroundColor: '#fcfcfc',
+                    outline: 'none'
+                  }}
+                />
+                <p style={{ textAlign: 'right', fontSize: '10px', color: '#999', marginTop: '4px', fontWeight: 600 }}>{metaDescription.length}/160</p>
+              </div>
+              <div>
+                <LabelText text="FOCUS KEYWORD" />
+                <div style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '8px',
+                  padding: '12px',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(0,0,0,0.06)',
+                  backgroundColor: '#fcfcfc'
+                }}>
+                  {focusKeywords.map(kw => (
+                    <div key={kw} style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#eee', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700 }}>
+                      {kw} <X size={10} style={{ cursor: 'pointer' }} onClick={() => handleRemoveKeyword(kw)} />
+                    </div>
+                  ))}
+                  <input
+                    placeholder="Add..."
+                    style={{ border: 'none', background: 'none', fontSize: '12px', fontWeight: 600, minWidth: '60px', outline: 'none', flex: 1 }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        handleAddKeyword(e.currentTarget.value)
+                        e.currentTarget.value = ''
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </ConfigSection>
+
+          {/* Section: Channels */}
+          <ConfigSection title="Channels">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <ChannelItem icon="W" name="WordPress" active={true} />
+              <ChannelItem icon="G" name="Ghost" active={false} />
+              <ChannelItem icon="M" name="Medium" active={false} />
+              <button style={{ background: 'none', border: 'none', fontSize: '11px', fontWeight: 800, color: '#1a1a1a', textDecoration: 'underline', marginTop: '4px', cursor: 'pointer' }}>
+                Manage Integrations
+              </button>
+            </div>
+          </ConfigSection>
+
+          {/* Action Area */}
+          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', padding: '12px 0 24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <SidebarActionButton text="Save Draft" onClick={() => handleSave()} />
+              <SidebarActionButton text="Schedule" onClick={() => { }} />
+            </div>
+            <button
+              onClick={handleDeleteArticle}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#FF3B30',
+                fontSize: '13px',
+                fontWeight: 800,
+                padding: '8px',
+                cursor: 'pointer'
+              }}
+            >
+              Delete Article
+            </button>
+          </div>
+        </aside>
+      </div>
+
+      {/* Floating AI Panel (Toggled via header) */}
+      {
+        showAISidebar && (
+          <div className="ai-panel-floating" style={{
+            position: 'fixed',
+            top: '84px',
+            right: '400px',
+            width: '380px',
+            height: 'calc(100vh - 100px)',
+            backgroundColor: '#fff',
+            borderRadius: '24px',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.1)',
+            zIndex: 200,
+            border: '1px solid rgba(0,0,0,0.05)',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden'
+          }}>
+            <div style={{ padding: '20px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fcfcfc' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Sparkles size={18} color="#FF7A33" />
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800 }}>AI Assistant</h3>
+              </div>
+              <button onClick={() => setShowAISidebar(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}><X size={20} /></button>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
+              <div className="flex gap-2 mb-6">
+                <button
+                  className="ai-tab-button"
+                  onClick={() => setActiveAITab('content')}
+                  style={{
+                    flex: 1, padding: '10px', borderRadius: '10px', border: 'none',
+                    backgroundColor: activeAITab === 'content' ? '#1a1a1a' : '#f5f5f5',
+                    color: activeAITab === 'content' ? '#fff' : '#666',
+                    fontSize: '12px', fontWeight: 700, cursor: 'pointer'
+                  }}
+                >Content</button>
+                <button
+                  className="ai-tab-button"
+                  onClick={() => setActiveAITab('images')}
+                  style={{
+                    flex: 1, padding: '10px', borderRadius: '10px', border: 'none',
+                    backgroundColor: activeAITab === 'images' ? '#1a1a1a' : '#f5f5f5',
+                    color: activeAITab === 'images' ? '#fff' : '#666',
+                    fontSize: '12px', fontWeight: 700, cursor: 'pointer'
+                  }}
+                >Images</button>
+                <button
+                  className="ai-tab-button"
+                  onClick={() => setActiveAITab('seo')}
+                  style={{
+                    flex: 1, padding: '10px', borderRadius: '10px', border: 'none',
+                    backgroundColor: activeAITab === 'seo' ? '#1a1a1a' : '#f5f5f5',
+                    color: activeAITab === 'seo' ? '#fff' : '#666',
+                    fontSize: '12px', fontWeight: 700, cursor: 'pointer'
+                  }}
+                >SEO</button>
+              </div>
+
+              {activeAITab === 'content' && (
+                <div className="space-y-6">
+                  <div style={{ padding: '16px', backgroundColor: '#f8f9fa', borderRadius: '16px', border: '1px solid #eee' }}>
+                    <LabelText text="AI MODEL" />
+                    <AIModelSelector value={selectedAIModel} onChange={setSelectedAIModel} />
+                  </div>
+
+                  <div className="space-y-3">
+                    <button onClick={handleGenerateContent} disabled={generateContentLoading} style={{ width: '100%', padding: '14px', backgroundColor: '#1a1a1a', color: '#fff', borderRadius: '12px', border: 'none', fontSize: '13px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      {generateContentLoading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+                      {generateContentLoading ? "Generating..." : "Generate Full Article"}
+                    </button>
+
+                    <button onClick={handleGenerateOutline} disabled={generateOutlineLoading} style={{ width: '100%', padding: '14px', backgroundColor: '#fff', color: '#1a1a1a', borderRadius: '12px', border: '1px solid #eee', fontSize: '13px', fontWeight: 800, cursor: 'pointer' }}>
+                      {generateOutlineLoading ? "Generating..." : "Create Outline"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {activeAITab === 'images' && (
+                <div className="space-y-4">
+                  <LabelText text="IMAGE PROMPT" />
                   <textarea
                     value={imagePrompt}
                     onChange={(e) => setImagePrompt(e.target.value)}
-                    placeholder="e.g., A futuristic city with flying cars, sunset lighting, digital art style..."
-                    className="w-full px-4 py-3 border border-neutral-200 rounded-lg bg-white min-h-[120px] text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                    placeholder="Describe the image you want to generate..."
+                    style={{ width: '100%', height: '120px', padding: '16px', borderRadius: '16px', border: '1px solid #eee', fontSize: '13px', resize: 'none', outline: 'none' }}
                   />
-                  <Button
-                    onClick={handleGenerateImage}
-                    disabled={imageGenerating || !imagePrompt.trim()}
-                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-6 h-auto rounded-lg font-semibold shadow-md hover:shadow-lg transition-all"
-                  >
-                    {imageGenerating ? (
-                      <>
-                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                        Generating Image...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-5 w-5 mr-2" />
-                        Generate Image
-                      </>
-                    )}
-                  </Button>
+                  <button onClick={handleGenerateImage} disabled={imageGenerating} style={{ width: '100%', padding: '14px', backgroundColor: '#FF7A33', color: '#fff', borderRadius: '12px', border: 'none', fontWeight: 800, cursor: 'pointer' }}>
+                    {imageGenerating ? "Processing..." : "Generate Asset"}
+                  </button>
                 </div>
+              )}
 
-                {/* Generated Images */}
-                {generatedImages.length > 0 && (
-                  <div className="space-y-3">
-                    <h3 className="text-xs font-bold text-neutral-900 uppercase tracking-wide">
-                      Generated Images ({generatedImages.length})
-                    </h3>
-                    <div className="space-y-3">
-                      {generatedImages.map((img, idx) => (
-                        <div key={idx} className="bg-white border-2 border-purple-200 rounded-xl p-3 hover:shadow-lg transition-all">
-                          {img && img.url ? (
-                            <>
-                              <img
-                                src={img.url}
-                                alt={img.prompt || `Generated image ${idx + 1}`}
-                                className="w-full rounded-lg mb-3 border border-neutral-200"
-                                onError={(e) => {
-                                  console.error('Image failed to load:', img.url)
-                                  toast.error("Failed to load image")
-                                }}
-                              />
-                              <p className="text-xs text-neutral-600 mb-2 line-clamp-2" title={img.prompt}>
-                                <strong>Prompt:</strong> {img.prompt}
-                              </p>
-                              {img.message && (
-                                <p className="text-xs text-purple-600 mb-2 italic">
-                                  {img.message}
-                                </p>
-                              )}
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="flex-1 text-xs border-purple-200 hover:bg-purple-50"
-                                  onClick={() => {
-                                    if (img.url) {
-                                      setContent(prev => prev + `<p><img src="${img.url}" alt="${img.prompt || 'Generated image'}" style="max-width: 100%; height: auto;" /></p>`)
-                                      toast.success("Image inserted into article")
-                                    }
-                                  }}
-                                >
-                                  Insert into Article
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-xs border-neutral-200 hover:bg-neutral-50"
-                                  onClick={() => {
-                                    setGeneratedImages(prev => prev.filter((_, i) => i !== idx))
-                                    toast.success("Image removed")
-                                  }}
-                                >
-                                  Remove
-                                </Button>
-                              </div>
-                            </>
-                          ) : (
-                            <div className="text-xs text-red-500">
-                              Invalid image data
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* SEO TAB */}
-            {activeAITab === 'seo' && (
-              <div className="p-6 space-y-5">
-                {/* AI Model Selector for SEO */}
-                <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 p-4 rounded-xl">
-                  <h3 className="text-xs font-bold text-neutral-900 uppercase tracking-wide mb-3 flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-blue-600" />
-                    AI Model for SEO
-                  </h3>
-                  <AIModelSelector
-                    value={selectedSEOModel}
-                    onChange={setSelectedSEOModel}
-                    className="w-full"
-                  />
-                  <div className="mt-3 space-y-1.5 text-xs">
-                    <p className="font-semibold text-neutral-700">SEO Quality by Model:</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-gray-400"></span>
-                        <span className="text-neutral-600">Gemini Flash: Basic</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-blue-400"></span>
-                        <span className="text-neutral-600">GPT-4o Mini: Good</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-purple-400"></span>
-                        <span className="text-neutral-600">GPT-4o: Advanced</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                        <span className="text-neutral-600">Claude/GPT-4: Expert</span>
+              {activeAITab === 'seo' && (
+                <div className="space-y-6">
+                  <button onClick={handleAnalyzeSEO} disabled={seoAnalyzing} style={{ width: '100%', padding: '14px', backgroundColor: '#4f46e5', color: '#fff', borderRadius: '12px', border: 'none', fontWeight: 800 }}>
+                    {seoAnalyzing ? "Auditing..." : "Run SEO Analysis"}
+                  </button>
+                  {seoAnalysis && (
+                    <div style={{ padding: '16px', backgroundColor: '#f0f3ff', borderRadius: '16px', border: '1px solid #e0e7ff' }}>
+                      <h4 style={{ fontSize: '13px', fontWeight: 800, color: '#4338ca', marginBottom: '10px' }}>Analysis Report</h4>
+                      <div style={{ fontSize: '12px', color: '#4b5563', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
+                        {typeof seoAnalysis === 'string' ? seoAnalysis : JSON.stringify(seoAnalysis, null, 2)}
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
-
-                {/* SEO Fields */}
-                <div className="space-y-4">
-
-                  <div>
-                    <label className="text-xs font-medium mb-2 block text-neutral-700">Focus Keyword</label>
-                    <Input
-                      placeholder="e.g., content marketing"
-                      value={focusKeyword}
-                      onChange={(e) => setFocusKeyword(e.target.value)}
-                      className="h-10 bg-white border-neutral-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-medium mb-2 block text-neutral-700">Meta Title</label>
-                    <Input
-                      placeholder="Article meta title"
-                      value={metaTitle}
-                      onChange={(e) => setMetaTitle(e.target.value)}
-                      className="h-10 bg-white border-neutral-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                    />
-                    <p className="text-xs text-neutral-500 mt-1.5 flex items-center justify-between">
-                      <span>{metaTitle.length}/60 characters</span>
-                      <span className={metaTitle.length > 60 ? 'text-red-500 font-semibold' : metaTitle.length > 50 ? 'text-orange-500' : 'text-emerald-500'}>
-                        {metaTitle.length <= 60 ? '✓' : '⚠'}
-                      </span>
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-medium mb-2 block text-neutral-700">Meta Description</label>
-                    <textarea
-                      placeholder="Article meta description"
-                      value={metaDescription}
-                      onChange={(e) => setMetaDescription(e.target.value)}
-                      className="w-full px-3 py-2.5 border border-neutral-200 rounded-lg bg-white min-h-[90px] text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                    />
-                    <p className="text-xs text-neutral-500 mt-1.5 flex items-center justify-between">
-                      <span>{metaDescription.length}/160 characters</span>
-                      <span className={metaDescription.length > 160 ? 'text-red-500 font-semibold' : metaDescription.length > 150 ? 'text-orange-500' : 'text-emerald-500'}>
-                        {metaDescription.length <= 160 ? '✓' : '⚠'}
-                      </span>
-                    </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white border-0 px-4 py-4 h-auto rounded-lg font-semibold"
-                      onClick={handleGenerateMetaDescription}
-                      disabled={generateMetaLoading}
-                    >
-                      {generateMetaLoading ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Generating...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="h-4 w-4 mr-2" />
-                          Generate with AI
-                        </>
-                      )}
-                    </Button>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-medium mb-2 block text-neutral-700">Excerpt</label>
-                    <textarea
-                      placeholder="Brief summary of the article"
-                      value={excerpt}
-                      onChange={(e) => setExcerpt(e.target.value)}
-                      className="w-full px-3 py-2.5 border border-neutral-200 rounded-lg bg-white min-h-[70px] text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                    />
-                  </div>
-                </div>
-
-                {/* SEO Analysis Button */}
-                <div>
-                  <Button
-                    onClick={handleAnalyzeSEO}
-                    disabled={seoAnalyzing || !content.trim()}
-                    className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-4 py-6 h-auto rounded-lg font-semibold shadow-md hover:shadow-lg transition-all"
-                  >
-                    {seoAnalyzing ? (
-                      <>
-                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                        Analyzing SEO...
-                      </>
-                    ) : (
-                      <>
-                        <Target className="h-5 w-5 mr-2" />
-                        Run SEO Analysis
-                      </>
-                    )}
-                  </Button>
-                  <p className="text-xs text-neutral-500 mt-2 text-center">
-                    Analysis depth depends on selected AI model
-                  </p>
-                </div>
-
-                {/* SEO Analysis Results */}
-                {seoAnalysis && (
-                  <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 p-4 rounded-xl">
-                    <h3 className="text-xs font-bold text-neutral-900 uppercase tracking-wide mb-3">
-                      📊 SEO Analysis Results
-                    </h3>
-                    <div className="prose prose-sm max-w-none text-xs">
-                      {typeof seoAnalysis === 'string' ? (
-                        <p className="text-neutral-700 whitespace-pre-wrap">{seoAnalysis}</p>
-                      ) : (
-                        <div className="space-y-2">
-                          {seoAnalysis.score && (
-                            <div className="flex items-center justify-between p-2 bg-white rounded">
-                              <span className="font-medium">SEO Score:</span>
-                              <span className="font-bold text-blue-600">{seoAnalysis.score}/100</span>
-                            </div>
-                          )}
-                          {seoAnalysis.recommendations && (
-                            <div className="mt-2">
-                              <p className="font-medium mb-1">Recommendations:</p>
-                              <ul className="list-disc list-inside space-y-1 text-neutral-600">
-                                {Array.isArray(seoAnalysis.recommendations)
-                                  ? seoAnalysis.recommendations.map((rec: string, idx: number) => (
-                                      <li key={idx}>{rec}</li>
-                                    ))
-                                  : <li>{seoAnalysis.recommendations}</li>
-                                }
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Content Analysis */}
-                <div className="bg-neutral-50 border border-neutral-200 p-4 rounded-xl">
-                  <h3 className="text-xs font-bold text-neutral-900 uppercase tracking-wide mb-3">
-                    Content Quality
-                  </h3>
-                  <ContentAnalysis content={content} />
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
-        </>
-      )}
+        )
+      }
 
-      {/* Publish Modal */}
       <PublishModal
         open={showPublishModal}
         onClose={() => setShowPublishModal(false)}
@@ -1137,5 +1267,184 @@ export default function ArticleEditorPage() {
         articleTitle={title}
       />
     </div>
+  )
+}
+
+// Reusable Helper Components for the Premium UI
+function ConfigSection({ title, children, badge }: any) {
+  return (
+    <div className="config-section" style={{
+      backgroundColor: '#fff',
+      borderRadius: '24px',
+      border: '1px solid rgba(0,0,0,0.05)',
+      padding: '24px',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h3 style={{ fontSize: '14px', fontWeight: 800, color: '#1a1a1a', margin: 0 }}>{title}</h3>
+        {badge && <span style={{ fontSize: '12px', fontWeight: 800, color: '#FF7A33' }}>{badge}</span>}
+      </div>
+      {children}
+    </div>
+  )
+}
+
+function LabelText({ text }: { text: string }) {
+  return <label style={{ display: 'block', fontSize: '10px', fontWeight: 800, color: '#999', marginBottom: '8px', letterSpacing: '0.5px' }}>{text}</label>
+}
+
+function ConfigInput({ label, type, placeholder, options, value, onChange }: any) {
+  return (
+    <div>
+      <LabelText text={label} />
+      <div style={{ position: 'relative' }}>
+        {type === 'select' ? (
+          <select
+            value={value}
+            onChange={(e) => onChange?.(e.target.value)}
+            style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.06)', backgroundColor: '#fcfcfc', fontSize: '13px', fontWeight: 600, appearance: 'none', cursor: 'pointer', outline: 'none' }}
+          >
+            {options.map((opt: string) => <option key={opt}>{opt}</option>)}
+          </select>
+        ) : (
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <input
+              className="config-input"
+              type={type}
+              placeholder={placeholder}
+              value={value}
+              onChange={(e) => onChange?.(e.target.value)}
+              style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.06)', backgroundColor: '#fcfcfc', fontSize: '13px', fontWeight: 600, outline: 'none' }}
+            />
+            {type === 'date' && <Calendar size={14} color="#666" style={{ position: 'absolute', right: '16px', pointerEvents: 'none' }} />}
+          </div>
+        )}
+        {type === 'select' && (
+          <ChevronDown size={14} color="#666" style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+        )}
+      </div>
+    </div>
+  )
+}
+
+function ChannelItem({ icon, name, active }: any) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{
+          width: '28px',
+          height: '28px',
+          borderRadius: '50%',
+          backgroundColor: '#FFF5F0',
+          color: '#FF7A33',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '11px',
+          fontWeight: 800
+        }}>
+          {icon}
+        </div>
+        <span style={{ fontSize: '13px', fontWeight: 600, color: '#666' }}>{name}</span>
+      </div>
+      <Checkbox checked={active} />
+    </div>
+  )
+}
+
+function CheckboxItem({ label, checked }: any) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <Checkbox checked={checked} />
+      <span style={{ fontSize: '13px', fontWeight: 600, color: '#666' }}>{label}</span>
+    </div>
+  )
+}
+
+function Checkbox({ checked }: { checked: boolean }) {
+  return (
+    <div style={{
+      width: '18px',
+      height: '18px',
+      borderRadius: '4px',
+      border: checked ? 'none' : '2px solid #ddd',
+      backgroundColor: checked ? '#1a1a1a' : 'transparent',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}>
+      {checked && <div style={{ width: '8px', height: '4px', borderLeft: '2px solid #fff', borderBottom: '2px solid #fff', transform: 'rotate(-45deg)', marginTop: '-1px' }} />}
+    </div>
+  )
+}
+
+function ToggleItem({ label, active }: any) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <span style={{ fontSize: '13px', fontWeight: 600, color: '#666' }}>{label}</span>
+      <div style={{
+        width: '36px',
+        height: '20px',
+        borderRadius: '20px',
+        backgroundColor: active ? '#FF7A33' : '#eee',
+        position: 'relative',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease'
+      }}>
+        <div style={{
+          width: '16px',
+          height: '16px',
+          borderRadius: '50%',
+          backgroundColor: '#fff',
+          position: 'absolute',
+          top: '2px',
+          left: active ? '18px' : '2px',
+          transition: 'all 0.2s ease',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+        }} />
+      </div>
+    </div>
+  )
+}
+
+function EditorToolButton({ icon, onClick, className }: any) {
+  return (
+    <button
+      onClick={onClick}
+      className={className}
+      style={{ padding: '8px', borderRadius: '8px', border: 'none', backgroundColor: 'transparent', color: '#666', cursor: 'pointer', transition: 'all 0.2s ease' }}
+      onMouseOver={(e: any) => e.currentTarget.style.backgroundColor = '#f8f8f8'}
+      onMouseOut={(e: any) => e.currentTarget.style.backgroundColor = 'transparent'}
+    >
+      {icon}
+    </button>
+  )
+}
+
+function Divider({ className }: { className?: string }) {
+  return <div className={className} style={{ width: '1px', height: '20px', backgroundColor: '#eee', margin: '0 4px' }} />
+}
+
+function SidebarActionButton({ text, onClick }: any) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: '12px',
+        borderRadius: '12px',
+        border: '1px solid #FF7A33',
+        backgroundColor: '#fff',
+        color: '#FF7A33',
+        fontWeight: 800,
+        fontSize: '12px',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        whiteSpace: 'nowrap'
+      }}
+      onMouseOver={(e: any) => { e.currentTarget.style.backgroundColor = '#FF7A33'; e.currentTarget.style.color = '#fff' }}
+      onMouseOut={(e: any) => { e.currentTarget.style.backgroundColor = '#fff'; e.currentTarget.style.color = '#FF7A33' }}
+    >
+      {text}
+    </button>
   )
 }

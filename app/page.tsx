@@ -1,1469 +1,686 @@
 "use client"
 
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import {
-  PenTool,
-  Calendar,
-  BarChart3,
-  Sparkles,
-  Check,
-  Plus,
-  ArrowRight,
-  Zap,
-  Users,
-  Globe,
-  Twitter,
-  Linkedin,
-  Github,
-  Mail,
-  ChevronLeft,
-  ChevronRight,
-  Info
-} from "lucide-react"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts'
-import { useState, useEffect, useRef } from "react"
-import { useRouter } from "next/navigation"
+import { Check, Star, Users, FileText, TrendingUp, Plus, Minus, ArrowRight, Play, Sparkles, Send, LayoutGrid, BarChart3 } from "lucide-react"
+import { useState } from "react"
+import Image from "next/image"
 import { useAuth } from "@/lib/context/AuthContext"
-import { PricingCarousel } from "@/components/PricingCarousel"
-
-const chartData = [
-  { month: 'Jan', platform1: 1200, platform2: 800 },
-  { month: 'Feb', platform1: 1500, platform2: 1000 },
-  { month: 'Mar', platform1: 1400, platform2: 1100 },
-  { month: 'Apr', platform1: 1800, platform2: 1300 },
-  { month: 'May', platform1: 2200, platform2: 1600 },
-  { month: 'Jun', platform1: 2100, platform2: 1700 },
-  { month: 'Jul', platform1: 2600, platform2: 1900 },
-]
+import { useRouter } from "next/navigation"
 
 export default function Home() {
+  const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly')
   const { user } = useAuth()
   const router = useRouter()
-  const [openFaq, setOpenFaq] = useState<number | null>(null)
-  const [isChartVisible, setIsChartVisible] = useState(false)
-  const [heroVisible, setHeroVisible] = useState(false)
-  const [featuresVisible, setFeaturesVisible] = useState(false)
-  const [statsVisible, setStatsVisible] = useState(false)
-  const [pricingVisible, setPricingVisible] = useState(false)
-  const [currentTestimonial, setCurrentTestimonial] = useState(0)
-  const [hoveredPlatform, setHoveredPlatform] = useState<string | null>(null)
-  const [activeFeature, setActiveFeature] = useState<number | null>(null)
-  const [counters, setCounters] = useState({ users: 0, content: 0, reach: 0 })
-  const [email, setEmail] = useState("")
-  const [screenSize, setScreenSize] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200)
-  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly')
 
-  const chartRef = useRef<HTMLDivElement>(null)
-  const heroRef = useRef<HTMLDivElement>(null)
-  const featuresRef = useRef<HTMLDivElement>(null)
-  const statsRef = useRef<HTMLDivElement>(null)
-  const pricingRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    // Hero animation on mount
-    setTimeout(() => setHeroVisible(true), 100)
-
-    // Handle window resize for responsive pricing cards
-    const handleResize = () => {
-      setScreenSize(window.innerWidth)
+  const handleStart = () => {
+    if (user) {
+      router.push('/dashboard')
+    } else {
+      router.push('/signup')
     }
-
-    window.addEventListener('resize', handleResize)
-
-    // Testimonial carousel auto-rotate
-    const testimonialInterval = setInterval(() => {
-      setCurrentTestimonial((prev) => (prev + 1) % 3)
-    }, 5000)
-
-    const observerOptions = { threshold: 0.15 }
-
-    const chartObserver = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) setIsChartVisible(true)
-      })
-    }, observerOptions)
-
-    const featuresObserver = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) setFeaturesVisible(true)
-      })
-    }, observerOptions)
-
-    const statsObserver = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          setStatsVisible(true)
-          // Animate counters
-          const duration = 2000
-          const steps = 60
-          const usersTarget = 10000
-          const contentTarget = 500000
-          const reachTarget = 5000000
-
-          let currentStep = 0
-          const counterInterval = setInterval(() => {
-            currentStep++
-            const progress = currentStep / steps
-            setCounters({
-              users: Math.floor(usersTarget * progress),
-              content: Math.floor(contentTarget * progress),
-              reach: Math.floor(reachTarget * progress)
-            })
-            if (currentStep >= steps) clearInterval(counterInterval)
-          }, duration / steps)
-        }
-      })
-    }, observerOptions)
-
-    const pricingObserver = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) setPricingVisible(true)
-      })
-    }, observerOptions)
-
-    if (chartRef.current) chartObserver.observe(chartRef.current)
-    if (featuresRef.current) featuresObserver.observe(featuresRef.current)
-    if (statsRef.current) statsObserver.observe(statsRef.current)
-    if (pricingRef.current) pricingObserver.observe(pricingRef.current)
-
-    return () => {
-      window.removeEventListener('resize', handleResize)
-      clearInterval(testimonialInterval)
-      if (chartRef.current) chartObserver.unobserve(chartRef.current)
-      if (featuresRef.current) featuresObserver.unobserve(featuresRef.current)
-      if (statsRef.current) statsObserver.unobserve(statsRef.current)
-      if (pricingRef.current) pricingObserver.unobserve(pricingRef.current)
-    }
-  }, [])
-
-  // Helper function to format numbers
-  const formatNumber = (num: number) => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
-    if (num >= 1000) return `${(num / 1000).toFixed(0)}K`
-    return num.toString()
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f5f1e8 0%, #e8dcc8 50%, #f5f1e8 100%)', position: 'relative', overflow: 'hidden' }}>
-      {/* Animated background orbs */}
-      <div style={{
-        position: 'absolute',
-        top: '-10%',
-        right: '-5%',
-        width: '600px',
-        height: '600px',
-        borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(31, 53, 41, 0.05) 0%, transparent 70%)',
-        animation: 'float 20s ease-in-out infinite',
-        zIndex: 0
-      }} />
-      <div style={{
-        position: 'absolute',
-        bottom: '-15%',
-        left: '-8%',
-        width: '500px',
-        height: '500px',
-        borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(31, 53, 41, 0.04) 0%, transparent 70%)',
-        animation: 'float 25s ease-in-out infinite reverse',
-        zIndex: 0
-      }} />
-      <style jsx>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes fadeInDown {
-          from {
-            opacity: 0;
-            transform: translateY(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes slideInLeft {
-          from {
-            opacity: 0;
-            transform: translateX(-30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-
-        @keyframes slideInRight {
-          from {
-            opacity: 0;
-            transform: translateX(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-
-        @keyframes scaleIn {
-          from {
-            opacity: 0;
-            transform: scale(0.9);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-
-        @keyframes float {
-          0%, 100% {
-            transform: translateY(0px);
-          }
-          50% {
-            transform: translateY(-10px);
-          }
-        }
-
-        .hover-lift {
-          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .hover-lift:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 20px 40px -12px rgba(31, 53, 41, 0.2);
-        }
-
-        .hover-scale {
-          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .hover-scale:hover {
-          transform: scale(1.05);
-        }
-
-        .btn-primary {
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          position: relative;
-          overflow: hidden;
-        }
-
-        .btn-primary::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: -100%;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-          transition: left 0.5s;
-        }
-
-        .btn-primary:hover::before {
-          left: 100%;
-        }
-
-        .btn-primary:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 25px -5px rgba(31, 53, 41, 0.3);
-        }
-
-        .feature-card {
-          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-          position: relative;
-        }
-
-        .feature-card::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          border-radius: 16px;
-          padding: 2px;
-          background: linear-gradient(135deg, transparent, rgba(31, 53, 41, 0.1));
-          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-          -webkit-mask-composite: xor;
-          mask-composite: exclude;
-          opacity: 0;
-          transition: opacity 0.4s;
-        }
-
-        .feature-card:hover::before {
-          opacity: 1;
-        }
-
-        .feature-card:hover {
-          transform: translateY(-6px);
-          box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.15);
-          border-color: #1f3529;
-        }
-
-        .pricing-card {
-          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .pricing-card:hover {
-          transform: translateY(-8px) scale(1.02);
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.2);
-        }
-
-        .platform-item {
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          opacity: 0.7;
-        }
-
-        .platform-item:hover {
-          opacity: 1;
-          transform: translateY(-3px);
-        }
-
-        .pulse {
-          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-
-        @keyframes pulse {
-          0%, 100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0.5;
-          }
-        }
-
-        .gradient-bg {
-          background: linear-gradient(135deg, #f5f1e8 0%, #ebe4d5 50%, #f5f1e8 100%);
-          background-size: 200% 200%;
-          animation: gradientShift 15s ease infinite;
-        }
-
-        @keyframes gradientShift {
-          0% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-          100% {
-            background-position: 0% 50%;
-          }
-        }
-
-        .slide-in {
-          animation: slideIn 0.5s ease-out;
-        }
-
-        @keyframes slideIn {
-          from {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
-
-        .tooltip {
-          position: absolute;
-          bottom: 100%;
-          left: 50%;
-          transform: translateX(-50%) translateY(-10px);
-          background: #1f3529;
-          color: white;
-          padding: 8px 14px;
-          border-radius: 8px;
-          font-size: 13px;
-          white-space: nowrap;
-          opacity: 0;
-          pointer-events: none;
-          transition: all 0.3s;
-        }
-
-        .tooltip::after {
-          content: '';
-          position: absolute;
-          top: 100%;
-          left: 50%;
-          transform: translateX(-50%);
-          border: 6px solid transparent;
-          border-top-color: #1f3529;
-        }
-
-        .platform-item:hover .tooltip {
-          opacity: 1;
-          transform: translateX(-50%) translateY(-5px);
-        }
-      `}</style>
+    <div style={{ backgroundColor: '#fff', minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
 
       {/* Hero Section */}
-      <section className="gradient-bg" style={{ maxWidth: '1152px', margin: '0 auto', padding: '104px 32px 72px', position: 'relative', overflow: 'hidden' }} ref={heroRef}>
-        {/* Animated decorative elements */}
-        <div style={{
-          position: 'absolute',
-          top: '10%',
-          right: '5%',
-          width: '120px',
-          height: '120px',
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(31, 53, 41, 0.08) 0%, transparent 70%)',
-          opacity: heroVisible ? 0.6 : 0,
-          transition: 'opacity 1.5s ease-out 0.5s'
-        }} />
-        <div style={{
-          position: 'absolute',
-          bottom: '20%',
-          left: '8%',
-          width: '80px',
-          height: '80px',
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(31, 53, 41, 0.06) 0%, transparent 70%)',
-          opacity: heroVisible ? 0.5 : 0,
-          transition: 'opacity 1.5s ease-out 0.8s'
-        }} />
-
-        <div style={{ textAlign: 'center', maxWidth: '840px', margin: '0 auto 56px', position: 'relative', zIndex: 1 }}>
-          {/* Badge */}
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            backgroundColor: 'white',
-            padding: '8px 18px',
-            borderRadius: '24px',
-            marginBottom: '32px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-            opacity: heroVisible ? 1 : 0,
-            transform: heroVisible ? 'translateY(0)' : 'translateY(-10px)',
-            transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.05s'
-          }}>
-            <Zap style={{ height: '14px', width: '14px', color: '#1f3529' }} strokeWidth={2.5} />
-            <span style={{ fontSize: '12px', fontWeight: 600, color: '#1f3529', letterSpacing: '0.3px' }}>
-              Join 10,000+ creators
-            </span>
-          </div>
-
-          <p style={{
-            fontSize: '11px',
-            letterSpacing: '0.15em',
-            color: '#6b7280',
-            marginBottom: '28px',
-            fontWeight: 600,
-            textTransform: 'uppercase',
-            opacity: heroVisible ? 1 : 0,
-            transform: heroVisible ? 'translateY(0)' : 'translateY(-10px)',
-            transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.1s'
-          }}>
-            Your content, amplified across platforms
-          </p>
+      <section style={{
+        backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.92)), url("/design/BG%2023-01%202.png")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        padding: '80px 24px 100px',
+        position: 'relative'
+      }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', textAlign: 'center' }}>
           <h1 style={{
-            fontFamily: 'Playfair Display, Georgia, serif',
-            fontSize: '72px',
-            lineHeight: '1.1',
-            marginBottom: '36px',
-            letterSpacing: '-0.03em',
-            opacity: heroVisible ? 1 : 0,
-            transform: heroVisible ? 'translateY(0)' : 'translateY(20px)',
-            transition: 'all 0.7s cubic-bezier(0.4, 0, 0.2, 1) 0.2s'
+            fontSize: 'clamp(36px, 6vw, 64px)',
+            fontWeight: 900,
+            lineHeight: '1.2',
+            marginBottom: '20px',
+            color: '#1a1a1a',
+            letterSpacing: '-0.02em'
           }}>
-            Publish Once,<br />
-            <span style={{ fontStyle: 'italic', fontWeight: 400 }}>Reach Everywhere</span>
+            Publish Smarter Blogs With AI<br />
+            Across Every <span style={{ color: '#888', fontStyle: 'italic', fontWeight: 300, fontFamily: 'serif' }}>Platform</span>
           </h1>
           <p style={{
-            fontSize: '18px',
-            lineHeight: '1.7',
-            color: '#4b5563',
-            maxWidth: '700px',
-            margin: '0 auto 48px',
-            opacity: heroVisible ? 1 : 0,
-            transform: heroVisible ? 'translateY(0)' : 'translateY(20px)',
-            transition: 'all 0.7s cubic-bezier(0.4, 0, 0.2, 1) 0.3s'
+            fontSize: '16px',
+            lineHeight: '1.6',
+            color: '#666',
+            maxWidth: '650px',
+            margin: '0 auto 40px',
+            fontWeight: 500
           }}>
-            With PublishType, publish your blog posts on all major platforms in a few clicks.
-            Reach your audience where they are, and track performance from one simple dashboard.
+            AIMy Blogs helps creators and teams generate, optimize, and publish high-quality content in minutes.<br />
+            From SEO + images to scheduling and analytics, everything stays in one workflow.
           </p>
 
           <div style={{
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
             gap: '16px',
-            marginBottom: '88px',
-            opacity: heroVisible ? 1 : 0,
-            transform: heroVisible ? 'translateY(0)' : 'translateY(20px)',
-            transition: 'all 0.7s cubic-bezier(0.4, 0, 0.2, 1) 0.4s'
+            justifyContent: 'center',
+            marginBottom: '32px',
+            flexWrap: 'wrap'
           }}>
-            <Link href="/signup">
-              <button className="btn-primary" style={{
-                backgroundColor: '#1f3529',
+            <button
+              onClick={handleStart}
+              style={{
+                padding: '16px 40px',
+                backgroundColor: '#FF7A33',
                 color: 'white',
-                padding: '16px 36px',
-                fontSize: '16px',
-                fontWeight: 500,
-                borderRadius: '8px',
                 border: 'none',
-                cursor: 'pointer'
-              }}>
-                Start For Free
-              </button>
-            </Link>
-            <Link href="#features">
-              <button className="hover-lift" style={{
-                border: '2px solid #1f3529',
-                color: '#1f3529',
-                backgroundColor: 'transparent',
-                padding: '14px 36px',
-                fontSize: '16px',
-                fontWeight: 500,
-                borderRadius: '8px',
-                cursor: 'pointer'
-              }}>
-                Learn More
-              </button>
-            </Link>
-          </div>
-
-          {/* Analytics Chart */}
-          <div
-            ref={chartRef}
-            style={{
-              position: 'relative',
-              margin: '0 auto',
-              maxWidth: '860px',
-              opacity: isChartVisible ? 1 : 0,
-              transform: isChartVisible ? 'translateY(0)' : 'translateY(40px)',
-              transition: 'all 0.9s cubic-bezier(0.4, 0, 0.2, 1)'
-            }}
-          >
-            <div
-              className="hover-lift"
-              style={{
-                position: 'relative',
-                backgroundColor: '#fafaf9',
-                border: '1px solid #ebe4d5',
-                borderRadius: '20px',
-                overflow: 'hidden',
-                boxShadow: '0 8px 16px -4px rgba(0, 0, 0, 0.08)'
-              }}
-            >
-              <div style={{
-                padding: '32px 40px 24px',
-                borderBottom: '1px solid #ebe4d5',
-                background: 'linear-gradient(to bottom, #fafaf9, #ffffff)'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  marginBottom: '8px',
-                  opacity: isChartVisible ? 1 : 0,
-                  transform: isChartVisible ? 'translateX(0)' : 'translateX(-20px)',
-                  transition: 'all 0.7s cubic-bezier(0.4, 0, 0.2, 1) 0.3s'
-                }}>
-                  <h3 style={{
-                    fontSize: '16px',
-                    fontWeight: 600,
-                    color: '#1f3529',
-                    margin: 0
-                  }}>
-                    Publication Performance
-                  </h3>
-                  <span style={{
-                    fontSize: '11px',
-                    color: '#6b7280',
-                    fontWeight: 600,
-                    backgroundColor: '#ebe4d5',
-                    padding: '6px 12px',
-                    borderRadius: '8px',
-                    letterSpacing: '0.5px'
-                  }}>
-                    LAST 7 MONTHS
-                  </span>
-                </div>
-                <p style={{
-                  fontSize: '13px',
-                  color: '#6b7280',
-                  margin: 0,
-                  marginTop: '6px',
-                  opacity: isChartVisible ? 1 : 0,
-                  transition: 'opacity 0.7s ease-out 0.4s'
-                }}>
-                  Track your content reach across platforms
-                </p>
-              </div>
-
-              <div style={{
-                padding: '28px 40px 32px',
-                backgroundColor: 'white',
-                opacity: isChartVisible ? 1 : 0,
-                transition: 'opacity 0.9s ease-out 0.5s'
-              }}>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorPlatform1" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#1f3529" stopOpacity={0.1} />
-                        <stop offset="95%" stopColor="#1f3529" stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="colorPlatform2" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#8b9485" stopOpacity={0.1} />
-                        <stop offset="95%" stopColor="#8b9485" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid
-                      strokeDasharray="4 4"
-                      stroke="#ebe4d5"
-                      vertical={false}
-                      opacity={0.6}
-                    />
-                    <XAxis
-                      dataKey="month"
-                      tick={{ fontSize: 11, fill: '#9ca3af', fontWeight: 500 }}
-                      stroke="#ebe4d5"
-                      tickLine={false}
-                      axisLine={{ stroke: '#ebe4d5', strokeWidth: 1 }}
-                      dy={10}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 11, fill: '#9ca3af', fontWeight: 500 }}
-                      stroke="#ebe4d5"
-                      tickLine={false}
-                      axisLine={{ stroke: '#ebe4d5', strokeWidth: 1 }}
-                      tickFormatter={(value) => `${(value / 1000).toFixed(1)}k`}
-                      dx={-8}
-                    />
-                    <Tooltip
-                      cursor={{ stroke: '#ebe4d5', strokeWidth: 1, strokeDasharray: '4 4' }}
-                      contentStyle={{
-                        backgroundColor: 'white',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '10px',
-                        fontSize: '13px',
-                        padding: '12px 16px',
-                        boxShadow: '0 12px 24px -6px rgba(0, 0, 0, 0.12)'
-                      }}
-                      labelStyle={{
-                        fontWeight: 600,
-                        color: '#1f3529',
-                        marginBottom: '6px'
-                      }}
-                      animationDuration={300}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="platform1"
-                      stroke="#1f3529"
-                      strokeWidth={3}
-                      dot={{
-                        fill: '#1f3529',
-                        r: 5,
-                        strokeWidth: 0,
-                        style: {
-                          transition: 'all 0.3s ease',
-                          cursor: 'pointer'
-                        }
-                      }}
-                      activeDot={{
-                        r: 7,
-                        fill: '#1f3529',
-                        strokeWidth: 3,
-                        stroke: 'white',
-                        style: { filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.3))' }
-                      }}
-                      name="Medium"
-                      animationBegin={isChartVisible ? 600 : 0}
-                      animationDuration={1800}
-                      animationEasing="ease-in-out"
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="platform2"
-                      stroke="#8b9485"
-                      strokeWidth={3}
-                      dot={{
-                        fill: '#8b9485',
-                        r: 5,
-                        strokeWidth: 0,
-                        style: {
-                          transition: 'all 0.3s ease',
-                          cursor: 'pointer'
-                        }
-                      }}
-                      activeDot={{
-                        r: 7,
-                        fill: '#8b9485',
-                        strokeWidth: 3,
-                        stroke: 'white',
-                        style: { filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.3))' }
-                      }}
-                      name="Substack"
-                      animationBegin={isChartVisible ? 800 : 0}
-                      animationDuration={1800}
-                      animationEasing="ease-in-out"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-
-              <div style={{
-                padding: '18px 40px',
-                backgroundColor: '#fafaf9',
-                borderTop: '1px solid #ebe4d5',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                opacity: isChartVisible ? 1 : 0,
-                transform: isChartVisible ? 'translateY(0)' : 'translateY(15px)',
-                transition: 'all 0.7s cubic-bezier(0.4, 0, 0.2, 1) 0.7s'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
-                  <div className="hover-scale" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    cursor: 'pointer'
-                  }}>
-                    <div style={{
-                      width: '12px',
-                      height: '12px',
-                      borderRadius: '3px',
-                      backgroundColor: '#1f3529'
-                    }}></div>
-                    <span style={{ fontSize: '14px', color: '#4b5563', fontWeight: 600 }}>
-                      Medium
-                    </span>
-                  </div>
-                  <div className="hover-scale" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    cursor: 'pointer'
-                  }}>
-                    <div style={{
-                      width: '12px',
-                      height: '12px',
-                      borderRadius: '3px',
-                      backgroundColor: '#8b9485'
-                    }}></div>
-                    <span style={{ fontSize: '14px', color: '#4b5563', fontWeight: 600 }}>
-                      Substack
-                    </span>
-                  </div>
-                </div>
-                <span style={{
-                  fontSize: '11px',
-                  color: '#9ca3af',
-                  fontWeight: 600,
-                  letterSpacing: '0.5px'
-                }}>
-                  MONTHLY VIEWS
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Platform Integrations */}
-      <section style={{
-        maxWidth: '1152px',
-        margin: '0 auto',
-        padding: '72px 32px',
-        textAlign: 'center',
-        borderTop: '1px solid rgba(0,0,0,0.06)'
-      }}>
-        <p style={{
-          fontSize: '10px',
-          letterSpacing: '0.2em',
-          color: '#9ca3af',
-          marginBottom: '40px',
-          fontWeight: 600,
-          textTransform: 'uppercase'
-        }}>
-          Integrates with all your favorite platforms
-        </p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '72px 56px' }}>
-          {[
-            { icon: '👻', name: 'Ghost Blog', desc: '500+ integrations' },
-            { icon: '📮', name: 'Substack', desc: 'Newsletter platform' },
-            { icon: '💼', name: 'LinkedIn', desc: 'Professional network' },
-            { icon: '🐝', name: 'Beehiiv', desc: 'Modern newsletters' },
-            { icon: '✉️', name: 'ConvertKit', desc: 'Email marketing' },
-          ].map((platform, i) => (
-            <div
-              key={platform.name}
-              className="platform-item"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                color: '#6b7280',
-                cursor: 'pointer',
-                position: 'relative',
-                padding: '12px 20px',
-                borderRadius: '12px',
-                backgroundColor: hoveredPlatform === platform.name ? 'white' : 'transparent',
-                boxShadow: hoveredPlatform === platform.name ? '0 4px 12px rgba(0,0,0,0.08)' : 'none',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-              }}
-              onMouseEnter={() => setHoveredPlatform(platform.name)}
-              onMouseLeave={() => setHoveredPlatform(null)}
-            >
-              <span style={{ fontSize: '24px', transition: 'transform 0.3s', transform: hoveredPlatform === platform.name ? 'scale(1.2)' : 'scale(1)' }}>{platform.icon}</span>
-              <div>
-                <div style={{ fontSize: '15px', fontWeight: 600 }}>{platform.name}</div>
-                {hoveredPlatform === platform.name && (
-                  <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }} className="slide-in">
-                    {platform.desc}
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Statistics */}
-      <section ref={statsRef} style={{ maxWidth: '1152px', margin: '0 auto', padding: '88px 32px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '56px' }}>
-          {[
-            { icon: BarChart3, key: 'users' as const, label: 'Active Users', delay: '0s', suffix: '+' },
-            { icon: PenTool, key: 'content' as const, label: 'Content Published', delay: '0.1s', suffix: '+' },
-            { icon: Sparkles, key: 'reach' as const, label: 'Total Reach', delay: '0.2s', suffix: '+' }
-          ].map((stat, i) => (
-            <div
-              key={i}
-              style={{
-                textAlign: 'center',
-                opacity: statsVisible ? 1 : 0,
-                transform: statsVisible ? 'translateY(0)' : 'translateY(30px)',
-                transition: `all 0.7s cubic-bezier(0.4, 0, 0.2, 1) ${stat.delay}`
-              }}
-            >
-              <div className="hover-scale" style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '72px',
-                height: '72px',
-                borderRadius: '50%',
-                backgroundColor: '#1f3529',
-                marginBottom: '28px',
-                cursor: 'pointer',
-                boxShadow: '0 8px 20px rgba(31, 53, 41, 0.25)'
-              }}>
-                <stat.icon style={{ height: '34px', width: '34px', color: 'white' }} strokeWidth={1.5} />
-              </div>
-              <div style={{
-                fontFamily: 'Playfair Display, Georgia, serif',
-                fontSize: '64px',
+                borderRadius: '50px',
+                fontSize: '15px',
                 fontWeight: 700,
-                marginBottom: '14px',
-                letterSpacing: '-0.03em',
-                color: '#1f3529'
-              }}>
-                {statsVisible ? formatNumber(counters[stat.key]) : '0'}{stat.suffix}
-              </div>
-              <p style={{
-                fontSize: '12px',
-                letterSpacing: '0.15em',
-                color: '#6b7280',
-                fontWeight: 600,
-                textTransform: 'uppercase'
-              }}>{stat.label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Features */}
-      <section ref={featuresRef} id="features" style={{ maxWidth: '1152px', margin: '0 auto', padding: '88px 32px' }}>
-        <div style={{
-          textAlign: 'center',
-          marginBottom: '72px',
-          opacity: featuresVisible ? 1 : 0,
-          transform: featuresVisible ? 'translateY(0)' : 'translateY(30px)',
-          transition: 'all 0.7s cubic-bezier(0.4, 0, 0.2, 1)'
-        }}>
-          <h2 style={{
-            fontFamily: 'Playfair Display, Georgia, serif',
-            fontSize: '56px',
-            marginBottom: '20px',
-            letterSpacing: '-0.03em',
-            color: '#1f3529'
-          }}>Everything you need to scale</h2>
-          <p style={{
-            fontSize: '17px',
-            color: '#4b5563',
-            maxWidth: '720px',
-            margin: '0 auto',
-            lineHeight: '1.7'
-          }}>
-            Stop switching between platforms. Manage everything from one central hub and save hours every week.
-          </p>
-        </div>
-
-        <div className="responsive-grid-3">
-          {[
-            {
-              icon: Globe,
-              title: 'Multi-Platform Publishing',
-              desc: 'Publish your content to Ghost, Substack, LinkedIn, and more with one click. Save time and reach your audience wherever they are.',
-              delay: '0s',
-              color: '#1f3529',
-              benefits: ['Save 5+ hours/week', '10+ platforms', 'One-click sync']
-            },
-            {
-              icon: Sparkles,
-              title: 'AI-Powered Generation',
-              desc: 'Create engaging, platform-optimized content with our AI writing assistant. Generate ideas, titles, and outlines in seconds.',
-              delay: '0.1s',
-              color: '#8b9485',
-              benefits: ['Smart suggestions', 'Auto-formatting', 'SEO optimized']
-            },
-            {
-              icon: BarChart3,
-              title: 'Real-Time Analytics',
-              desc: 'Track engagement metrics across all platforms in one unified dashboard. Make data-driven decisions to grow your audience.',
-              delay: '0.2s',
-              color: '#6b7280',
-              benefits: ['Unified dashboard', 'Real-time data', 'Growth insights']
-            }
-          ].map((feature, i) => (
-            <div
-              key={i}
-              className="feature-card"
-              style={{
-                padding: '44px',
-                backgroundColor: 'white',
-                border: '1px solid rgba(0,0,0,0.06)',
-                borderRadius: '20px',
-                opacity: featuresVisible ? 1 : 0,
-                transform: featuresVisible ? 'translateY(0)' : 'translateY(30px)',
-                transition: `all 0.7s cubic-bezier(0.4, 0, 0.2, 1) ${feature.delay}`,
                 cursor: 'pointer',
-                position: 'relative',
-                overflow: 'hidden'
-              }}
-              onMouseEnter={() => setActiveFeature(i)}
-              onMouseLeave={() => setActiveFeature(null)}
-            >
-              {/* Animated background on hover */}
-              <div style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                height: '4px',
-                backgroundColor: feature.color,
-                transform: activeFeature === i ? 'scaleX(1)' : 'scaleX(0)',
-                transformOrigin: 'left',
-                transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
-              }} />
-
-              <div style={{
-                width: '64px',
-                height: '64px',
-                borderRadius: '50%',
-                backgroundColor: activeFeature === i ? feature.color : '#ebe4d5',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '28px',
-                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                boxShadow: activeFeature === i ? `0 8px 20px ${feature.color}40` : 'none'
+                transition: 'all 0.3s',
+                boxShadow: '0 4px 14px rgba(255, 122, 51, 0.3)'
               }}>
-                <feature.icon style={{ height: '28px', width: '28px', color: activeFeature === i ? 'white' : '#1f3529' }} strokeWidth={2} />
-              </div>
-              <h3 style={{
-                fontFamily: 'Playfair Display, Georgia, serif',
-                fontSize: '26px',
-                marginBottom: '18px',
-                letterSpacing: '-0.025em',
-                color: '#1f3529',
-                transition: 'color 0.3s'
-              }}>{feature.title}</h3>
-              <p style={{ fontSize: '16px', color: '#4b5563', lineHeight: '1.7', marginBottom: '24px' }}>
-                {feature.desc}
-              </p>
-
-              {/* Benefits list on hover */}
-              {activeFeature === i && (
-                <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #e5e7eb' }}>
-                  {feature.benefits.map((benefit, idx) => (
-                    <div key={idx} style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '10px',
-                      marginBottom: '10px',
-                      animation: `slideInLeft 0.4s ease-out ${idx * 0.1}s both`
-                    }}>
-                      <Check style={{ height: '16px', width: '16px', color: feature.color }} strokeWidth={2.5} />
-                      <span style={{ fontSize: '14px', color: '#374151', fontWeight: 500 }}>{benefit}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Workflow */}
-      <section id="how-it-works" style={{ backgroundColor: 'rgba(235, 228, 213, 0.4)', padding: '104px 0' }}>
-        <div style={{ maxWidth: '1152px', margin: '0 auto', padding: '0 32px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '88px' }}>
-            <h2 style={{
-              fontFamily: 'Playfair Display, Georgia, serif',
-              fontSize: '56px',
-              marginBottom: '20px',
-              letterSpacing: '-0.03em',
-              color: '#1f3529'
-            }}>From Draft to Distribution</h2>
-            <p style={{ fontSize: '17px', color: '#4b5563', lineHeight: '1.7' }}>Your content journey, simplified in four steps</p>
+              Get Started Free
+            </button>
+            <button
+              onClick={() => router.push('/pricing')}
+              style={{
+                padding: '16px 40px',
+                backgroundColor: 'white',
+                color: '#1a1a1a',
+                border: '2px solid #e0e0e0',
+                borderRadius: '50px',
+                fontSize: '15px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.3s'
+              }}>
+              View Pricing
+            </button>
           </div>
 
-          <div className="workflow-grid">
+          {/* Feature Tags */}
+          <div style={{
+            display: 'flex',
+            gap: '24px',
+            justifyContent: 'center',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            fontSize: '14px',
+            color: '#666',
+            fontWeight: 500
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Check size={18} color="#FF7A33" strokeWidth={3} />
+              <span>No credit card required</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Check size={18} color="#FF7A33" strokeWidth={3} />
+              <span>Publish faster</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Check size={18} color="#FF7A33" strokeWidth={3} />
+              <span>Works with WordPress</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Preview Section with Image */}
+      <section style={{
+        padding: '0 24px 80px',
+        marginTop: '-40px'
+      }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <div className="bg-[#eee] rounded-[32px] p-6 md:p-10 lg:p-[60px] min-h-[300px] lg:min-h-[500px] flex flex-col lg:flex-row items-center justify-center gap-8 relative overflow-hidden lg:overflow-visible">
+            {/* Top dots & decorations - visible on desktop only */}
+            <div className="hidden lg:flex absolute top-6 left-10 gap-3">
+              <div className="w-6 h-6 rounded-full bg-[#e0e0e0]"></div>
+              <div className="w-6 h-6 rounded-full bg-[#e0e0e0]"></div>
+              <div className="w-6 h-6 rounded-full bg-[#e0e0e0]"></div>
+            </div>
+
+            <div className="hidden lg:flex absolute top-6 left-1/2 -translate-x-1/2 gap-6">
+              <div className="w-[120px] h-6 rounded-xl bg-[#e0e0e0] opacity-50"></div>
+              <div className="w-[180px] h-6 rounded-xl bg-[#e0e0e0] opacity-50"></div>
+            </div>
+
+            <div className="hidden lg:block absolute top-6 right-10">
+              <div className="w-[120px] h-6 rounded-xl bg-[#aaa] opacity-20"></div>
+            </div>
+
+            {/* Left Card Placeholder - Hidden on mobile/tablet */}
+            <div className="hidden lg:flex flex-1 w-full max-w-[300px] h-[320px] bg-[#eee] rounded-3xl p-6 flex-col gap-4 justify-center relative">
+              <div className="absolute top-5 left-4 md:-left-10 bg-white px-4 py-2 rounded-full shadow-sm flex items-center gap-2 text-xs font-bold z-10 border border-[#eee]">
+                <div className="w-2 h-2 rounded-full bg-[#FF7A33]"></div>
+                SEO Optimized Draft
+              </div>
+
+              <div className="h-3 w-[90%] bg-[#ddd] rounded-md"></div>
+              <div className="h-3 w-[70%] bg-[#ddd] rounded-md"></div>
+              <div className="h-3 w-[80%] bg-[#ddd] rounded-md"></div>
+              <div className="h-3 w-[60%] bg-[#ddd] rounded-md"></div>
+              <div className="h-3 w-[85%] bg-[#ddd] rounded-md"></div>
+              <div className="h-3 w-[75%] bg-[#ddd] rounded-md"></div>
+              <div className="h-9 w-full bg-[#ddd] rounded-[20px] mt-auto"></div>
+
+              <div className="absolute bottom-10 left-4 md:-left-8 bg-white px-4 py-2 rounded-full shadow-sm flex items-center gap-2 text-xs font-bold z-10 border border-[#eee]">
+                <div className="w-2 h-2 rounded-full bg-[#FF7A33]"></div>
+                AI Blog Draft Ready
+              </div>
+            </div>
+
+            {/* Center Image - Always visible */}
+            <div className="w-full max-w-[480px] aspect-[16/10] rounded-2xl overflow-hidden shadow-2xl border-4 border-white z-20">
+              <Image
+                src="/design/Frame 23.png"
+                alt="Content Creation"
+                width={500}
+                height={312}
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            {/* Right Card Placeholder - Hidden on mobile/tablet */}
+            <div className="hidden lg:flex flex-1 w-full max-w-[300px] h-[320px] bg-[#eee] rounded-3xl p-6 flex-col gap-4 justify-center relative">
+              <div className="absolute -top-4 right-0 md:-right-5 bg-white px-4 py-2 rounded-full shadow-sm flex items-center gap-2 text-xs font-bold z-10 border border-[#eee]">
+                <div className="w-2 h-2 rounded-full bg-[#FF7A33]"></div>
+                Publish Anywhere
+              </div>
+
+              <div className="h-3 w-[90%] bg-[#ddd] rounded-md"></div>
+              <div className="h-3 w-[70%] bg-[#ddd] rounded-md"></div>
+              <div className="h-3 w-[80%] bg-[#ddd] rounded-md"></div>
+              <div className="h-3 w-[60%] bg-[#ddd] rounded-md"></div>
+              <div className="h-3 w-[85%] bg-[#ddd] rounded-md"></div>
+              <div className="h-3 w-[75%] bg-[#ddd] rounded-md"></div>
+              <div className="h-9 w-full bg-[#ddd] rounded-[20px] mt-auto"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Steps Section */}
+      <section style={{ padding: '80px 24px' }}>
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          background: 'linear-gradient(180deg, #FFFFFF 0%, #FFF5F0 100%)',
+          borderRadius: '60px',
+          padding: '80px 40px',
+          boxShadow: '0 20px 80px rgba(0,0,0,0.03)'
+        }}>
+          <div style={{ textAlign: 'center', marginBottom: '80px' }}>
+            <h2 style={{
+              fontSize: 'clamp(32px, 5vw, 42px)',
+              fontWeight: 800,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              lineHeight: '1.2',
+              color: '#1a1a1a'
+            }}>
+              AIMy Blogs Captures Every Content
+              <span style={{ fontSize: 'clamp(32px, 5vw, 42px)', fontWeight: 300, fontStyle: 'italic', fontFamily: 'serif', color: '#555' }}>Detail Automatically</span>
+            </h2>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px', marginBottom: '80px' }}>
             {[
-              { icon: PenTool, num: '1', title: 'Create', desc: 'Write your content in our intuitive editor', bg: '#1f3529' },
-              { icon: Sparkles, num: '2', title: 'Craft', desc: 'Optimize with AI suggestions and formatting', bg: 'white' },
-              { icon: Calendar, num: '3', title: 'Schedule', desc: 'Set it and forget it with our scheduling', bg: 'white' },
-              { icon: BarChart3, num: '4', title: 'Analyze', desc: 'Monitor performance and optimize', bg: 'white' }
-            ].map((step, i) => (
-              <div key={i} className="hover-lift" style={{ textAlign: 'center' }}>
+              { num: '01', title: 'Connect Your Platforms', desc: 'Connect WordPress, Medium, Ghost, LinkedIn and more using simple setup.' },
+              { num: '02', title: 'Generate AI Blogs', desc: 'Pick a topic, select tone & length, and let AI create a structured blog instantly.' },
+              { num: '03', title: 'Optimize for SEO', desc: 'Improve keyword focus, structure, and writing clarity for better ranking.' },
+              { num: '04', title: 'Publish + Track Results', desc: 'Schedule or publish instantly, then track performance from your dashboard.' }
+            ].map((step, idx) => (
+              <div key={idx} style={{
+                backgroundColor: 'white',
+                padding: '40px 32px',
+                borderRadius: '32px',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.02)',
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100%'
+              }}>
                 <div style={{
-                  width: '88px',
-                  height: '88px',
+                  fontSize: '48px',
+                  fontWeight: 800,
+                  color: '#1a1a1a',
+                  marginBottom: '24px',
+                  lineHeight: 1
+                }}>
+                  {step.num}
+                </div>
+                <h3 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '12px', color: '#1a1a1a' }}>{step.title}</h3>
+                <p style={{ fontSize: '14px', color: '#666', lineHeight: '1.6', fontWeight: 500 }}>{step.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ textAlign: 'center' }}>
+            <h3 style={{ fontSize: '32px', fontWeight: 900, marginBottom: '16px', color: '#1a1a1a' }}>Start your free trial today</h3>
+            <p style={{ color: '#666', fontSize: '15px', marginBottom: '40px', maxWidth: '600px', margin: '0 auto 40px', lineHeight: '1.6' }}>
+              With AIMy Blogs, publish your blog posts on all major platforms in a few clicks. Reach your audience where they are, and track performance.
+            </p>
+            <button
+              onClick={handleStart}
+              style={{
+                backgroundColor: '#FF7A33',
+                color: 'white',
+                padding: '18px 48px',
+                borderRadius: '50px',
+                border: 'none',
+                fontSize: '15px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                boxShadow: '0 10px 30px rgba(255, 122, 51, 0.3)'
+              }}>
+              Get Started Free
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Detailed Features Grid */}
+      <section style={{ padding: '80px 24px', backgroundColor: '#fff' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+            <h2 style={{ fontSize: 'clamp(32px, 5vw, 42px)', fontWeight: 700, color: '#1a1a1a', marginBottom: '16px' }}>
+              A Quick Overview of Essential <span style={{ fontStyle: 'italic', fontWeight: 400, color: '#555', fontFamily: 'serif' }}>Features</span>
+            </h2>
+            <p style={{ color: '#666', fontSize: '16px', maxWidth: '700px', margin: '0 auto' }}>
+              Everything you need to create content that ranks, converts, and scales without hiring a full team.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+            {/* Left Column - Feature List */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              {/* Item 1 - Active */}
+              <div style={{
+                backgroundColor: '#FFF9F5',
+                padding: '32px',
+                borderRadius: '24px',
+                border: '1px solid #FFE8DF'
+              }}>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
                   borderRadius: '50%',
-                  backgroundColor: step.bg,
-                  color: step.bg === 'white' ? '#1f3529' : 'white',
-                  border: step.bg === 'white' ? '2px solid #e5e7eb' : 'none',
+                  backgroundColor: '#FF7A33',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  margin: '0 auto 28px',
-                  boxShadow: step.bg === '#1f3529' ? '0 12px 24px -6px rgba(31, 53, 41, 0.3)' : 'none',
-                  transition: 'all 0.3s'
+                  marginBottom: '24px',
+                  color: 'white'
                 }}>
-                  <step.icon style={{ height: '36px', width: '36px' }} strokeWidth={1.5} />
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                 </div>
-                <h3 style={{
-                  fontFamily: 'Playfair Display, Georgia, serif',
-                  fontSize: '22px',
-                  marginBottom: '14px',
-                  letterSpacing: '-0.025em',
-                  color: '#1f3529'
-                }}>{step.num}. {step.title}</h3>
-                <p style={{ fontSize: '15px', color: '#4b5563', lineHeight: '1.7' }}>
-                  {step.desc}
-                </p>
+                <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px', color: '#1a1a1a' }}>Real-time Blog Generation</h3>
+                <p style={{ fontSize: '14px', color: '#666', lineHeight: '1.6' }}>Generate complete blogs with a strong structure: intro, sections, CTA, and conclusion.</p>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* Testimonials */}
-      <section style={{ maxWidth: '1152px', margin: '0 auto', padding: '104px 32px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '72px' }}>
-          <h2 style={{
-            fontFamily: 'Playfair Display, Georgia, serif',
-            fontSize: '56px',
-            letterSpacing: '-0.03em',
-            color: '#1f3529',
-            marginBottom: '12px'
-          }}>Creators love PublishType</h2>
-          <p style={{ fontSize: '16px', color: '#6b7280' }}>Join thousands of happy creators</p>
-        </div>
-
-        <div style={{ position: 'relative' }}>
-          <div className="responsive-grid-3">
-            {[
-              {
-                stars: 5,
-                text: "PublishType has AMAZING content that I used for my latest blog posts. I got 200K+ views across all platforms in just one week!",
-                name: "Sarah Khan",
-                role: "Content Creator",
-                avatar: 'S',
-                highlight: true
-              },
-              {
-                stars: 5,
-                text: "I spent 3-4 hours a day manually posting to different platforms. Now it takes me 10 minutes with PublishType. Game changer!",
-                name: "Marcus Lee",
-                role: "Tech Blogger",
-                avatar: 'M',
-                highlight: false
-              },
-              {
-                stars: 5,
-                text: "The analytics dashboard is pure magic! I can actually see what works and optimize my strategy accordingly.",
-                name: "Emma Rodriguez",
-                role: "Newsletter Writer",
-                avatar: 'E',
-                highlight: false
-              }
-            ].map((testimonial, i) => (
-              <div key={i} className="hover-lift" style={{
-                padding: '40px',
-                backgroundColor: 'white',
-                border: testimonial.highlight ? '2px solid #1f3529' : '1px solid rgba(0,0,0,0.06)',
-                borderRadius: '20px',
-                position: 'relative',
-                opacity: i === currentTestimonial ? 1 : 0.7,
-                transform: i === currentTestimonial ? 'scale(1.02)' : 'scale(1)',
-                transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
-              }}>
-                {testimonial.highlight && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-12px',
-                    right: '20px',
-                    backgroundColor: '#1f3529',
-                    color: 'white',
-                    padding: '6px 14px',
-                    borderRadius: '20px',
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    letterSpacing: '0.5px'
-                  }}>
-                    FEATURED
-                  </div>
-                )}
-                <div style={{ display: 'flex', gap: '3px', marginBottom: '24px' }}>
-                  {[...Array(testimonial.stars)].map((_, idx) => (
-                    <span key={idx} style={{ color: '#1f3529', fontSize: '22px' }}>★</span>
-                  ))}
-                </div>
-                <p style={{ fontSize: '16px', color: '#374151', marginBottom: '36px', lineHeight: '1.7', fontStyle: 'italic' }}>
-                  "{testimonial.text}"
-                </p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                  <div style={{
-                    width: '52px',
-                    height: '52px',
-                    borderRadius: '50%',
-                    backgroundColor: '#ebe4d5',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '20px',
-                    fontWeight: 700,
-                    color: '#1f3529'
-                  }}>{testimonial.avatar}</div>
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: '15px', color: '#111827' }}>{testimonial.name}</div>
-                    <div style={{ fontSize: '13px', color: '#6b7280' }}>{testimonial.role}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Carousel Controls */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', marginTop: '48px' }}>
-            <button
-              onClick={() => setCurrentTestimonial((prev) => (prev === 0 ? 2 : prev - 1))}
-              className="hover-scale"
-              style={{
-                width: '44px',
-                height: '44px',
-                borderRadius: '50%',
-                border: '2px solid #1f3529',
-                backgroundColor: 'white',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                transition: 'all 0.3s'
-              }}
-            >
-              <ChevronLeft style={{ height: '20px', width: '20px', color: '#1f3529' }} strokeWidth={2.5} />
-            </button>
-
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {[0, 1, 2].map((idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setCurrentTestimonial(idx)}
-                  style={{
-                    width: currentTestimonial === idx ? '32px' : '10px',
-                    height: '10px',
-                    borderRadius: '5px',
-                    backgroundColor: currentTestimonial === idx ? '#1f3529' : '#d1d5db',
-                    border: 'none',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s'
-                  }}
-                />
-              ))}
-            </div>
-
-            <button
-              onClick={() => setCurrentTestimonial((prev) => (prev + 1) % 3)}
-              className="hover-scale"
-              style={{
-                width: '44px',
-                height: '44px',
-                borderRadius: '50%',
-                border: '2px solid #1f3529',
-                backgroundColor: 'white',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                transition: 'all 0.3s'
-              }}
-            >
-              <ChevronRight style={{ height: '20px', width: '20px', color: '#1f3529' }} strokeWidth={2.5} />
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing */}
-      <section ref={pricingRef} id="pricing" style={{ maxWidth: '1152px', margin: '0 auto', padding: '104px 32px' }}>
-        <div style={{
-          textAlign: 'center',
-          marginBottom: '72px',
-          opacity: pricingVisible ? 1 : 0,
-          transform: pricingVisible ? 'translateY(0)' : 'translateY(30px)',
-          transition: 'all 0.7s cubic-bezier(0.4, 0, 0.2, 1)'
-        }}>
-          <h2 style={{
-            fontFamily: 'Playfair Display, Georgia, serif',
-            fontSize: '56px',
-            marginBottom: '20px',
-            letterSpacing: '-0.03em',
-            color: '#1f3529'
-          }}>Simple, Transparent Pricing</h2>
-          <p style={{ fontSize: '17px', color: '#4b5563', lineHeight: '1.7', marginBottom: '40px' }}>Choose the plan that works for you. Cancel anytime.</p>
-
-          {/* Billing Toggle */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '12px',
-              backgroundColor: 'white',
-              padding: '4px',
-              borderRadius: '8px',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-            }}>
-              <button
-                onClick={() => setBillingPeriod('monthly')}
-                style={{
-                  padding: '8px 24px',
-                  borderRadius: '6px',
-                  border: 'none',
-                  backgroundColor: billingPeriod === 'monthly' ? '#1f3529' : 'transparent',
-                  color: billingPeriod === 'monthly' ? 'white' : '#374151',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s'
-                }}
-              >
-                Monthly
-              </button>
-              <button
-                onClick={() => setBillingPeriod('annual')}
-                style={{
-                  padding: '8px 24px',
-                  borderRadius: '6px',
-                  border: 'none',
-                  backgroundColor: billingPeriod === 'annual' ? '#1f3529' : 'transparent',
-                  color: billingPeriod === 'annual' ? 'white' : '#374151',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s'
-                }}
-              >
-                Annual
-              </button>
-            </div>
-            {billingPeriod === 'annual' && (
+              {/* Item 2 */}
               <div style={{
-                backgroundColor: '#dcfce7',
-                color: '#166534',
-                padding: '6px 16px',
-                borderRadius: '20px',
-                fontSize: '13px',
-                fontWeight: 500
+                backgroundColor: 'white',
+                padding: '32px',
+                borderRadius: '24px',
+                border: '1px solid #f0f0f0',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
               }}>
-                Save up to 17% with annual billing
+                <div style={{ marginBottom: '24px', color: '#8B4513' }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                </div>
+                <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px', color: '#1a1a1a' }}>Smart SEO + Readability Score</h3>
+                <p style={{ fontSize: '14px', color: '#666', lineHeight: '1.6' }}>Improve keyword focus, structure, and writing clarity for better ranking.</p>
               </div>
-            )}
+
+              {/* Item 3 */}
+              <div style={{
+                backgroundColor: 'white',
+                padding: '32px',
+                borderRadius: '24px',
+                border: '1px solid #f0f0f0',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
+              }}>
+                <div style={{ marginBottom: '24px', color: '#8B4513' }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </div>
+                <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px', color: '#1a1a1a' }}>One-Click Highlights & Repurpose</h3>
+                <p style={{ fontSize: '14px', color: '#666', lineHeight: '1.6' }}>Instantly convert your blog into Twitter threads, LinkedIn posts, and summaries.</p>
+              </div>
+
+              {/* Item 4 */}
+              <div style={{
+                backgroundColor: 'white',
+                padding: '32px',
+                borderRadius: '24px',
+                border: '1px solid #f0f0f0',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
+              }}>
+                <div style={{ marginBottom: '24px', color: '#8B4513' }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path></svg>
+                </div>
+                <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px', color: '#1a1a1a' }}>Multi-Platform Publishing</h3>
+                <p style={{ fontSize: '14px', color: '#666', lineHeight: '1.6' }}>Publish to multiple platforms in one go—with platform-specific formatting support.</p>
+              </div>
+            </div>
+
+            {/* Right Column - Gallery */}
+            <div style={{
+              backgroundColor: '#f5f5f5',
+              borderRadius: '32px',
+              padding: '24px',
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '20px'
+            }}>
+              {/* Main Image */}
+              <div style={{
+                flex: 1,
+                minHeight: '400px',
+                backgroundColor: '#1a1a1a',
+                borderRadius: '20px',
+                overflow: 'hidden',
+                position: 'relative'
+              }}>
+                <Image
+                  src="/design/Frame 23.png"
+                  alt="Workspace"
+                  width={600}
+                  height={400}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </div>
+
+              {/* Thumbnails Row */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+                <div style={{ aspectRatio: '1', backgroundColor: '#fff', borderRadius: '16px', overflow: 'hidden' }}>
+                  <Image
+                    src="/design/Frame 59.png"
+                    alt="Workspace"
+                    width={600}
+                    height={400}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                </div>
+                <div style={{ aspectRatio: '1', backgroundColor: '#FFC0CB', borderRadius: '16px', overflow: 'hidden' }}>
+                  <Image
+                    src="/design/Frame 60.png"
+                    alt="Workspace"
+                    width={600}
+                    height={400}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                </div>
+                <div style={{ aspectRatio: '1', backgroundColor: '#333', borderRadius: '16px', overflow: 'hidden' }}>
+                  <Image
+                    src="/design/Frame 61.png"
+                    alt="Workspace"
+                    width={600}
+                    height={400}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                </div>
+                <div style={{ aspectRatio: '1', backgroundColor: '#ccc', borderRadius: '16px', overflow: 'hidden' }}>
+                  <Image
+                    src="/design/Frame 62.png"
+                    alt="Workspace"
+                    width={600}
+                    height={400}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+      </section>
 
-        <PricingCarousel
-          billingPeriod={billingPeriod}
-          plans={[
-            {
-              name: 'Free',
-              price: '₹0',
-              description: 'Perfect for trying out',
-              button: 'Get Started Free',
-              onClick: () => router.push(user ? '/dashboard' : '/signup'),
-              loading: false,
-              featured: false,
-              features: [
-                '1 blog post/month',
-                '2 platform integrations',
-                'Basic analytics',
-                'Email support',
-                'Community access'
-              ]
-            },
-            {
-              name: 'Starter',
-              price: billingPeriod === 'monthly' ? '₹5,000' : '₹40,000',
-              priceINR: billingPeriod === 'monthly' ? 'or $60/month' : 'or $482/year',
-              description: 'For individuals',
-              button: 'Get Started',
-              onClick: () => router.push('/pricing'),
-              loading: false,
-              featured: false,
-              features: [
-                'Up to 2 platforms',
-                'Basic AI editor',
-                '10 scheduled posts',
-                'Basic analytics',
-                'Email support'
-              ]
-            },
-            {
-              name: 'Creator',
-              price: billingPeriod === 'monthly' ? '₹15,000' : '₹1,50,000',
-              priceINR: billingPeriod === 'monthly' ? 'or $181/month' : 'or $1,807/year',
-              description: 'Most popular',
-              button: 'Start Free Trial',
-              onClick: () => router.push('/pricing'),
-              loading: false,
-              featured: true,
-              features: [
-                'Unlimited platforms',
-                'Advanced AI editor',
-                'Unlimited scheduled posts',
-                'Advanced analytics & SEO',
-                'Team collaboration (5 members)',
-                'Priority support'
-              ]
-            },
-            {
-              name: 'Professional',
-              price: billingPeriod === 'monthly' ? '₹20,000' : '₹1,80,000',
-              priceINR: billingPeriod === 'monthly' ? 'or $241/month' : 'or $2,169/year',
-              description: 'For enterprises',
-              button: 'Get Started',
-              onClick: () => router.push('/pricing'),
-              loading: false,
-              featured: false,
-              features: [
-                'Everything in Creator',
-                'Unlimited team members',
-                'White-label options',
-                'Custom integrations',
-                'Dedicated account manager',
-                '24/7 premium support'
-              ]
-            }
-          ]}
-        />
 
-        <p style={{ textAlign: 'center', marginTop: '44px', fontSize: '15px', color: '#6b7280', fontWeight: 500 }}>
-          Start with Medium/Substack/Beehiiv
-        </p>
+      {/* Trusted By Section */}
+      <section style={{ padding: '80px 24px', backgroundColor: '#fff' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '60px' }}>
+            <h2 style={{ fontSize: 'clamp(32px, 5vw, 42px)', fontWeight: 800, maxWidth: '500px', lineHeight: '1.2', color: '#1a1a1a' }}>
+              Trusted by High-<span style={{ fontFamily: 'serif', fontStyle: 'italic', fontWeight: 300, color: '#666' }}>Performing Teams</span>
+            </h2>
+            <div style={{ display: 'flex', gap: '16px' }}>
+              <button style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#FFF5F0', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><ArrowRight size={20} style={{ transform: 'rotate(180deg)' }} /></button>
+              <button style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#FF7A33', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'white' }}><ArrowRight size={20} /></button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[1, 2, 3].map((i) => (
+              <div key={i} style={{ border: '1px solid #eee', borderRadius: '24px', padding: '32px' }}>
+                <div style={{ display: 'flex', gap: '4px', marginBottom: '20px' }}>
+                  {[1, 2, 3, 4, 5].map(s => <Star key={s} size={16} fill="#FF7A33" color="#FF7A33" />)}
+                </div>
+                <p style={{ fontSize: '14px', lineHeight: '1.6', color: '#666', marginBottom: '32px' }}>
+                  &quot;This AI platform is a game changer. Used to take days to write blogs, now it takes minutes. A perfect tool for content creators!&quot;
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#eee' }}></div>
+                  <div>
+                    <div style={{ fontSize: '14px', fontWeight: 800, color: '#1a1a1a' }}>Alex J.</div>
+                    <div style={{ fontSize: '12px', color: '#999' }}>Content Creator</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '60px', borderTop: '1px solid #f0f0f0', paddingTop: '40px', flexWrap: 'wrap', gap: '32px' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>10,000+</div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: '#1a1a1a' }}>Customers worldwide</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>50,000+</div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: '#1a1a1a' }}>Content Published</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>3.2M+</div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: '#1a1a1a' }}>Total Reads</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>1000+</div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: '#1a1a1a' }}>Comments on month</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section style={{ padding: '80px 24px', backgroundColor: '#fff' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+            <h2 style={{ fontSize: 'clamp(32px, 5vw, 42px)', fontWeight: 800, color: '#1a1a1a', marginBottom: '16px' }}>
+              Pricing That Grows as <span style={{ fontStyle: 'italic', fontWeight: 600, color: '#666', fontFamily: 'serif' }}>You Grow</span>
+            </h2>
+            <p style={{ color: '#666', fontSize: '16px', marginBottom: '32px' }}>
+              Choose a plan that fits your workflow today upgrade anytime as you scale.
+            </p>
+
+            {/* Pricing Toggle */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', fontSize: '14px', fontWeight: 600 }}>
+              <span style={{ color: '#1a1a1a' }}>Monthly</span>
+              <div
+                onClick={() => setBillingPeriod(billingPeriod === 'monthly' ? 'annual' : 'monthly')}
+                style={{
+                  width: '48px',
+                  height: '24px',
+                  backgroundColor: '#eee',
+                  borderRadius: '50px',
+                  padding: '2px',
+                  cursor: 'pointer',
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: billingPeriod === 'monthly' ? 'flex-start' : 'flex-end',
+                  transition: 'all 0.2s'
+                }}>
+                <div style={{ width: '20px', height: '20px', backgroundColor: 'white', borderRadius: '50%', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}></div>
+              </div>
+              <span style={{ color: '#999' }}>Annual <span style={{ color: '#FF7A33', marginLeft: '4px' }}>-20%</span></span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              { id: 'STARTER', name: 'Starter Plan', monthlyPrice: '₹5,000', annualPrice: '₹40,000', featured: false, bgColor: '#FFF9F6', textColor: '#1a1a1a' },
+              { id: 'CREATOR', name: 'Creator Plan', monthlyPrice: '₹15,000', annualPrice: '₹150,000', featured: true, bgColor: '#FF7A33', textColor: 'white' },
+              { id: 'PROFESSIONAL', name: 'Professional Plan', monthlyPrice: '₹20,000', annualPrice: '₹180,000', featured: false, bgColor: '#FFF9F6', textColor: '#1a1a1a' }
+            ].map((p, i) => (
+              <div key={i} style={{
+                backgroundColor: 'white',
+                borderRadius: '32px',
+                overflow: 'hidden',
+                border: '1px solid #f0f0f0',
+                display: 'flex',
+                flexDirection: 'column',
+                textAlign: 'left',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.02)'
+              }}>
+                <div style={{
+                  backgroundColor: p.bgColor,
+                  padding: '40px 32px',
+                  color: p.textColor,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '24px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '8px',
+                      backgroundColor: p.featured ? 'rgba(255,255,255,0.3)' : '#FF7A33',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <div className="grid grid-cols-2 gap-0.5" style={{ width: '16px' }}>
+                        {[1, 2, 3, 4].map(j => <div key={j} style={{ width: '6px', height: '6px', border: `1.5px solid white`, borderRadius: '1px' }}></div>)}
+                      </div>
+                    </div>
+                    <span style={{ fontSize: '16px', fontWeight: 700 }}>{p.name}</span>
+                  </div>
+
+                  <div style={{ fontSize: '32px', fontWeight: 800 }}>
+                    {billingPeriod === 'annual' ? p.annualPrice : p.monthlyPrice}<span style={{ fontSize: '15px', fontWeight: 500, opacity: 0.8 }}>/{billingPeriod === 'annual' ? 'Year' : 'Month'}</span>
+                  </div>
+
+                  <button
+                    onClick={() => router.push('/pricing')}
+                    style={{
+                      width: '100%',
+                      padding: '14px',
+                      borderRadius: '50px',
+                      border: p.featured ? 'none' : '1px solid #ddd',
+                      backgroundColor: 'white',
+                      color: '#1a1a1a',
+                      fontWeight: 600,
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+                    }}>
+                    Get Started
+                  </button>
+                </div>
+
+                <div style={{ padding: '40px 32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {[
+                    '15,000 words/month',
+                    '5 blog templates',
+                    '15 images/month',
+                    'Basic SEO tools',
+                    'Email support'
+                  ].map(f => (
+                    <div key={f} style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#1a1a1a', fontWeight: 500 }}>
+                      <Check style={{ width: '18px', height: '18px', color: '#1a1a1a' }} strokeWidth={2.5} />
+                      <span>{f}</span>
+                    </div>
+                  ))}
+                  <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #f0f0f0', fontSize: '14px', fontWeight: 700, color: '#1a1a1a' }}>
+                    Perfect for Individuals.
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* FAQ */}
-      <section style={{ maxWidth: '840px', margin: '0 auto', padding: '104px 32px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '72px' }}>
-          <h2 style={{
-            fontFamily: 'Playfair Display, Georgia, serif',
-            fontSize: '56px',
-            letterSpacing: '-0.03em',
-            color: '#1f3529'
-          }}>Frequently Asked Questions</h2>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          {[
-            {
-              q: "Which platforms are currently supported?",
-              a: "We currently support Ghost, Substack, LinkedIn, Medium, Dev.to, Hashnode, Beehiiv, and ConvertKit. We're constantly adding new platforms based on user demand."
-            },
-            {
-              q: "Can I cancel or switch subscriptions at any time?",
-              a: "Yes! You can upgrade, downgrade, or cancel your subscription at any time from your account settings. Changes take effect at the start of your next billing cycle."
-            },
-            {
-              q: "How does the content creation process work?",
-              a: "Simply write your content in our editor, customize it for each platform if needed, and publish with one click. Our AI helps optimize for each platform's best practices."
-            },
-            {
-              q: "What's your refund policy?",
-              a: "We offer a 30-day money-back guarantee. If you're not satisfied with PublishType, contact our support team for a full refund within 30 days of purchase."
-            }
-          ].map((faq, i) => (
-            <div
-              key={i}
-              className="hover-lift"
-              style={{
-                backgroundColor: 'white',
-                border: '1px solid rgba(0,0,0,0.06)',
-                borderRadius: '16px',
-                cursor: 'pointer',
-                overflow: 'hidden',
-                transition: 'all 0.3s'
-              }}
-              onClick={() => setOpenFaq(openFaq === i ? null : i)}
-            >
-              <div style={{
-                padding: '28px 36px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between'
-              }}>
-                <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#111827' }}>{faq.q}</h3>
-                <Plus
-                  style={{
-                    height: '22px',
-                    width: '22px',
-                    color: '#9ca3af',
-                    transition: 'transform 0.3s',
-                    transform: openFaq === i ? 'rotate(45deg)' : 'rotate(0deg)',
-                    flexShrink: 0,
-                    marginLeft: '18px'
-                  }}
-                  strokeWidth={2}
-                />
-              </div>
-              {openFaq === i && (
-                <div style={{
-                  padding: '0 36px 28px',
-                  fontSize: '15px',
-                  color: '#4b5563',
-                  lineHeight: '1.7',
-                  animation: 'fadeInUp 0.3s ease-out'
-                }}>
-                  {faq.a}
+      <section style={{ padding: '100px 24px', backgroundColor: '#fff' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+            <h2 style={{ fontSize: '36px', fontWeight: 800, marginBottom: '16px', color: '#1a1a1a' }}>Frequently Asked Questions</h2>
+            <p style={{ color: '#666' }}>Everything you need to know before getting started with AIMy Blogs.</p>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            {[
+              {
+                q: "What is AIMy Blogs?",
+                a: "AIMy Blogs is an AI-powered content creation platform that helps you generate, optimize, and publish high-quality blogs across multiple platforms like WordPress, Medium, and LinkedIn."
+              },
+              {
+                q: "Do I need writing experience to use AIMy Blogs?",
+                a: "No, you don't need expert writing skills. Our AI helps you structure, write, and polish your content, making it perfect for beginners and pros alike."
+              },
+              {
+                q: "Can I publish directly to WordPress or Medium?",
+                a: "Yes! We support direct integration with WordPress, Medium, Ghost, and LinkedIn, allowing you to publish your content with a single click."
+              },
+              {
+                q: "Does AIMy Blogs support SEO optimization?",
+                a: "Absolutely. We provide real-time SEO scoring, keyword optimization suggestions, and readability improvements to help your content rank higher."
+              },
+              {
+                q: "Can I generate blog images using AIMy Blogs?",
+                a: "Yes, our platform includes AI image generation tools to create relevant, royalty-free images for your blog posts automatically."
+              },
+              {
+                q: "Can I rewrite or improve my existing blog content?",
+                a: "Yes, you can import existing content, and our AI will suggest improvements, rewrite sections, or repurpose it for different platforms."
+              }
+            ].map((item, idx) => (
+              <div
+                key={idx}
+                onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                style={{
+                  cursor: 'pointer',
+                  borderBottom: '1px solid #f0f0f0',
+                  paddingBottom: openFaq === idx ? '24px' : '16px',
+                  transition: 'all 0.3s'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '16px', fontWeight: 600, color: '#1a1a1a' }}>{idx + 1}. {item.q}</span>
+                  {openFaq === idx ? <Minus size={16} color="#666" /> : <Plus size={16} color="#666" />}
                 </div>
-              )}
-            </div>
-          ))}
+
+                {openFaq === idx && (
+                  <div style={{
+                    marginTop: '16px',
+                    fontSize: '15px',
+                    color: '#666',
+                    lineHeight: '1.6',
+                    paddingLeft: '0',
+                    animation: 'fadeIn 0.3s ease-in'
+                  }}>
+                    {item.a}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
+
     </div>
   )
 }

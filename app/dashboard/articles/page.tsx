@@ -2,10 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/lib/context/AuthContext"
 import {
   Search,
@@ -16,8 +12,11 @@ import {
   Edit,
   Trash2,
   Calendar,
+  ChevronRight,
+  Loader2
 } from "lucide-react"
 import { toast } from "sonner"
+import Link from "next/link"
 
 interface Article {
   id: string
@@ -64,93 +63,46 @@ export default function ArticlesPage() {
     try {
       setLoading(true)
       const token = localStorage.getItem("accessToken")
-
       const params = new URLSearchParams({ limit: '50' })
-      if (filterStatus !== 'all') {
-        params.append('status', filterStatus.toUpperCase())
-      }
+      if (filterStatus !== 'all') params.append('status', filterStatus.toUpperCase())
 
       const response = await fetch(`/api/articles?${params}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       })
-
       const data = await response.json()
-
       if (data.success) {
-        setArticles(data.data.articles)
+        const fetched = data.data.articles || []
+        setArticles(fetched)
         setTotalArticles(data.data.pagination.total)
 
-        // Calculate total words
-        const words = data.data.articles.reduce(
-          (sum: number, article: Article) => sum + article.wordCount,
-          0
-        )
+        // RESTORING: Calculate total words dynamically
+        const words = fetched.reduce((sum: number, article: Article) => sum + (article.wordCount || 0), 0)
         setTotalWords(words)
-      } else {
-        toast.error(data.error || "Failed to fetch articles")
       }
     } catch (error) {
       console.error("Error fetching articles:", error)
-      toast.error("Failed to load articles")
     } finally {
       setLoading(false)
     }
   }
 
   const handleDelete = async (articleId: string, articleTitle: string) => {
-    if (!confirm(`Are you sure you want to delete "${articleTitle}"?`)) {
-      return
-    }
+    if (!confirm(`Are you sure you want to delete "${articleTitle}"?`)) return
 
     try {
       const token = localStorage.getItem("accessToken")
       const response = await fetch(`/api/articles/${articleId}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       })
-
       const data = await response.json()
-
       if (data.success) {
         toast.success("Article deleted successfully")
         setArticles((prev) => prev.filter((article) => article.id !== articleId))
-        setTotalArticles((prev) => prev - 1)
-      } else {
-        toast.error(data.error || "Failed to delete article")
+        setTotalArticles(prev => prev - 1)
       }
     } catch (error) {
-      console.error("Error deleting article:", error)
       toast.error("Failed to delete article")
-    }
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "PUBLISHED":
-        return "bg-green-500/10 text-green-500 border-green-500/20"
-      case "DRAFT":
-        return "bg-gray-500/10 text-gray-500 border-gray-500/20"
-      case "SCHEDULED":
-        return "bg-blue-500/10 text-blue-500 border-blue-500/20"
-      default:
-        return "bg-gray-500/10 text-gray-500 border-gray-500/20"
-    }
-  }
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "PUBLISHED":
-        return <Eye className="h-3 w-3" />
-      case "DRAFT":
-        return <FileText className="h-3 w-3" />
-      case "SCHEDULED":
-        return <Calendar className="h-3 w-3" />
-      default:
-        return <FileText className="h-3 w-3" />
     }
   }
 
@@ -160,273 +112,300 @@ export default function ArticlesPage() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    })
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
   }
 
   const getPlatformName = (platform: string) => {
-    switch (platform) {
-      case 'WORDPRESS':
-        return 'WordPress'
-      case 'GHOST':
-        return 'Ghost'
-      case 'DEVTO':
-        return 'Dev.to'
-      case 'HASHNODE':
-        return 'Hashnode'
-      case 'WIX':
-        return 'Wix'
-      case 'MEDIUM':
-        return 'Medium'
-      case 'LINKEDIN':
-        return 'LinkedIn'
-      default:
-        return platform
+    const names: Record<string, string> = {
+      'WORDPRESS': 'WordPress', 'GHOST': 'Ghost', 'DEVTO': 'Dev.to',
+      'HASHNODE': 'Hashnode', 'WIX': 'Wix', 'MEDIUM': 'Medium', 'LINKEDIN': 'LinkedIn'
     }
+    return names[platform] || platform
   }
 
   if (authLoading || loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading articles...</p>
-        </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+        <Loader2 className="animate-spin" size={40} style={{ color: '#FF7A33' }} />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-[1600px]">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-8 mb-10">
+    <>
+      <style jsx global>{`
+        /* Tablet and below */
+        @media (max-width: 1024px) {
+          .articles-grid {
+            grid-template-columns: repeat(auto-fill, minwidth(300px, 1fr)) !important;
+          }
+        }
+
+        /* Mobile landscape and below */
+        @media (max-width: 768px) {
+          .articles-hero {
+            padding: 40px 20px !important;
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 20px !important;
+          }
+          .articles-hero h1 {
+            font-size: 32px !important;
+          }
+          .articles-hero button {
+            width: 100% !important;
+            justify-content: center !important;
+          }
+          .articles-filters-section {
+            padding: 24px 20px !important;
+          }
+          .articles-filters-row {
+            flex-direction: column !important;
+            gap: 16px !important;
+          }
+          .articles-search {
+            width: 100% !important;
+          }
+          .articles-filter-buttons {
+            width: 100% !important;
+            overflow-x: auto !important;
+            flex-wrap: nowrap !important;
+          }
+          .articles-grid {
+            grid-template-columns: 1fr !important;
+            gap: 20px !important;
+          }
+        }
+
+        /* Mobile portrait */
+        @media (max-width: 480px) {
+          .articles-hero {
+            padding: 32px 16px !important;
+          }
+          .articles-hero h1 {
+            font-size: 28px !important;
+            line-height: 1.2 !important;
+          }
+          .articles-hero p {
+            font-size: 14px !important;
+          }
+          .articles-filters-section {
+            padding: 20px 12px !important;
+          }
+          .articles-card {
+            border-radius: 24px !important;
+          }
+          .articles-card-inner {
+            padding: 24px !important;
+          }
+        }
+      `}</style>
+
+      <div style={{ paddingBottom: '100px' }}>
+        {/* Hero Header */}
+        <section className="articles-hero" style={{
+          backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.4)), url("/design/BG%2023-01%202.png")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          padding: '60px 40px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
           <div>
-            <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-3">
-              Articles
+            <h1 style={{ fontSize: '42px', fontWeight: 800, color: '#1a1a1a', margin: '0 0 10px 0' }}>
+              All <span style={{ fontStyle: 'italic', fontWeight: 300, color: '#666', fontFamily: 'serif' }}>Articles</span>
             </h1>
-            <p className="text-gray-600 text-lg">
-              Manage and organize your blog posts
-            </p>
+            <p style={{ color: '#666', fontSize: '15px', fontWeight: 500 }}>Manage, edit and publish your stories from one place.</p>
           </div>
-          <Button
+
+          <button
             onClick={() => router.push("/dashboard/articles/new")}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white px-7 py-6 h-auto rounded-lg shadow-lg hover:shadow-xl font-medium transition-all"
+            style={{
+              backgroundColor: '#FF7A33',
+              color: 'white',
+              padding: '16px 32px',
+              borderRadius: '50px',
+              border: 'none',
+              fontSize: '15px',
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              boxShadow: '0 8px 25px rgba(255, 122, 51, 0.3)'
+            }}
           >
-            <Plus className="h-5 w-5 mr-2" />
-            New Article
-          </Button>
-        </div>
+            <Plus size={20} strokeWidth={3} />
+            Create New Article
+          </button>
+        </section>
 
-        {/* Search and Filters */}
-        <div className="mb-10 space-y-6">
-          <div className="relative max-w-lg">
-            <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <Input
-              placeholder="Search articles..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-14 h-14 bg-white border-gray-200 rounded-xl shadow-sm text-base focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-            />
-          </div>
-
-          <div className="flex gap-4 overflow-x-auto pb-2">
-            <Button
-              variant={filterStatus === "all" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilterStatus("all")}
-              className={filterStatus === "all"
-                ? "bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-6 h-auto rounded-xl font-medium shadow-md hover:shadow-lg transition-all"
-                : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-emerald-600 hover:text-emerald-700 px-6 py-6 h-auto rounded-xl font-medium shadow-sm transition-all"}
-            >
-              All
-            </Button>
-            <Button
-              variant={filterStatus === "draft" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilterStatus("draft")}
-              className={filterStatus === "draft"
-                ? "bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-6 h-auto rounded-xl font-medium shadow-md hover:shadow-lg transition-all"
-                : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-emerald-600 hover:text-emerald-700 px-6 py-6 h-auto rounded-xl font-medium shadow-sm transition-all"}
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              Drafts
-            </Button>
-            <Button
-              variant={filterStatus === "published" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilterStatus("published")}
-              className={filterStatus === "published"
-                ? "bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-6 h-auto rounded-xl font-medium shadow-md hover:shadow-lg transition-all"
-                : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-emerald-600 hover:text-emerald-700 px-6 py-6 h-auto rounded-xl font-medium shadow-sm transition-all"}
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              Published
-            </Button>
-            <Button
-              variant={filterStatus === "scheduled" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilterStatus("scheduled")}
-              className={filterStatus === "scheduled"
-                ? "bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-6 h-auto rounded-xl font-medium shadow-md hover:shadow-lg transition-all"
-                : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-emerald-600 hover:text-emerald-700 px-6 py-6 h-auto rounded-xl font-medium shadow-sm transition-all"}
-            >
-              <Calendar className="h-4 w-4 mr-2" />
-              Scheduled
-            </Button>
-          </div>
-        </div>
-
-        {/* Articles Grid */}
-        {filteredArticles.length === 0 ? (
-          <Card className="bg-white border-gray-200 shadow-lg rounded-2xl p-20 text-center">
-            <div className="mx-auto w-24 h-24 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-full flex items-center justify-center mb-6">
-              <FileText className="h-12 w-12 text-emerald-600" />
+        {/* Filters & Search */}
+        <section className="articles-filters-section" style={{ padding: '40px' }}>
+          <div className="articles-filters-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
+            <div className="articles-search" style={{ position: 'relative', width: '400px' }}>
+              <input
+                type="text"
+                placeholder="Search by article title..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '14px 20px 14px 48px',
+                  borderRadius: '50px',
+                  border: '1px solid #eee',
+                  backgroundColor: '#fcfcfc',
+                  fontSize: '14px',
+                  outline: 'none'
+                }}
+              />
+              <Search style={{ position: 'absolute', left: '18px', top: '50%', transform: 'translateY(-50%)', color: '#999' }} size={18} />
             </div>
-            <h3 className="text-3xl font-semibold mb-4 text-gray-900">No articles found</h3>
-            <p className="text-gray-600 mb-10 text-lg max-w-md mx-auto">
-              {searchQuery
-                ? "Try adjusting your search query"
-                : "Start creating your first article"}
-            </p>
-            {!searchQuery && (
-              <Button
-                onClick={() => router.push("/dashboard/articles/new")}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-6 h-auto rounded-xl shadow-lg hover:shadow-xl font-medium transition-all"
-              >
-                <Plus className="h-5 w-5 mr-2" />
-                Create First Article
-              </Button>
-            )}
-          </Card>
-        ) : (
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+
+            <div className="articles-filter-buttons" style={{ display: 'flex', gap: '12px' }}>
+              {['all', 'published', 'draft', 'scheduled'].map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setFilterStatus(status)}
+                  style={{
+                    padding: '10px 24px',
+                    borderRadius: '50px',
+                    border: filterStatus === status ? 'none' : '1px solid #eee',
+                    backgroundColor: filterStatus === status ? '#1a1a1a' : '#fff',
+                    color: filterStatus === status ? '#fff' : '#666',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    textTransform: 'capitalize'
+                  }}
+                >
+                  {status}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Articles Grid */}
+          <div className="articles-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '32px' }}>
             {filteredArticles.map((article) => (
-              <Card key={article.id} className="bg-white border-gray-200 overflow-hidden hover:shadow-2xl hover:border-emerald-300 transition-all duration-300 rounded-2xl group">
-                <div className="p-8">
-                  {/* Status Badge */}
-                  <div className="flex items-center gap-2 mb-6">
-                    <Badge className={getStatusColor(article.status)} variant="outline">
-                      {getStatusIcon(article.status)}
-                      <span className="ml-2 capitalize font-medium text-sm">{article.status.toLowerCase()}</span>
-                    </Badge>
-                  </div>
+              <div key={article.id} className="articles-card" style={{
+                backgroundColor: '#fff',
+                borderRadius: '32px',
+                border: '1px solid #eee',
+                overflow: 'hidden',
+                boxShadow: '0 10px 40px rgba(0,0,0,0.02)',
+                position: 'relative'
+              }}>
+                <div className="articles-card-inner" style={{ padding: '32px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+                    <span style={{
+                      backgroundColor: article.status === 'PUBLISHED' ? '#e7f9ee' : '#f9f9f9',
+                      color: article.status === 'PUBLISHED' ? '#22c55e' : '#999',
+                      padding: '4px 12px',
+                      borderRadius: '50px',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      textTransform: 'uppercase'
+                    }}>{article.status}</span>
 
-                  {/* Title */}
-                  <h3 className="font-semibold text-xl mb-4 line-clamp-2 text-gray-900 leading-tight group-hover:text-emerald-700 transition-colors">
-                    {article.title}
-                  </h3>
-
-                  {/* Excerpt */}
-                  {article.excerpt && (
-                    <p className="text-sm text-gray-600 mb-6 line-clamp-2 leading-relaxed">
-                      {article.excerpt}
-                    </p>
-                  )}
-
-                  {/* Stats */}
-                  <div className="flex items-center gap-6 text-sm text-gray-500 mb-6 pb-6 border-b border-gray-100">
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-gray-400" />
-                      <span className="font-medium">{article.wordCount.toLocaleString()}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-gray-400" />
-                      <span className="font-medium">{article.readingTime} min</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Eye className="h-4 w-4 text-gray-400" />
-                      <span className="font-medium">{article.views}</span>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={() => router.push(`/dashboard/articles/${article.id}`)}
+                        style={{ width: '36px', height: '36px', borderRadius: '50%', border: '1px solid #eee', backgroundColor: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#666' }}>
+                        <Edit size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(article.id, article.title)}
+                        style={{ width: '36px', height: '36px', borderRadius: '50%', border: '1px solid #eee', backgroundColor: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#ff4b2b' }}>
+                        <Trash2 size={16} />
+                      </button>
                     </div>
                   </div>
 
-                  {/* Date */}
-                  <p className="text-xs text-gray-500 mb-4 font-medium">
-                    {article.status === "PUBLISHED" && article.publishedAt
-                      ? `Published ${formatDate(article.publishedAt)}`
-                      : article.status === "SCHEDULED" && article.scheduleAt
-                      ? `Scheduled for ${new Date(article.scheduleAt).toLocaleString()}`
-                      : `Updated ${formatDate(article.updatedAt)}`}
+                  <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#1a1a1a', margin: '0 0 12px 0', lineHeight: '1.4' }}>{article.title}</h3>
+                  <p style={{ color: '#666', fontSize: '14px', lineHeight: '1.6', marginBottom: '24px', display: '-webkit-box', WebkitLineClamp: '2', WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {article.excerpt || "No excerpt provided for this account."}
                   </p>
 
-                  {/* Published Platforms */}
+                  {/* RESTORING: Published Platforms visibility */}
                   {article.publishRecords && article.publishRecords.length > 0 && (
-                    <div className="mb-6">
-                      <p className="text-xs text-gray-500 font-medium mb-3">Published on:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {article.publishRecords.map((record, index) => (
-                          <a
-                            key={index}
-                            href={record.url || '#'}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-medium hover:bg-emerald-100 transition-colors"
-                          >
-                            {getPlatformName(record.platform)}
+                    <div style={{ marginBottom: '24px' }}>
+                      <p style={{ margin: '0 0 8px 0', fontSize: '11px', fontWeight: 800, color: '#999' }}>PUBLISHED ON:</p>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                        {article.publishRecords.map((rec, i) => (
+                          <a key={i} href={rec.url || '#'} target="_blank" rel="noreferrer" style={{
+                            backgroundColor: '#f5f5f5', color: '#1a1a1a', fontSize: '10px', fontWeight: 700, padding: '4px 10px', borderRadius: '4px', textDecoration: 'none'
+                          }}>
+                            {getPlatformName(rec.platform)}
                           </a>
                         ))}
                       </div>
                     </div>
                   )}
 
-                  {/* Actions */}
-                  <div className="flex gap-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 bg-white border-gray-200 hover:bg-emerald-50 hover:border-emerald-600 hover:text-emerald-700 px-5 py-6 h-auto rounded-xl font-medium transition-all shadow-sm"
-                      onClick={() => router.push(`/dashboard/articles/${article.id}`)}
-                    >
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="bg-white border-gray-200 hover:bg-red-50 hover:border-red-600 hover:text-red-700 px-5 py-6 h-auto rounded-xl font-medium transition-all shadow-sm"
-                      onClick={() => handleDelete(article.id, article.title)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '20px 0', borderTop: '1px solid #f9f9f9' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#999', fontWeight: 700 }}>
+                      <FileText size={14} /> {article.wordCount} Words
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#999', fontWeight: 700 }}>
+                      <Clock size={14} /> {article.readingTime} Min
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#999', fontWeight: 700 }}>
+                      <Calendar size={14} /> {formatDate(article.publishedAt || article.createdAt)}
+                    </div>
                   </div>
+
+                  <Link href={`/dashboard/articles/${article.id}`} style={{
+                    marginTop: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    color: '#FF7A33',
+                    textDecoration: 'none',
+                    fontSize: '14px',
+                    fontWeight: 800
+                  }}>
+                    Continue Editing <ChevronRight size={16} />
+                  </Link>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
-        )}
 
-        {/* Stats Footer */}
-        {filteredArticles.length > 0 && (
-          <div className="mt-12 p-8 bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl shadow-lg">
-            <div className="flex items-center justify-center gap-16 text-base">
-              <div className="flex items-center gap-4">
-                <div className="p-3.5 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl shadow-sm">
-                  <FileText className="h-6 w-6 text-emerald-600" />
-                </div>
-                <div>
-                  <span className="font-bold text-3xl text-gray-900">{totalArticles}</span>
-                  <span className="text-gray-600 ml-2.5 text-lg">
-                    {totalArticles === 1 ? "Article" : "Articles"}
-                  </span>
-                </div>
+          {/* RESTORING: Dynamic Stats Footer from original */}
+          {filteredArticles.length > 0 && (
+            <div style={{
+              marginTop: '80px',
+              backgroundColor: '#1a1a1a',
+              borderRadius: '32px',
+              padding: '40px',
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '80px',
+              color: 'white'
+            }}>
+              <div style={{ textAlign: 'center' }}>
+                <p style={{ margin: 0, fontSize: '32px', fontWeight: 800 }}>{totalArticles}</p>
+                <p style={{ margin: 0, fontSize: '12px', fontWeight: 700, opacity: 0.6, textTransform: 'uppercase' }}>Total Articles</p>
               </div>
-              <div className="h-16 w-px bg-gray-200" />
-              <div className="flex items-center gap-4">
-                <div className="p-3.5 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl shadow-sm">
-                  <Clock className="h-6 w-6 text-emerald-600" />
-                </div>
-                <div>
-                  <span className="font-bold text-3xl text-gray-900">{totalWords.toLocaleString()}</span>
-                  <span className="text-gray-600 ml-2.5 text-lg">Words</span>
-                </div>
+              <div style={{ width: '1px', height: '50px', backgroundColor: '#333' }}></div>
+              <div style={{ textAlign: 'center' }}>
+                <p style={{ margin: 0, fontSize: '32px', fontWeight: 800 }}>{totalWords.toLocaleString()}</p>
+                <p style={{ margin: 0, fontSize: '12px', fontWeight: 700, opacity: 0.6, textTransform: 'uppercase' }}>Total Words Written</p>
               </div>
             </div>
-          </div>
-        )}
+          )}
+
+          {filteredArticles.length === 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '100px 0' }}>
+              <FileText size={60} color="#eee" style={{ marginBottom: '24px' }} />
+              <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#1a1a1a', marginBottom: '8px' }}>No stories found</h2>
+              <p style={{ color: '#999', fontWeight: 600 }}>Try adjusting your search or create a new article.</p>
+            </div>
+          )}
+        </section>
       </div>
-    </div>
+    </>
   )
 }

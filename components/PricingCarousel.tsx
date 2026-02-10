@@ -93,8 +93,8 @@ export function PricingCarousel({ plans, billingPeriod }: PricingCarouselProps) 
                 className="flex-shrink-0 transition-all duration-300"
                 style={{
                   width: cardsToShow === 1 ? 'calc(100% - 0px)' :
-                         cardsToShow === 2 ? 'calc(50% - 12px)' :
-                         'calc(33.333% - 16px)',
+                    cardsToShow === 2 ? 'calc(50% - 12px)' :
+                      'calc(33.333% - 16px)',
                 }}
               >
                 <div

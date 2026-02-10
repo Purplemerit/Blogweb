@@ -1,12 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { PenSquare, ArrowLeft } from "lucide-react"
 import { useState } from "react"
+import { ArrowLeft, Loader2, MailCheck } from "lucide-react"
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
@@ -25,103 +21,148 @@ export default function ForgotPasswordPage() {
       })
 
       await response.json()
-
-      // Always show success message for security (don't reveal if email exists)
       setIsSubmitted(true)
     } catch (error) {
-      // Still show success for security
       setIsSubmitted(true)
     } finally {
       setIsLoading(false)
     }
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <PenSquare className="h-8 w-8" />
-            <span className="text-2xl font-bold">Publish Type</span>
-          </Link>
-        </div>
+  const inputStyle = {
+    width: '100%',
+    padding: '16px 24px',
+    borderRadius: '50px',
+    border: '1px solid #eee',
+    backgroundColor: '#f9f9f9',
+    fontSize: '15px',
+    outline: 'none',
+    transition: 'all 0.2s',
+    marginBottom: '24px'
+  }
 
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Reset your password</CardTitle>
-            <CardDescription>
-              {isSubmitted
-                ? "Check your email for reset instructions"
-                : "Enter your email address and we'll send you a reset link"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isSubmitted ? (
-              <div className="text-center space-y-4">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                  <svg
-                    className="w-8 h-8 text-green-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </div>
-                <p className="text-sm text-neutral-600 mb-2">
-                  We've sent a password reset link to <strong>{email}</strong>
-                </p>
-                <p className="text-sm text-neutral-500 mb-3">
-                  Click the link in your email to reset your password. The link will expire in 1 hour.
-                </p>
-                <p className="text-xs text-neutral-500">
-                  Didn't receive the email? Check your spam folder or{" "}
-                  <button
-                    onClick={() => setIsSubmitted(false)}
-                    className="text-emerald-800 font-medium hover:underline"
-                  >
-                    try again
-                  </button>
-                </p>
-                <Link href="/login">
-                  <Button variant="outline" className="w-full mt-4">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to login
-                  </Button>
-                </Link>
+  return (
+    <div style={{
+      backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.4)), url("/design/BG%2023-01%202.png")',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
+
+      {/* Mini Header */}
+      <header style={{ padding: '24px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
+          <div style={{ width: '32px', height: '32px', backgroundColor: '#FF7A33', borderRadius: '8px' }}></div>
+          <span style={{ fontSize: '20px', fontWeight: 800, color: '#1a1a1a' }}>PublishType</span>
+        </Link>
+      </header>
+
+      {/* Main Content */}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
+        <div style={{
+          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+          backdropFilter: 'blur(20px)',
+          borderRadius: '48px',
+          padding: '60px',
+          width: '100%',
+          maxWidth: '540px',
+          boxShadow: '0 30px 60px rgba(0,0,0,0.05)',
+          textAlign: 'center'
+        }}>
+          {isSubmitted ? (
+            <div>
+              <div style={{ width: '80px', height: '80px', backgroundColor: 'rgba(255, 122, 51, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 32px', color: '#FF7A33' }}>
+                <MailCheck size={40} strokeWidth={2} />
               </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
+              <h1 style={{ fontSize: '32px', fontWeight: 800, marginBottom: '16px', color: '#1a1a1a' }}>Check your email</h1>
+              <p style={{ color: '#666', fontSize: '16px', lineHeight: '1.6', marginBottom: '32px' }}>
+                We've sent reset instructions to <strong>{email}</strong>. If an account exists, you'll receive a link shortly.
+              </p>
+              <Link href="/login" style={{
+                color: '#FF7A33',
+                fontSize: '15px',
+                fontWeight: 800,
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
+              }}>
+                <ArrowLeft size={18} /> Back to Login
+              </Link>
+            </div>
+          ) : (
+            <>
+              <h1 style={{ fontSize: '32px', fontWeight: 800, marginBottom: '16px', color: '#1a1a1a' }}>Reset Password</h1>
+              <p style={{ color: '#666', fontSize: '15px', marginBottom: '40px', lineHeight: '1.6' }}>
+                Enter your email address and we'll send you a link to reset your password.
+              </p>
+
+              <form onSubmit={handleSubmit} style={{ textAlign: 'left' }}>
+                <div>
+                  <label style={{ fontSize: '13px', fontWeight: 800, color: '#1a1a1a', marginBottom: '8px', display: 'block' }}>Email Address</label>
+                  <input
                     type="email"
-                    placeholder="you@example.com"
+                    placeholder="john@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    style={inputStyle}
                   />
                 </div>
-                <Button type="submit" className="w-full bg-emerald-800 hover:bg-emerald-900 text-white" disabled={isLoading}>
-                  {isLoading ? "Sending..." : "Send reset link"}
-                </Button>
-                <Link href="/login">
-                  <Button variant="ghost" className="w-full">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to login
-                  </Button>
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  style={{
+                    width: '100%',
+                    backgroundColor: '#FF7A33',
+                    color: 'white',
+                    padding: '18px',
+                    borderRadius: '50px',
+                    border: 'none',
+                    fontSize: '16px',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    boxShadow: '0 8px 25px rgba(255, 122, 51, 0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '10px'
+                  }}>
+                  {isLoading ? <Loader2 className="animate-spin" size={20} /> : 'Send Reset Link'}
+                </button>
+
+                <Link href="/login" style={{
+                  marginTop: '32px',
+                  color: '#999',
+                  fontSize: '14px',
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}>
+                  <ArrowLeft size={16} /> Back to Login
                 </Link>
               </form>
-            )}
-          </CardContent>
-        </Card>
+            </>
+          )}
+        </div>
       </div>
+
+      <footer style={{ padding: '24px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '24px' }}>
+          <Link href="/privacy" style={{ fontSize: '13px', color: '#999', textDecoration: 'none', fontWeight: 600 }}>Privacy Policy</Link>
+          <Link href="/terms" style={{ fontSize: '13px', color: '#999', textDecoration: 'none', fontWeight: 600 }}>Term & Condition</Link>
+        </div>
+        <p style={{ margin: 0, fontSize: '13px', color: '#999', fontWeight: 600 }}>
+          © {new Date().getFullYear()} PublishType. All Rights Reserved.
+        </p>
+      </footer>
     </div>
   )
 }
