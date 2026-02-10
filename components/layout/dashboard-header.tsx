@@ -1,71 +1,16 @@
 "use client"
 
-import { Search, Settings, Maximize2, TrendingUp, LogOut, Menu, X, PenTool } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Search, Bell, LogOut, Menu, X, ChevronDown } from "lucide-react"
 import { useAuth } from "@/lib/context/AuthContext"
 import { useRouter, usePathname } from "next/navigation"
-import { useEffect, useState } from "react"
-import { theme } from "@/lib/theme"
+import { useState } from "react"
 import Link from "next/link"
 
 export function DashboardHeader() {
   const { user, logout } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
-  const [stats, setStats] = useState({ totalViews: 0, totalPosts: 0 })
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-
-  const mobileNavItems = [
-    { name: "Dashboard", href: "/dashboard" },
-    { name: "Articles", href: "/dashboard/articles" },
-    { name: "Collaborate", href: "/dashboard/collaborate" },
-    { name: "Analytics", href: "/dashboard/analytics" },
-    { name: "Settings", href: "/dashboard/settings" },
-  ]
-
-  useEffect(() => {
-    // Fetch user stats (with caching to avoid duplicate requests)
-    const fetchStats = async () => {
-      try {
-        const token = localStorage.getItem('accessToken')
-        if (!token) return
-
-        // Check if we have cached stats (within 30 seconds)
-        const cachedStats = sessionStorage.getItem('headerStats')
-        const cachedTime = sessionStorage.getItem('headerStatsTime')
-        if (cachedStats && cachedTime && (Date.now() - parseInt(cachedTime)) < 30000) {
-          const cached = JSON.parse(cachedStats)
-          setStats(cached)
-          return
-        }
-
-        const response = await fetch('/api/user/stats', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        })
-
-        if (response.ok) {
-          const data = await response.json()
-          const newStats = {
-            totalViews: data.data.totalViews || 0,
-            totalPosts: data.data.totalArticles || 0,
-          }
-          setStats(newStats)
-          // Cache the stats
-          sessionStorage.setItem('headerStats', JSON.stringify(newStats))
-          sessionStorage.setItem('headerStatsTime', Date.now().toString())
-        }
-      } catch (error) {
-        console.error('Error fetching stats:', error)
-      }
-    }
-
-    if (user) {
-      fetchStats()
-    }
-  }, [user])
 
   const getInitials = (name: string) => {
     return name
@@ -78,254 +23,204 @@ export function DashboardHeader() {
 
   return (
     <>
-    <header style={{
-      display: 'flex',
-      height: '64px',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      borderBottom: `1px solid ${theme.colors.border}`,
-      backgroundColor: theme.colors.background,
-      padding: '0 16px',
-    }}>
-      {/* Mobile Menu Button - only visible on mobile */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="mobile-menu-toggle"
-        style={{
-          height: '36px',
-          width: '36px',
-          color: theme.colors.text.secondary,
-        }}
-        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-      >
-        {mobileMenuOpen ? (
-          <X style={{ height: '20px', width: '20px' }} strokeWidth={1.5} />
-        ) : (
-          <Menu style={{ height: '20px', width: '20px' }} strokeWidth={1.5} />
-        )}
-      </Button>
-
-      {/* Mobile Logo - only visible on mobile */}
-      <Link href="/dashboard" className="show-mobile-flex" style={{ alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-        <PenTool style={{ height: '20px', width: '20px', color: theme.colors.text.primary }} strokeWidth={2} />
-        <span style={{ fontSize: '16px', fontWeight: 500, color: theme.colors.text.primary }}>PublishType</span>
-      </Link>
-
-      <div className="hidden md:flex" style={{ flex: 1, alignItems: 'center', gap: '16px' }}>
-        <div style={{ position: 'relative', width: '320px' }}>
-          <Search style={{
-            position: 'absolute',
-            left: '12px',
-            top: '50%',
-            height: '16px',
-            width: '16px',
-            transform: 'translateY(-50%)',
-            color: theme.colors.text.muted,
-          }} />
-          <Input
-            type="search"
-            placeholder="Search articles, platforms, or settings..."
-            style={{
-              paddingLeft: '40px',
-              height: '36px',
-              fontSize: '13px',
-              border: `1px solid ${theme.colors.borderStrong}`,
-              backgroundColor: theme.colors.surface,
-              borderRadius: '6px',
-            }}
-            className="focus:ring-1 focus:ring-[#1f3529]"
-          />
-        </div>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        {/* Stat Boxes - Hidden on mobile */}
-        <div className="hidden lg:flex" style={{ alignItems: 'center', gap: '12px' }}>
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '6px 16px',
-            border: `1px solid ${theme.colors.border}`,
-            borderRadius: '8px',
-            backgroundColor: theme.colors.surface,
-            minWidth: '70px',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <TrendingUp style={{ height: '12px', width: '12px', color: theme.colors.primary }} strokeWidth={2} />
-              <span style={{ fontSize: '11px', color: theme.colors.text.muted }}>Views</span>
-            </div>
-            <span style={{
-              fontSize: '16px',
-              fontWeight: 600,
-              color: theme.colors.text.primary,
-            }}>
-              {stats.totalViews >= 1000
-                ? `${(stats.totalViews / 1000).toFixed(1)}K`
-                : stats.totalViews}
-            </span>
-          </div>
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '6px 16px',
-            border: `1px solid ${theme.colors.border}`,
-            borderRadius: '8px',
-            backgroundColor: theme.colors.surface,
-            minWidth: '70px',
-          }}>
-            <span style={{ fontSize: '11px', color: theme.colors.text.muted }}>Posts</span>
-            <span style={{
-              fontSize: '16px',
-              fontWeight: 600,
-              color: theme.colors.text.primary,
-            }}>{stats.totalPosts}</span>
-          </div>
-        </div>
-
-        <div className="hidden lg:block" style={{ height: '32px', width: '1px', backgroundColor: theme.colors.border }} />
-
-        <Button
-          variant="ghost"
-          size="icon"
-          className="hidden md:flex hover:bg-[rgba(235,228,213,0.5)]"
-          style={{
-            height: '36px',
-            width: '36px',
-            color: theme.colors.text.secondary,
-          }}
-          onClick={() => router.push('/dashboard/settings')}
-        >
-          <Settings style={{ height: '18px', width: '18px' }} strokeWidth={1.5} />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          style={{
-            height: '36px',
-            width: '36px',
-            color: theme.colors.text.secondary,
-          }}
-          onClick={logout}
-          title="Logout"
-          className="hover:bg-[rgba(235,228,213,0.5)]"
-        >
-          <LogOut style={{ height: '18px', width: '18px' }} strokeWidth={1.5} />
-        </Button>
-
-        <div className="hidden sm:flex" style={{ alignItems: 'center', gap: '8px', marginLeft: '8px' }}>
-          <span className="hidden md:inline" style={{ fontSize: '13px', color: theme.colors.text.secondary }}>{user?.name || 'User'}</span>
-          {user?.avatar ? (
-            <img
-              src={user.avatar}
-              alt={user.name}
-              style={{
-                height: '32px',
-                width: '32px',
-                borderRadius: '50%',
-                objectFit: 'cover',
-              }}
-            />
-          ) : (
-            <div style={{
-              height: '32px',
-              width: '32px',
-              borderRadius: '50%',
-              backgroundColor: theme.colors.primary,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <span style={{
-                color: 'white',
-                fontSize: '12px',
-                fontWeight: 600,
-              }}>
-                {user ? getInitials(user.name) : 'U'}
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-    </header>
-
-    {/* Mobile Navigation Menu */}
-    {mobileMenuOpen && (
-      <div className="show-mobile" style={{
-        position: 'fixed',
-        top: '64px',
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: theme.colors.background,
-        zIndex: 50,
-        padding: '16px',
-        borderTop: `1px solid ${theme.colors.border}`,
+      <style jsx>{`
+        @media (max-width: 768px) {
+          header {
+            height: 64px !important;
+            padding: 0 16px !important;
+          }
+        }
+        @media (max-width: 480px) {
+          header {
+            height: 60px !important;
+            padding: 0 12px !important;
+          }
+        }
+      `}</style>
+      <header style={{
+        display: 'flex',
+        height: '80px',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        borderBottom: '1px solid #eee',
+        backgroundColor: '#fff',
+        padding: '0 40px',
+        position: 'relative'
       }}>
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {mobileNavItems.map((item) => {
-            const isActive = pathname === item.href || pathname?.startsWith(item.href + "/")
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                onClick={() => setMobileMenuOpen(false)}
-                style={{
-                  padding: '12px 16px',
-                  fontSize: '16px',
-                  fontWeight: isActive ? 600 : 400,
-                  borderRadius: '8px',
-                  textDecoration: 'none',
-                  color: isActive ? theme.colors.text.primary : theme.colors.text.secondary,
-                  backgroundColor: isActive ? theme.colors.secondary : 'transparent',
-                }}
-              >
-                {item.name}
-              </Link>
-            )
-          })}
-        </nav>
+        {/* Mobile Menu Toggle */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="lg:hidden"
+          style={{
+            background: 'none',
+            border: 'none',
+            color: '#1a1a1a',
+            cursor: 'pointer',
+            padding: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
+          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
 
-        {/* User info in mobile menu */}
-        <div style={{
-          marginTop: '24px',
-          paddingTop: '24px',
-          borderTop: `1px solid ${theme.colors.border}`,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-        }}>
-          {user?.avatar ? (
-            <img
-              src={user.avatar}
-              alt={user.name}
-              style={{ height: '40px', width: '40px', borderRadius: '50%', objectFit: 'cover' }}
-            />
-          ) : (
-            <div style={{
-              height: '40px',
-              width: '40px',
-              borderRadius: '50%',
-              backgroundColor: theme.colors.primary,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <span style={{ color: 'white', fontSize: '14px', fontWeight: 600 }}>
-                {user ? getInitials(user.name) : 'U'}
-              </span>
-            </div>
-          )}
-          <div>
-            <p style={{ fontSize: '14px', fontWeight: 500, color: theme.colors.text.primary }}>{user?.name || 'User'}</p>
-            <p style={{ fontSize: '12px', color: theme.colors.text.muted }}>{user?.email || ''}</p>
-          </div>
+        {/* Search Bar */}
+        <div style={{ position: 'relative', width: '400px' }} className="hidden lg:block">
+          <input
+            type="text"
+            placeholder="Search articles, analytics..."
+            style={{
+              width: '100%',
+              padding: '12px 20px 12px 48px',
+              borderRadius: '50px',
+              border: '1px solid #eee',
+              backgroundColor: '#fff',
+              fontSize: '14px',
+              outline: 'none',
+              color: '#1a1a1a',
+              fontWeight: 500
+            }}
+          />
+          <Search style={{ position: 'absolute', left: '18px', top: '50%', transform: 'translateY(-50%)', color: '#999' }} size={18} />
         </div>
-      </div>
-    )}
+
+        {/* Right Side Icons */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', borderRight: '1px solid #eee', paddingRight: '24px' }} className="hidden sm:flex">
+            <button style={{ background: 'none', border: 'none', color: '#1a1a1a', cursor: 'pointer', position: 'relative' }}>
+              <Bell size={20} />
+              <div style={{ position: 'absolute', top: '-2px', right: '-2px', width: '8px', height: '8px', backgroundColor: '#FF7A33', borderRadius: '50%', border: '2px solid #fff' }}></div>
+            </button>
+          </div>
+
+          {/* User Profile */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
+            <div style={{ textAlign: 'right' }} className="hidden lg:block">
+              <p style={{ margin: 0, fontSize: '14px', fontWeight: 800, color: '#1a1a1a' }}>{user?.name || 'User'}</p>
+              <p style={{ margin: 0, fontSize: '12px', fontWeight: 600, color: '#999' }}>{user?.subscriptionPlan || 'Free Plan'}</p>
+            </div>
+            <div style={{ position: 'relative' }}>
+              {user?.avatar ? (
+                <img src={user.avatar} alt="" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />
+              ) : (
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#FF7A33', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 700 }}>
+                  {user ? getInitials(user.name) : 'U'}
+                </div>
+              )}
+            </div>
+            <ChevronDown size={14} color="#999" strokeWidth={3} className="hidden sm:block" />
+          </div>
+
+          {/* Logout - Keep functionality */}
+          <button
+            onClick={logout}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#666',
+              cursor: 'pointer',
+              padding: '8px',
+              borderRadius: '8px',
+              backgroundColor: '#f9f9f9'
+            }}
+            title="Logout"
+          >
+            <LogOut size={18} />
+          </button>
+        </div>
+
+        {/* Mobile Links Overlay (Optional but good for UX) */}
+        {mobileMenuOpen && (
+          <div style={{
+            position: 'absolute',
+            top: '80px',
+            left: 0,
+            right: 0,
+            backgroundColor: '#fff',
+            padding: '24px 20px',
+            borderBottom: '1px solid #eee',
+            zIndex: 100,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px',
+            boxShadow: '0 8px 20px rgba(0,0,0,0.08)',
+            maxHeight: 'calc(100vh - 80px)',
+            overflowY: 'auto'
+          }} className="md:hidden">
+            <Link
+              href="/dashboard"
+              onClick={() => setMobileMenuOpen(false)}
+              style={{
+                textDecoration: 'none',
+                color: pathname === '/dashboard' ? '#FF7A33' : '#1a1a1a',
+                fontWeight: 700,
+                fontSize: '15px',
+                padding: '12px 16px',
+                borderRadius: '12px',
+                backgroundColor: pathname === '/dashboard' ? '#FFF5F0' : 'transparent',
+                transition: 'all 0.2s'
+              }}
+            >Dashboard</Link>
+            <Link
+              href="/dashboard/articles"
+              onClick={() => setMobileMenuOpen(false)}
+              style={{
+                textDecoration: 'none',
+                color: pathname?.startsWith('/dashboard/articles') ? '#FF7A33' : '#1a1a1a',
+                fontWeight: 700,
+                fontSize: '15px',
+                padding: '12px 16px',
+                borderRadius: '12px',
+                backgroundColor: pathname?.startsWith('/dashboard/articles') ? '#FFF5F0' : 'transparent',
+                transition: 'all 0.2s'
+              }}
+            >Articles</Link>
+            <Link
+              href="/dashboard/integrations"
+              onClick={() => setMobileMenuOpen(false)}
+              style={{
+                textDecoration: 'none',
+                color: pathname?.startsWith('/dashboard/integrations') ? '#FF7A33' : '#1a1a1a',
+                fontWeight: 700,
+                fontSize: '15px',
+                padding: '12px 16px',
+                borderRadius: '12px',
+                backgroundColor: pathname?.startsWith('/dashboard/integrations') ? '#FFF5F0' : 'transparent',
+                transition: 'all 0.2s'
+              }}
+            >Publishing</Link>
+            <Link
+              href="/dashboard/analytics"
+              onClick={() => setMobileMenuOpen(false)}
+              style={{
+                textDecoration: 'none',
+                color: pathname?.startsWith('/dashboard/analytics') ? '#FF7A33' : '#1a1a1a',
+                fontWeight: 700,
+                fontSize: '15px',
+                padding: '12px 16px',
+                borderRadius: '12px',
+                backgroundColor: pathname?.startsWith('/dashboard/analytics') ? '#FFF5F0' : 'transparent',
+                transition: 'all 0.2s'
+              }}
+            >Analytics</Link>
+            <Link
+              href="/dashboard/settings"
+              onClick={() => setMobileMenuOpen(false)}
+              style={{
+                textDecoration: 'none',
+                color: pathname?.startsWith('/dashboard/settings') ? '#FF7A33' : '#1a1a1a',
+                fontWeight: 700,
+                fontSize: '15px',
+                padding: '12px 16px',
+                borderRadius: '12px',
+                backgroundColor: pathname?.startsWith('/dashboard/settings') ? '#FFF5F0' : 'transparent',
+                transition: 'all 0.2s'
+              }}
+            >Settings</Link>
+          </div>
+        )}
+      </header>
     </>
   )
 }

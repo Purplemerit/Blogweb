@@ -2,10 +2,21 @@
 
 import { Suspense, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Settings, Plus, Check, AlertCircle, Loader2 } from "lucide-react"
+import {
+  Plus,
+  Check,
+  AlertCircle,
+  Loader2,
+  Send,
+  Globe,
+  LayoutGrid,
+  Sparkles,
+  Share2,
+  Settings,
+  ChevronRight,
+  Clock,
+  FileText
+} from "lucide-react"
 import { useAuth } from "@/lib/context/AuthContext"
 import { GhostConnectModal } from "@/components/GhostConnectModal"
 import { DevToConnectModal } from "@/components/DevToConnectModal"
@@ -38,37 +49,27 @@ function IntegrationsContent() {
   const [showGhostModal, setShowGhostModal] = useState(false)
   const [showDevToModal, setShowDevToModal] = useState(false)
   const [showHashnodeModal, setShowHashnodeModal] = useState(false)
-  const [platformFilter, setPlatformFilter] = useState<'ALL' | 'CMS' | 'BLOGGING'>('ALL')
+  const [platformFilter, setPlatformFilter] = useState<'ALL' | 'CMS' | 'BLOGGING' | 'SOCIAL MEDIA'>('ALL')
 
   useEffect(() => {
-    // Handle OAuth callback messages
     const success = searchParams.get('success')
     const error = searchParams.get('error')
 
     if (success === 'wordpress_connected') {
       toast.success('WordPress.com connected successfully!')
-      // Remove query params
       router.replace('/dashboard/integrations')
       fetchConnections()
-    }
-
-    if (success === 'wix_connected') {
+    } else if (success === 'wix_connected') {
       toast.success('Wix connected successfully!')
       router.replace('/dashboard/integrations')
       fetchConnections()
     }
 
     if (error) {
-      const errorMessages: Record<string, string> = {
-        no_code: 'Authorization code not received',
-        invalid_state: 'Invalid authorization state',
-        token_exchange_failed: 'Failed to exchange authorization code',
-        connection_failed: 'Failed to connect to WordPress.com'
-      }
-      toast.error(errorMessages[error] || 'Connection failed')
+      toast.error('Connection failed')
       router.replace('/dashboard/integrations')
     }
-  }, [searchParams])
+  }, [searchParams, router])
 
   useEffect(() => {
     if (user) {
@@ -80,9 +81,7 @@ function IntegrationsContent() {
     try {
       const token = localStorage.getItem('accessToken')
       const response = await fetch('/api/platforms/connections', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
       })
 
       if (response.ok) {
@@ -98,10 +97,7 @@ function IntegrationsContent() {
 
   const connectWordPress = () => {
     if (!user) return
-
     setConnectingWordPress(true)
-
-    // Build WordPress.com OAuth URL
     const params = new URLSearchParams({
       client_id: process.env.NEXT_PUBLIC_WORDPRESS_CLIENT_ID || '',
       redirect_uri: `${window.location.origin}/api/oauth/wordpress/callback`,
@@ -109,27 +105,19 @@ function IntegrationsContent() {
       state: user.id,
       scope: 'posts'
     })
-
-    const authUrl = `https://public-api.wordpress.com/oauth2/authorize?${params.toString()}`
-    window.location.href = authUrl
+    window.location.href = `https://public-api.wordpress.com/oauth2/authorize?${params.toString()}`
   }
 
   const connectWix = async () => {
     if (!user) return
-
     try {
       setConnectingWix(true)
       const token = localStorage.getItem('accessToken')
-
       const response = await fetch('/api/oauth/wix', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
       })
-
       const data = await response.json()
-
       if (data.success && data.authUrl) {
         window.location.href = data.authUrl
       } else {
@@ -137,503 +125,333 @@ function IntegrationsContent() {
         setConnectingWix(false)
       }
     } catch (error) {
-      console.error('Error connecting Wix:', error)
       toast.error('Failed to connect Wix')
       setConnectingWix(false)
     }
   }
 
   const disconnectPlatform = async (connectionId: string, platform: string) => {
+    if (!confirm(`Are you sure you want to disconnect ${platform}?`)) return
     try {
       const token = localStorage.getItem('accessToken')
       const response = await fetch(`/api/platforms/connections/${connectionId}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
       })
-
       const data = await response.json()
-
       if (response.ok && data.success) {
         toast.success(`${platform} disconnected`)
         fetchConnections()
-      } else {
-        console.error('Disconnect error:', data)
-        toast.error(data.error || 'Failed to disconnect platform')
       }
     } catch (error) {
-      console.error('Error disconnecting platform:', error)
       toast.error('Failed to disconnect platform')
     }
   }
 
-  const wpConnection = connections.find(c => c.platform === 'WORDPRESS')
-  const ghostConnection = connections.find(c => c.platform === 'GHOST')
-  const devtoConnection = connections.find(c => c.platform === 'DEVTO')
-  const hashnodeConnection = connections.find(c => c.platform === 'HASHNODE')
-  const wixConnection = connections.find(c => c.platform === 'WIX')
+  if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}><Loader2 className="animate-spin" size={40} style={{ color: '#FF7A33' }} /></div>
 
-  if (loading) {
-    return (
-      <div className="p-8 bg-white min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-neutral-400" />
-      </div>
-    )
-  }
+  const platformDefinitions = [
+    { name: 'Wordpress', type: 'CMS', color: '#21759b', connect: connectWordPress, key: 'WORDPRESS', description: 'Publish your stories directly to your WordPress blog. All formatting and images are synced automatically.' },
+    { name: 'Ghost', type: 'CMS', color: '#15171a', connect: () => setShowGhostModal(true), key: 'GHOST', description: 'Modern publishing platform for professionals. Connect via Admin API to sync content.' },
+    { name: 'Dev.to', type: 'BLOGGING', color: '#0a0a0a', connect: () => setShowDevToModal(true), key: 'DEVTO', description: 'Share your technical articles with the developer community on Dev.to.' },
+    { name: 'Hashnode', type: 'BLOGGING', color: '#2962ff', connect: () => setShowHashnodeModal(true), key: 'HASHNODE', description: 'Connect your personal domain blog on Hashnode to sync and publish instantly.' },
+    { name: 'Wix', type: 'CMS', color: '#faad14', connect: connectWix, key: 'WIX', description: 'Sync and manage your content on your Wix Site with total creative control.' },
+    { name: 'LinkedIn', type: 'SOCIAL MEDIA', color: '#0077b5', connect: () => { }, key: 'LINKEDIN', description: 'Draft and publish professional articles directly to your LinkedIn profile feed.', comingSoon: true },
+  ]
+
+  const connectedPlatforms = platformDefinitions.filter(p => connections.find(c => c.platform === p.key))
+  const availablePlatforms = platformDefinitions.filter(p => !connections.find(c => c.platform === p.key))
 
   return (
-    <div className="p-8 bg-white min-h-screen">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-[26px] font-bold text-neutral-900 mb-1 tracking-tight">Platform Integrations</h1>
-        <p className="text-[13px] text-neutral-500">Connect your favorite platforms to auto-publish your content</p>
-      </div>
+    <>
+      <style jsx global>{`
+        @media (max-width: 768px) {
+          .integrations-hero {
+            padding: 40px 20px !important;
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 20px !important;
+          }
+          .integrations-hero h1 {
+            font-size: 32px !important;
+          }
+          .integrations-hero button {
+            width: 100% !important;
+            justify-content: center !important;
+          }
+          .integrations-tabs {
+            padding: 0 20px !important;
+            overflow-x: auto !important;
+          }
+          .integrations-content {
+            padding: 40px 20px !important;
+          }
+          .integrations-grid {
+            grid-template-columns: 1fr !important;
+            gap: 20px !important;
+          }
+        }
 
-      {/* Connected Platforms */}
-      {connections.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-[15px] font-semibold text-neutral-900 mb-4">Connected Platforms</h2>
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {wpConnection && (
-              <Card className="border border-neutral-200 shadow-sm">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="h-12 w-12 rounded-lg bg-blue-50 flex items-center justify-center">
-                      <div className="h-6 w-6 rounded bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
-                        W
-                      </div>
-                    </div>
-                    <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 text-[11px] font-medium border-0 gap-1">
-                      <Check className="h-3 w-3" />
-                      Connected
-                    </Badge>
-                  </div>
-                  <h3 className="text-[15px] font-semibold text-neutral-900 mb-1">WordPress.com</h3>
-                  <p className="text-[12px] text-neutral-500 mb-1">Account</p>
-                  <p className="text-[13px] text-neutral-900 mb-3 truncate">{wpConnection.metadata?.displayName || wpConnection.metadata?.username || 'Connected'}</p>
-                  <p className="text-[12px] text-neutral-500 mb-1">Blog URL</p>
-                  <p className="text-[13px] text-neutral-900 mb-4 truncate">{wpConnection.metadata?.blogUrl || 'N/A'}</p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 h-8 text-[12px] hover:bg-red-50 hover:text-red-600 hover:border-red-200"
-                      onClick={() => disconnectPlatform(wpConnection.id, 'WordPress.com')}
-                    >
-                      DISCONNECT
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-            {ghostConnection && (
-              <Card className="border border-neutral-200 shadow-sm">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="h-12 w-12 rounded-lg bg-neutral-100 flex items-center justify-center">
-                      <div className="h-6 w-6 rounded bg-neutral-900 flex items-center justify-center text-white text-xs font-bold">
-                        G
-                      </div>
-                    </div>
-                    <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 text-[11px] font-medium border-0 gap-1">
-                      <Check className="h-3 w-3" />
-                      Connected
-                    </Badge>
-                  </div>
-                  <h3 className="text-[15px] font-semibold text-neutral-900 mb-1">Ghost</h3>
-                  <p className="text-[12px] text-neutral-500 mb-1">Site Name</p>
-                  <p className="text-[13px] text-neutral-900 mb-3 truncate">{ghostConnection.metadata?.siteName || 'Ghost Site'}</p>
-                  <p className="text-[12px] text-neutral-500 mb-1">Site URL</p>
-                  <p className="text-[13px] text-neutral-900 mb-4 truncate">{ghostConnection.metadata?.apiUrl || 'N/A'}</p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 h-8 text-[12px] hover:bg-red-50 hover:text-red-600 hover:border-red-200"
-                      onClick={() => disconnectPlatform(ghostConnection.id, 'Ghost')}
-                    >
-                      DISCONNECT
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-            {devtoConnection && (
-              <Card className="border border-neutral-200 shadow-sm">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="h-12 w-12 rounded-lg bg-neutral-900 flex items-center justify-center">
-                      <div className="h-6 w-6 text-white flex items-center justify-center text-[10px] font-bold">
-                        DEV
-                      </div>
-                    </div>
-                    <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 text-[11px] font-medium border-0 gap-1">
-                      <Check className="h-3 w-3" />
-                      Connected
-                    </Badge>
-                  </div>
-                  <h3 className="text-[15px] font-semibold text-neutral-900 mb-1">Dev.to</h3>
-                  <p className="text-[12px] text-neutral-500 mb-1">Username</p>
-                  <p className="text-[13px] text-neutral-900 mb-4 truncate">@{devtoConnection.metadata?.username || 'Connected'}</p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 h-8 text-[12px] hover:bg-red-50 hover:text-red-600 hover:border-red-200"
-                      onClick={() => disconnectPlatform(devtoConnection.id, 'Dev.to')}
-                    >
-                      DISCONNECT
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-            {hashnodeConnection && (
-              <Card className="border border-neutral-200 shadow-sm">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="h-12 w-12 rounded-lg bg-blue-600 flex items-center justify-center">
-                      <div className="h-6 w-6 text-white flex items-center justify-center text-xs font-bold">
-                        H
-                      </div>
-                    </div>
-                    <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 text-[11px] font-medium border-0 gap-1">
-                      <Check className="h-3 w-3" />
-                      Connected
-                    </Badge>
-                  </div>
-                  <h3 className="text-[15px] font-semibold text-neutral-900 mb-1">Hashnode</h3>
-                  <p className="text-[12px] text-neutral-500 mb-1">Username</p>
-                  <p className="text-[13px] text-neutral-900 mb-4 truncate">@{hashnodeConnection.metadata?.username || 'Connected'}</p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 h-8 text-[12px] hover:bg-red-50 hover:text-red-600 hover:border-red-200"
-                      onClick={() => disconnectPlatform(hashnodeConnection.id, 'Hashnode')}
-                    >
-                      DISCONNECT
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-            {wixConnection && (
-              <Card className="border border-neutral-200 shadow-sm">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="h-12 w-12 rounded-lg bg-orange-50 flex items-center justify-center">
-                      <div className="h-6 w-6 rounded bg-orange-500 flex items-center justify-center text-white text-xs font-bold">
-                        W
-                      </div>
-                    </div>
-                    <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 text-[11px] font-medium border-0 gap-1">
-                      <Check className="h-3 w-3" />
-                      Connected
-                    </Badge>
-                  </div>
-                  <h3 className="text-[15px] font-semibold text-neutral-900 mb-1">Wix</h3>
-                  <p className="text-[12px] text-neutral-500 mb-1">Site</p>
-                  <p className="text-[13px] text-neutral-900 mb-3 truncate">{wixConnection.metadata?.siteName || 'Connected'}</p>
-                  <p className="text-[12px] text-neutral-500 mb-1">Site URL</p>
-                  <p className="text-[13px] text-neutral-900 mb-4 truncate">{wixConnection.metadata?.siteUrl || 'N/A'}</p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 h-8 text-[12px] hover:bg-red-50 hover:text-red-600 hover:border-red-200"
-                      onClick={() => disconnectPlatform(wixConnection.id, 'Wix')}
-                    >
-                      DISCONNECT
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </div>
-      )}
+        @media (max-width: 480px) {
+          .integrations-hero {
+            padding: 32px 16px !important;
+          }
+          .integrations-hero h1 {
+            font-size: 28px !important;
+            line-height: 1.2 !important;
+          }
+          .integrations-content {
+            padding: 32px 12px !important;
+          }
+          .integrations-card {
+            border-radius: 24px !important;
+            padding: 24px !important;
+          }
+        }
+      `}</style>
 
-      {/* Available Platforms */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[15px] font-semibold text-neutral-900">Available Platforms</h2>
-          <div className="flex gap-2">
-            <Button
-              variant={platformFilter === 'ALL' ? 'default' : 'outline'}
-              size="sm"
-              className="h-8 text-[11px] font-medium"
-              onClick={() => setPlatformFilter('ALL')}
-            >
-              ALL
-            </Button>
-            <Button
-              variant={platformFilter === 'CMS' ? 'default' : 'outline'}
-              size="sm"
-              className="h-8 text-[11px] font-medium"
-              onClick={() => setPlatformFilter('CMS')}
-            >
-              CMS
-            </Button>
-            <Button
-              variant={platformFilter === 'BLOGGING' ? 'default' : 'outline'}
-              size="sm"
-              className="h-8 text-[11px] font-medium"
-              onClick={() => setPlatformFilter('BLOGGING')}
-            >
-              BLOGGING
-            </Button>
-          </div>
-        </div>
+      <div style={{
+        paddingBottom: '100px',
+        backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), url("/design/BG%2023-01%202.png")',
+        backgroundSize: 'cover',
+        backgroundAttachment: 'fixed',
+        backgroundPosition: 'center',
+        minHeight: '100vh'
+      }}>
 
-        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-          {/* WordPress.com - CMS */}
-          {!wpConnection && (platformFilter === 'ALL' || platformFilter === 'CMS') && (
-            <Card className="border border-neutral-200 shadow-sm hover:border-blue-200 hover:shadow-md transition-all">
-              <CardContent className="p-5">
-                <div className="flex items-start gap-3 mb-3">
-                  <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-                    <div className="h-6 w-6 rounded bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
-                      W
-                    </div>
-                  </div>
-                  <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 text-[10px] font-medium border-0">
-                    READY
-                  </Badge>
-                </div>
-                <h3 className="text-[14px] font-semibold text-neutral-900 mb-2">WordPress.com</h3>
-                <p className="text-[12px] text-neutral-500 mb-4">
-                  Automatically publish your articles to WordPress.com blogs.
-                </p>
-                <Button
-                  variant="default"
-                  size="sm"
-                  className="w-full h-8 text-[12px] bg-blue-600 hover:bg-blue-700"
-                  onClick={connectWordPress}
-                  disabled={connectingWordPress}
-                >
-                  {connectingWordPress ? (
-                    <>
-                      <Loader2 className="h-3 w-3 mr-2 animate-spin" />
-                      CONNECTING...
-                    </>
-                  ) : (
-                    'CONNECT'
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Dev.to - BLOGGING */}
-          {!devtoConnection && (platformFilter === 'ALL' || platformFilter === 'BLOGGING') && (
-            <Card className="border border-neutral-200 shadow-sm hover:border-neutral-300 hover:shadow-md transition-all">
-              <CardContent className="p-5">
-                <div className="flex items-start gap-3 mb-3">
-                  <div className="h-10 w-10 rounded-lg bg-neutral-900 flex items-center justify-center flex-shrink-0">
-                    <div className="h-6 w-6 text-white flex items-center justify-center text-[10px] font-bold">
-                      DEV
-                    </div>
-                  </div>
-                  <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 text-[10px] font-medium border-0">
-                    READY
-                  </Badge>
-                </div>
-                <h3 className="text-[14px] font-semibold text-neutral-900 mb-2">Dev.to</h3>
-                <p className="text-[12px] text-neutral-500 mb-4">
-                  Publish to Dev.to community. Auto-converts HTML to Markdown.
-                </p>
-                <Button
-                  variant="default"
-                  size="sm"
-                  className="w-full h-8 text-[12px] bg-neutral-900 hover:bg-neutral-800"
-                  onClick={() => setShowDevToModal(true)}
-                >
-                  CONNECT
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Ghost - CMS */}
-          {!ghostConnection && (platformFilter === 'ALL' || platformFilter === 'CMS') && (
-            <Card className="border border-neutral-200 shadow-sm hover:border-neutral-300 hover:shadow-md transition-all">
-              <CardContent className="p-5">
-                <div className="flex items-start gap-3 mb-3">
-                  <div className="h-10 w-10 rounded-lg bg-neutral-100 flex items-center justify-center flex-shrink-0">
-                    <div className="h-6 w-6 rounded bg-neutral-900 text-white flex items-center justify-center text-xs font-bold">
-                      G
-                    </div>
-                  </div>
-                  <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 text-[10px] font-medium border-0">
-                    READY
-                  </Badge>
-                </div>
-                <h3 className="text-[14px] font-semibold text-neutral-900 mb-2">Ghost</h3>
-                <p className="text-[12px] text-neutral-500 mb-4">
-                  Connect your Ghost site to publish content automatically.
-                </p>
-                <Button
-                  variant="default"
-                  size="sm"
-                  className="w-full h-8 text-[12px] bg-neutral-900 hover:bg-neutral-800"
-                  onClick={() => setShowGhostModal(true)}
-                >
-                  CONNECT
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Hashnode - BLOGGING */}
-          {!hashnodeConnection && (platformFilter === 'ALL' || platformFilter === 'BLOGGING') && (
-            <Card className="border border-neutral-200 shadow-sm hover:border-blue-200 hover:shadow-md transition-all">
-              <CardContent className="p-5">
-                <div className="flex items-start gap-3 mb-3">
-                  <div className="h-10 w-10 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0">
-                    <div className="h-6 w-6 text-white flex items-center justify-center text-xs font-bold">
-                      H
-                    </div>
-                  </div>
-                  <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 text-[10px] font-medium border-0">
-                    READY
-                  </Badge>
-                </div>
-                <h3 className="text-[14px] font-semibold text-neutral-900 mb-2">Hashnode</h3>
-                <p className="text-[12px] text-neutral-500 mb-4">
-                  Publish to your Hashnode blog. Auto-converts HTML to Markdown.
-                </p>
-                <Button
-                  variant="default"
-                  size="sm"
-                  className="w-full h-8 text-[12px] bg-blue-600 hover:bg-blue-700"
-                  onClick={() => setShowHashnodeModal(true)}
-                >
-                  CONNECT
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Wix - CMS */}
-          {!wixConnection && (platformFilter === 'ALL' || platformFilter === 'CMS') && (
-            <Card className="border border-neutral-200 shadow-sm hover:border-orange-200 hover:shadow-md transition-all">
-              <CardContent className="p-5">
-                <div className="flex items-start gap-3 mb-3">
-                  <div className="h-10 w-10 rounded-lg bg-orange-50 flex items-center justify-center flex-shrink-0">
-                    <div className="h-6 w-6 rounded bg-orange-500 text-white flex items-center justify-center text-xs font-bold">
-                      W
-                    </div>
-                  </div>
-                  <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 text-[10px] font-medium border-0">
-                    READY
-                  </Badge>
-                </div>
-                <h3 className="text-[14px] font-semibold text-neutral-900 mb-2">Wix</h3>
-                <p className="text-[12px] text-neutral-500 mb-4">
-                  Publish articles to your Wix Blog. Perfect for business sites.
-                </p>
-                <Button
-                  variant="default"
-                  size="sm"
-                  className="w-full h-8 text-[12px] bg-orange-500 hover:bg-orange-600"
-                  onClick={connectWix}
-                  disabled={connectingWix}
-                >
-                  {connectingWix ? (
-                    <>
-                      <Loader2 className="h-3 w-3 mr-2 animate-spin" />
-                      CONNECTING...
-                    </>
-                  ) : (
-                    'CONNECT'
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* LinkedIn - BLOGGING */}
-          {(platformFilter === 'ALL' || platformFilter === 'BLOGGING') && (
-          <Card className="border border-neutral-200 shadow-sm opacity-60">
-            <CardContent className="p-5">
-              <div className="flex items-start gap-3 mb-3">
-                <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-                  <div className="h-6 w-6 rounded bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
-                    in
-                  </div>
-                </div>
-                <Badge className="bg-yellow-50 text-yellow-700 hover:bg-yellow-50 text-[10px] font-medium border-0">
-                  SOON
-                </Badge>
-              </div>
-              <h3 className="text-[14px] font-semibold text-neutral-900 mb-2">LinkedIn</h3>
-              <p className="text-[12px] text-neutral-500 mb-4">
-                Publish articles to your LinkedIn profile. Coming soon.
-              </p>
-              <Button variant="outline" size="sm" className="w-full h-8 text-[12px]" disabled>
-                COMING SOON
-              </Button>
-            </CardContent>
-          </Card>
-          )}
-        </div>
-      </div>
-
-      {/* Help Section */}
-      <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-100">
-        <div className="flex gap-3">
-          <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+        {/* Header Section */}
+        <section className="integrations-hero" style={{
+          padding: '60px 40px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
           <div>
-            <h3 className="text-[13px] font-semibold text-blue-900 mb-1">Platform Setup Instructions</h3>
-            <p className="text-[12px] text-blue-700 mb-2">
-              <strong>WordPress.com:</strong> Click CONNECT and authorize on WordPress.com to link your blog.
-            </p>
-            <p className="text-[12px] text-blue-700 mb-2">
-              <strong>Ghost:</strong> Click CONNECT and enter your Ghost site URL and Admin API Key from Settings → Integrations.
-            </p>
-            <p className="text-[12px] text-blue-700 mb-2">
-              <strong>Dev.to:</strong> Click CONNECT and enter your Dev.to API key from Settings → Extensions.
-            </p>
-            <p className="text-[12px] text-blue-700">
-              <strong>Hashnode:</strong> Click CONNECT and enter your Personal Access Token from Settings → Developer.
-            </p>
+            <h1 style={{ fontSize: '42px', fontWeight: 800, color: '#1a1a1a', margin: '0 0 10px 0' }}>Platform Integrations</h1>
+            <p style={{ color: '#666', fontSize: '15px', fontWeight: 500 }}>Connect your favorite tools to automate your publishing workflows.</p>
           </div>
-        </div>
+          <button
+            onClick={() => document.getElementById('available-platforms')?.scrollIntoView({ behavior: 'smooth' })}
+            style={{
+              backgroundColor: '#FF7A33',
+              color: 'white',
+              padding: '16px 32px',
+              borderRadius: '50px',
+              border: 'none',
+              fontSize: '13px',
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              boxShadow: '0 8px 25px rgba(255, 122, 51, 0.3)'
+            }}>
+            <Plus size={18} strokeWidth={3} /> ADD NEW PLATFORMS
+          </button>
+        </section>
+
+        <section className="integrations-content" style={{ padding: '40px' }}>
+
+          {/* Section 1: Connected Platforms */}
+          {connectedPlatforms.length > 0 && (
+            <div style={{ marginBottom: '80px' }}>
+              <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#1a1a1a', marginBottom: '32px' }}>Connected Platforms</h2>
+              <div className="integrations-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '32px' }}>
+                {connectedPlatforms.map((p) => {
+                  const conn = connections.find(c => c.platform === p.key)!
+                  return (
+                    <div key={p.key} style={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      backdropFilter: 'blur(10px)',
+                      borderRadius: '32px',
+                      border: '1px solid rgba(238, 238, 238, 0.5)',
+                      padding: '32px',
+                      boxShadow: '0 10px 40px rgba(0,0,0,0.02)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '24px'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                          <div style={{ width: '48px', height: '48px', borderRadius: '16px', backgroundColor: '#FFF5F0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FF7A33' }}>
+                            <Share2 size={24} />
+                          </div>
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800 }}>{p.name}</h3>
+                              <span style={{ backgroundColor: '#e7f9ee', color: '#22c55e', padding: '2px 10px', borderRadius: '50px', fontSize: '10px', fontWeight: 900 }}>ACTIVE</span>
+                            </div>
+                            <p style={{ margin: 0, fontSize: '12px', color: '#999', fontWeight: 600 }}>{conn.metadata?.blogUrl || conn.metadata?.apiUrl || conn.metadata?.siteName || 'Connected'}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 700 }}>
+                          <span style={{ color: '#999' }}>Last synced</span>
+                          <span style={{ color: '#1a1a1a' }}>10 mins ago</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 700 }}>
+                          <span style={{ color: '#999' }}>Article Published</span>
+                          <span style={{ color: '#1a1a1a' }}>1,248</span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div style={{ width: '100%', height: '8px', backgroundColor: '#f5f5f5', borderRadius: '4px', position: 'relative' }}>
+                          <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: '98%', backgroundColor: '#FF7A33', borderRadius: '4px' }}></div>
+                        </div>
+                        <p style={{ margin: 0, textAlign: 'right', fontSize: '12px', fontWeight: 800, color: '#1a1a1a' }}>98% success rate</p>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '12px' }}>
+                        <button
+                          onClick={() => window.open(conn.metadata?.blogUrl || conn.metadata?.apiUrl || conn.metadata?.siteUrl || '#', '_blank')}
+                          style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid #eee', backgroundColor: '#fff', fontWeight: 800, fontSize: '12px', cursor: 'pointer' }}>MANAGE</button>
+                        <button
+                          onClick={() => disconnectPlatform(conn.id, p.name)}
+                          style={{ width: '48px', height: '48px', borderRadius: '12px', border: '1px solid #eee', backgroundColor: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', cursor: 'pointer' }}>
+                          <Settings size={18} />
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Section 2: Available Platforms */}
+          <div id="available-platforms">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+              <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#1a1a1a', margin: 0 }}>Available Platforms</h2>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                {['ALL', 'CMS', 'BLOGGING', 'SOCIAL MEDIA'].map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setPlatformFilter(f as any)}
+                    style={{
+                      padding: '8px 20px',
+                      borderRadius: '50px',
+                      border: platformFilter === f ? 'none' : '1px solid #eee',
+                      backgroundColor: platformFilter === f ? '#FF7A33' : 'rgba(255, 255, 255, 0.8)',
+                      backdropFilter: 'blur(5px)',
+                      color: platformFilter === f ? '#fff' : '#666',
+                      fontSize: '12px',
+                      fontWeight: 800,
+                      cursor: 'pointer'
+                    }}>
+                    {f}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="integrations-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '32px' }}>
+              {availablePlatforms.filter(p => platformFilter === 'ALL' || p.type === platformFilter).map((p) => (
+                <div key={p.key} style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.85)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: '32px',
+                  border: '1px solid rgba(238, 238, 238, 0.5)',
+                  padding: '32px',
+                  boxShadow: '0 10px 40px rgba(0,0,0,0.02)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  minHeight: '340px',
+                  opacity: p.comingSoon ? 0.6 : 1
+                }}>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+                      <div style={{ width: '48px', height: '48px', borderRadius: '16px', backgroundColor: '#fcfcfc', border: '1px solid #eee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FF7A33' }}>
+                        <Share2 size={24} />
+                      </div>
+                      <span style={{ fontSize: '10px', fontWeight: 900, color: '#999', backgroundColor: 'rgba(249, 249, 249, 0.8)', padding: '4px 12px', borderRadius: '50px' }}>{p.type}</span>
+                    </div>
+                    <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#1a1a1a', margin: '0 0 12px 0' }}>{p.name}</h3>
+                    <p style={{ color: '#666', fontSize: '14px', lineHeight: '1.6', marginBottom: '32px' }}>{p.description}</p>
+                  </div>
+
+                  <button
+                    onClick={p.connect}
+                    disabled={p.comingSoon || (p.key === 'WORDPRESS' && connectingWordPress) || (p.key === 'WIX' && connectingWix)}
+                    style={{
+                      width: '100%',
+                      padding: '16px',
+                      borderRadius: '16px',
+                      backgroundColor: p.comingSoon ? 'rgba(249, 249, 249, 0.5)' : '#1a1a1a',
+                      color: p.comingSoon ? '#999' : '#fff',
+                      border: 'none',
+                      fontWeight: 800,
+                      fontSize: '14px',
+                      cursor: p.comingSoon ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '10px'
+                    }}>
+                    {p.comingSoon ? 'COMING SOON' : (
+                      <>
+                        {((p.key === 'WORDPRESS' && connectingWordPress) || (p.key === 'WIX' && connectingWix)) ? <Loader2 size={16} className="animate-spin" /> : <Plus size={18} />}
+                        CONNECT {p.name.toUpperCase()}
+                      </>
+                    )}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Detailed Info Footer */}
+          <div style={{
+            marginTop: '100px',
+            backgroundColor: 'rgba(255, 245, 240, 0.9)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '40px',
+            padding: '60px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            border: '1px solid rgba(255, 122, 51, 0.1)'
+          }}>
+            <div style={{ maxWidth: '600px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+                <div style={{ width: '40px', height: '40px', backgroundColor: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FF7A33' }}>
+                  <Sparkles size={20} />
+                </div>
+                <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 800, color: '#1a1a1a' }}>Omni-Channel Sync</h2>
+              </div>
+              <p style={{ fontSize: '16px', color: '#1a1a1a', opacity: 0.7, lineHeight: '1.7', marginBottom: '0' }}>
+                Your content is valuable. We ensure it reaches every audience across your blogs, CMS, and social platforms with pixel-perfect accuracy and real-time syncing.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '32px' }}>
+              <div style={{ textAlign: 'center' }}>
+                <p style={{ margin: 0, fontSize: '32px', fontWeight: 900, color: '#1a1a1a' }}>5+</p>
+                <p style={{ margin: 0, fontSize: '11px', fontWeight: 800, color: '#FF7A33' }}>CMS PLATFORMS</p>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <p style={{ margin: 0, fontSize: '32px', fontWeight: 900, color: '#1a1a1a' }}>100%</p>
+                <p style={{ margin: 0, fontSize: '11px', fontWeight: 800, color: '#FF7A33' }}>SYNC ACCURACY</p>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+        {/* Modals */}
+        <GhostConnectModal open={showGhostModal} onClose={() => setShowGhostModal(false)} onSuccess={() => fetchConnections()} />
+        <DevToConnectModal open={showDevToModal} onClose={() => setShowDevToModal(false)} onSuccess={() => fetchConnections()} />
+        <HashnodeConnectModal open={showHashnodeModal} onClose={() => setShowHashnodeModal(false)} onSuccess={() => fetchConnections()} />
       </div>
-
-      {/* Ghost Connect Modal */}
-      <GhostConnectModal
-        open={showGhostModal}
-        onClose={() => setShowGhostModal(false)}
-        onSuccess={() => fetchConnections()}
-      />
-
-      {/* Dev.to Connect Modal */}
-      <DevToConnectModal
-        open={showDevToModal}
-        onClose={() => setShowDevToModal(false)}
-        onSuccess={() => fetchConnections()}
-      />
-
-      {/* Hashnode Connect Modal */}
-      <HashnodeConnectModal
-        open={showHashnodeModal}
-        onClose={() => setShowHashnodeModal(false)}
-        onSuccess={() => fetchConnections()}
-      />
-    </div>
+    </>
   )
 }
 
 export default function IntegrationsPage() {
   return (
-    <Suspense fallback={
-      <div className="p-8 bg-white min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-neutral-400" />
-      </div>
-    }>
+    <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}><Loader2 className="animate-spin" size={40} style={{ color: '#FF7A33' }} /></div>}>
       <IntegrationsContent />
     </Suspense>
   )

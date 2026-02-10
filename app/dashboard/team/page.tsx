@@ -1,11 +1,6 @@
-'use client';
+"use client"
 
-/**
- * Team Collaboration Page
- * Manage team members and collaboration invitations
- */
-
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react'
 import {
   Users,
   UserPlus,
@@ -17,74 +12,62 @@ import {
   Edit3,
   MessageSquare,
   Trash2,
-} from 'lucide-react';
+  Send,
+  Loader2,
+  ChevronRight,
+  ShieldCheck
+} from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 interface User {
-  id: string;
-  name: string;
-  email: string;
-  avatar?: string;
+  id: string
+  name: string
+  email: string
+  avatar?: string
 }
 
 interface Invitation {
-  id: string;
-  role: string;
-  status: string;
-  invitedAt: string;
-  joinedAt?: string;
-  expiresAt?: string;
+  id: string
+  role: string
+  status: string
+  invitedAt: string
+  joinedAt?: string
   article: {
-    id: string;
-    title: string;
-    excerpt?: string;
-    status: string;
-    createdAt: string;
-    user: User;
-  };
+    id: string
+    title: string
+    excerpt?: string
+    status: string
+    createdAt: string
+    user: User
+  }
 }
 
-const roleIcons = {
-  OWNER: <Users className="h-4 w-4" />,
-  EDITOR: <Edit3 className="h-4 w-4" />,
-  COMMENTER: <MessageSquare className="h-4 w-4" />,
-  VIEWER: <Eye className="h-4 w-4" />,
-};
-
-const roleColors = {
-  OWNER: 'text-purple-600 bg-purple-50',
-  EDITOR: 'text-emerald-600 bg-emerald-50',
-  COMMENTER: 'text-blue-600 bg-blue-50',
-  VIEWER: 'text-neutral-600 bg-neutral-50',
-};
-
 export default function TeamPage() {
-  const [invitations, setInvitations] = useState<Invitation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'accepted'>('all');
+  const router = useRouter()
+  const [invitations, setInvitations] = useState<Invitation[]>([])
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState<'all' | 'pending' | 'accepted'>('all')
 
-  useEffect(() => {
-    fetchInvitations();
-  }, []);
+  useEffect(() => { fetchInvitations() }, [])
 
   const fetchInvitations = async () => {
     try {
-      setLoading(true);
+      setLoading(true)
+      const token = localStorage.getItem('accessToken')
       const response = await fetch('/api/collaboration/my-invitations', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-      });
-
+        headers: { 'Authorization': `Bearer ${token}` },
+      })
       if (response.ok) {
-        const data = await response.json();
-        setInvitations(data.data || []);
+        const data = await response.json()
+        setInvitations(data.data || [])
       }
     } catch (error) {
-      console.error('Error fetching invitations:', error);
+      console.error('Error fetching invitations:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleAccept = async (invitationId: string) => {
     try {
@@ -95,228 +78,149 @@ export default function TeamPage() {
           'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
         },
         body: JSON.stringify({ collaboratorId: invitationId }),
-      });
-
-      if (response.ok) {
-        fetchInvitations();
-      } else {
-        const data = await response.json();
-        alert(data.error || 'Failed to accept invitation');
-      }
-    } catch (error) {
-      console.error('Error accepting invitation:', error);
-      alert('Failed to accept invitation');
-    }
-  };
+      })
+      if (response.ok) fetchInvitations()
+    } catch (error) { console.error(error) }
+  }
 
   const filteredInvitations = invitations.filter((inv) => {
-    if (filter === 'all') return true;
-    if (filter === 'pending') return inv.status === 'PENDING';
-    if (filter === 'accepted') return inv.status === 'ACCEPTED';
-    return true;
-  });
+    if (filter === 'all') return true
+    if (filter === 'pending') return inv.status === 'PENDING'
+    if (filter === 'accepted') return inv.status === 'ACCEPTED'
+    return true
+  })
 
-  const pendingCount = invitations.filter(inv => inv.status === 'PENDING').length;
-  const acceptedCount = invitations.filter(inv => inv.status === 'ACCEPTED').length;
+  if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}><Loader2 className="animate-spin" size={40} color="#FF7A33" /></div>
 
   return (
-    <div className="p-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-[24px] font-bold text-neutral-900">Team Collaboration</h1>
-              <p className="text-[14px] text-neutral-600 mt-1">
-                Manage your collaboration invitations and shared articles
-              </p>
-            </div>
-          </div>
-        </div>
+    <div style={{ paddingBottom: '100px' }}>
+      {/* Hero Header */}
+      <section style={{
+        backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.4)), url("/design/BG%2023-01%202.png")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        padding: '60px 40px',
+      }}>
+        <h1 style={{ fontSize: '42px', fontWeight: 800, color: '#1a1a1a', margin: '0 0 10px 0' }}>
+          Team <span style={{ fontStyle: 'italic', fontWeight: 300, color: '#666', fontFamily: 'serif' }}>Collaboration</span>
+        </h1>
+        <p style={{ color: '#666', fontSize: '15px', fontWeight: 500 }}>Manage access and collaborate on shared articles.</p>
+      </section>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-lg border border-neutral-200">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-neutral-100 flex items-center justify-center">
-                <Mail className="h-5 w-5 text-neutral-600" />
-              </div>
-              <div>
-                <p className="text-[24px] font-bold text-neutral-900">{invitations.length}</p>
-                <p className="text-[12px] text-neutral-600">Total Invitations</p>
-              </div>
-            </div>
-          </div>
+      <section style={{ padding: '40px' }}>
 
-          <div className="bg-white p-4 rounded-lg border border-neutral-200">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-yellow-100 flex items-center justify-center">
-                <Clock className="h-5 w-5 text-yellow-600" />
+        {/* Stats Row */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '32px', marginBottom: '48px' }}>
+          {[
+            { label: 'Total Invitations', val: invitations.length, icon: <Mail color="#FF7A33" /> },
+            { label: 'Pending Access', val: invitations.filter(i => i.status === 'PENDING').length, icon: <Clock color="#faad14" /> },
+            { label: 'Joined Articles', val: invitations.filter(i => i.status === 'ACCEPTED').length, icon: <CheckCircle color="#22c55e" /> },
+          ].map(s => (
+            <div key={s.label} style={{ backgroundColor: '#fff', borderRadius: '32px', border: '1px solid #eee', padding: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.02)' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: '#fcfcfc', border: '1px solid #eee', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+                {s.icon}
               </div>
-              <div>
-                <p className="text-[24px] font-bold text-neutral-900">{pendingCount}</p>
-                <p className="text-[12px] text-neutral-600">Pending</p>
-              </div>
+              <p style={{ margin: '0 0 4px 0', fontSize: '28px', fontWeight: 800, color: '#1a1a1a' }}>{s.val}</p>
+              <p style={{ margin: 0, fontSize: '12px', fontWeight: 700, color: '#999', textTransform: 'uppercase' }}>{s.label}</p>
             </div>
-          </div>
-
-          <div className="bg-white p-4 rounded-lg border border-neutral-200">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                <CheckCircle className="h-5 w-5 text-emerald-600" />
-              </div>
-              <div>
-                <p className="text-[24px] font-bold text-neutral-900">{acceptedCount}</p>
-                <p className="text-[12px] text-neutral-600">Accepted</p>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg border border-neutral-200 mb-6">
-          <div className="flex items-center gap-2 p-4">
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '40px' }}>
+          {['all', 'pending', 'accepted'].map((f) => (
             <button
-              onClick={() => setFilter('all')}
-              className={`px-4 py-2 text-[13px] font-medium rounded transition-colors ${
-                filter === 'all'
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
-              }`}
+              key={f}
+              onClick={() => setFilter(f as any)}
+              style={{
+                padding: '10px 24px',
+                borderRadius: '50px',
+                border: filter === f ? 'none' : '1px solid #eee',
+                backgroundColor: filter === f ? '#1a1a1a' : '#fff',
+                color: filter === f ? '#fff' : '#666',
+                fontSize: '13px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                textTransform: 'capitalize'
+              }}
             >
-              All ({invitations.length})
+              {f}
             </button>
-            <button
-              onClick={() => setFilter('pending')}
-              className={`px-4 py-2 text-[13px] font-medium rounded transition-colors ${
-                filter === 'pending'
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
-              }`}
-            >
-              Pending ({pendingCount})
-            </button>
-            <button
-              onClick={() => setFilter('accepted')}
-              className={`px-4 py-2 text-[13px] font-medium rounded transition-colors ${
-                filter === 'accepted'
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
-              }`}
-            >
-              Accepted ({acceptedCount})
-            </button>
-          </div>
+          ))}
         </div>
 
-        {/* Invitations List */}
-        <div className="bg-white rounded-lg border border-neutral-200">
-          {loading ? (
-            <div className="p-8 text-center">
-              <div className="inline-block h-8 w-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin" />
-              <p className="text-[13px] text-neutral-600 mt-2">Loading invitations...</p>
-            </div>
-          ) : filteredInvitations.length === 0 ? (
-            <div className="p-8 text-center">
-              <Mail className="h-12 w-12 text-neutral-300 mx-auto mb-3" />
-              <p className="text-[14px] text-neutral-600">No invitations found</p>
-              <p className="text-[12px] text-neutral-500 mt-1">
-                You'll see collaboration invitations here when someone shares an article with you
-              </p>
-            </div>
-          ) : (
-            <div className="divide-y divide-neutral-200">
-              {filteredInvitations.map((invitation) => (
-                <div key={invitation.id} className="p-4 hover:bg-neutral-50 transition-colors">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-[15px] font-semibold text-neutral-900">
-                          {invitation.article.title}
-                        </h3>
-                        <span className={`inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded ${roleColors[invitation.role as keyof typeof roleColors]}`}>
-                          {roleIcons[invitation.role as keyof typeof roleIcons]}
-                          {invitation.role}
-                        </span>
-                        {invitation.status === 'PENDING' && (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-yellow-700 bg-yellow-100 rounded">
-                            <Clock className="h-3 w-3" />
-                            Pending
-                          </span>
-                        )}
-                        {invitation.status === 'ACCEPTED' && (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-emerald-700 bg-emerald-100 rounded">
-                            <CheckCircle className="h-3 w-3" />
-                            Accepted
-                          </span>
-                        )}
-                      </div>
-
-                      {invitation.article.excerpt && (
-                        <p className="text-[13px] text-neutral-600 mb-2 line-clamp-2">
-                          {invitation.article.excerpt}
-                        </p>
-                      )}
-
-                      <div className="flex items-center gap-4 text-[12px] text-neutral-500">
-                        <span>From: {invitation.article.user.name}</span>
-                        <span>•</span>
-                        <span>Invited: {new Date(invitation.invitedAt).toLocaleDateString()}</span>
-                        {invitation.joinedAt && (
-                          <>
-                            <span>•</span>
-                            <span>Joined: {new Date(invitation.joinedAt).toLocaleDateString()}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 ml-4">
-                      {invitation.status === 'PENDING' && (
-                        <button
-                          onClick={() => handleAccept(invitation.id)}
-                          className="flex items-center gap-2 px-4 py-2 text-[13px] font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded transition-colors"
-                        >
-                          <CheckCircle className="h-4 w-4" />
-                          Accept
-                        </button>
-                      )}
-                      {invitation.status === 'ACCEPTED' && (
-                        <a
-                          href={`/dashboard/articles/${invitation.article.id}`}
-                          className="flex items-center gap-2 px-4 py-2 text-[13px] font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded transition-colors"
-                        >
-                          <Edit3 className="h-4 w-4" />
-                          Open Article
-                        </a>
-                      )}
-                    </div>
-                  </div>
+        {/* Invitation List */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {filteredInvitations.map((inv) => (
+            <div key={inv.id} style={{
+              backgroundColor: '#fff',
+              borderRadius: '32px',
+              border: '1px solid #eee',
+              padding: '32px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.02)'
+            }}>
+              <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
+                <div style={{ width: '64px', height: '64px', borderRadius: '20px', backgroundColor: '#fcfcfc', border: '1px solid #eee', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: 800, color: '#FF7A33' }}>
+                  {inv.article.user.name[0]}
                 </div>
-              ))}
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#1a1a1a' }}>{inv.article.title}</h3>
+                    <span style={{ backgroundColor: '#f5f5f5', color: '#1a1a1a', padding: '4px 12px', borderRadius: '50px', fontSize: '10px', fontWeight: 800 }}>{inv.role}</span>
+                    {inv.status === 'PENDING' && <span style={{ backgroundColor: '#fff5eb', color: '#FF7A33', padding: '4px 12px', borderRadius: '50px', fontSize: '10px', fontWeight: 800 }}>PENDING</span>}
+                  </div>
+                  <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#666', fontWeight: 500 }}>Shared by <span style={{ fontWeight: 700, color: '#1a1a1a' }}>{inv.article.user.name}</span></p>
+                  <p style={{ margin: 0, fontSize: '12px', color: '#999', fontWeight: 600 }}>Invited on {new Date(inv.invitedAt).toLocaleDateString()}</p>
+                </div>
+              </div>
+
+              <div>
+                {inv.status === 'PENDING' ? (
+                  <button
+                    onClick={() => handleAccept(inv.id)}
+                    style={{ padding: '14px 32px', borderRadius: '50px', backgroundColor: '#1a1a1a', color: '#fff', border: 'none', fontWeight: 800, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <CheckCircle size={16} /> ACCEPT ACCESS
+                  </button>
+                ) : (
+                  <Link href={`/dashboard/articles/${inv.article.id}`} style={{ padding: '14px 32px', borderRadius: '50px', border: '1px solid #eee', color: '#1a1a1a', textDecoration: 'none', fontWeight: 800, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    OPEN ARTICLE <ChevronRight size={16} />
+                  </Link>
+                )}
+              </div>
+            </div>
+          ))}
+
+          {filteredInvitations.length === 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 0' }}>
+              <Users size={60} color="#eee" style={{ marginBottom: '24px' }} />
+              <p style={{ fontSize: '16px', fontWeight: 700, color: '#999' }}>No collaboration invitations found.</p>
             </div>
           )}
         </div>
 
-        {/* Help Text */}
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <div className="flex items-start gap-3">
-            <Users className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <h4 className="text-[13px] font-semibold text-blue-900 mb-1">About Team Collaboration</h4>
-              <p className="text-[12px] text-blue-700 leading-relaxed">
-                When someone shares an article with you, you'll receive an invitation here. Depending on your role, you can view, comment, or edit the article in real-time with other team members.
-              </p>
-              <ul className="mt-2 space-y-1 text-[12px] text-blue-700">
-                <li><strong>Viewer:</strong> Can only view the article</li>
-                <li><strong>Commenter:</strong> Can view and add comments</li>
-                <li><strong>Editor:</strong> Can view, comment, and edit the article in real-time</li>
-                <li><strong>Owner:</strong> Full access including managing collaborators</li>
-              </ul>
+        {/* Feature Hub Card */}
+        <div style={{ marginTop: '80px', backgroundColor: '#1a1a1a', borderRadius: '40px', padding: '60px', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ maxWidth: '600px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+              <ShieldCheck size={32} color="#FF7A33" />
+              <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 800 }}>Scale with Premium Management</h2>
+            </div>
+            <p style={{ fontSize: '16px', opacity: 0.7, lineHeight: '1.7', marginBottom: '32px' }}>
+              Invite multiple editors, manage content approval workflows, and see real-time updates from your team members as you scale your publication reach.
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: 700 }}><CheckCircle size={14} color="#FF7A33" /> Role Based Access Control</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: 700 }}><CheckCircle size={14} color="#FF7A33" /> Real-time Collaborative Editing</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: 700 }}><CheckCircle size={14} color="#FF7A33" /> Content Audit Logs</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: 700 }}><CheckCircle size={14} color="#FF7A33" /> Central Billing Management</div>
             </div>
           </div>
+          <button style={{ padding: '20px 48px', borderRadius: '50px', backgroundColor: '#FF7A33', color: '#fff', border: 'none', fontWeight: 800, fontSize: '14px', cursor: 'pointer' }}>CONTACT FOR ENTERPRISE</button>
         </div>
-      </div>
+      </section>
     </div>
-  );
+  )
 }

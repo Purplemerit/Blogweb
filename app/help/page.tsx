@@ -1,172 +1,223 @@
+"use client"
+
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, BookOpen, MessageSquare, FileText, Zap, HelpCircle, Mail } from "lucide-react"
+import {
+  ArrowLeft,
+  Search,
+  BookOpen,
+  MessageSquare,
+  Zap,
+  HelpCircle,
+  Mail,
+  ChevronRight,
+  Shield,
+  Clock,
+  Layout,
+  Globe,
+  Sparkles,
+  ExternalLink
+} from "lucide-react"
 
 export default function HelpPage() {
+  const categories = [
+    { title: "Getting Started", icon: <Zap size={24} />, desc: "Learn the basics and publish your first article." },
+    { title: "Collaboration", icon: <Users size={24} />, desc: "Invite team members and manage role permissions." },
+    { title: "Integrations", icon: <Globe size={24} />, desc: "Connect your Ghost, WordPress or Dev.to blogs." },
+    { title: "AI Assistant", icon: <Sparkles size={24} />, desc: "Maximize your output with our AI writing tools." },
+  ]
+
+  const faqs = [
+    {
+      q: "How do I create my first article?",
+      a: "After logging in, click the 'New Article' button in your dashboard. You can start writing manually or use our AI-powered editor to generate content based on your topic and requirements."
+    },
+    {
+      q: "Can I publish to multiple platforms at once?",
+      a: "Yes! PublishType supports multi-platform publishing to WordPress, Medium, Dev.to, Hashnode, Ghost, and LinkedIn. Connect your accounts in the Platforms section and publish with one click."
+    },
+    {
+      q: "How does the AI content generation work?",
+      a: "Our AI uses advanced language models to generate high-quality content based on your inputs. You provide the topic, tone, and key points, and the AI creates a complete article that you can edit and customize."
+    },
+    {
+      q: "Is my content secure?",
+      a: "Yes, we take security seriously. All data is encrypted in transit and at rest. Your content is private and only you have access to it. We never share or sell your data."
+    }
+  ]
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100">
-      <div className="container mx-auto px-4 py-12 max-w-6xl">
-        <Link href="/">
-          <Button variant="ghost" className="mb-6">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Home
-          </Button>
+    <div style={{
+      minHeight: '100vh',
+      backgroundColor: '#fff',
+      backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), url("/design/BG%2023-01%202.png")',
+      backgroundSize: 'cover',
+      backgroundAttachment: 'fixed',
+      backgroundPosition: 'center',
+      fontFamily: 'Inter, sans-serif'
+    }}>
+      {/* Navigation */}
+      <nav style={{ padding: '24px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', color: '#1a1a1a', fontWeight: 800 }}>
+          <div style={{ width: '32px', height: '32px', backgroundColor: '#FF7A33', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Layout size={18} color="white" />
+          </div>
+          <span>PublishType</span>
         </Link>
+        <Link href="/login" style={{ textDecoration: 'none', color: '#666', fontSize: '14px', fontWeight: 700 }}>
+          Go to Dashboard
+        </Link>
+      </nav>
 
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">Help Center</h1>
-          <p className="text-gray-600 text-lg">Find answers to common questions and get support</p>
-        </div>
+      <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '60px 40px' }}>
+        {/* Hero Section */}
+        <div style={{ textAlign: 'center', marginBottom: '80px' }}>
+          <h1 style={{ fontSize: '56px', fontWeight: 800, color: '#1a1a1a', letterSpacing: '-0.03em', marginBottom: '16px' }}>
+            How can we <span style={{ fontStyle: 'italic', fontWeight: 300, color: '#666', fontFamily: 'serif' }}>help you?</span>
+          </h1>
+          <p style={{ fontSize: '18px', color: '#666', fontWeight: 500, marginBottom: '40px' }}>
+            Search our documentation or browse categories below to find answers.
+          </p>
 
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
-          <Card>
-            <CardHeader>
-              <BookOpen className="h-10 w-10 text-blue-600 mb-2" />
-              <CardTitle>Documentation</CardTitle>
-              <CardDescription>Comprehensive guides and tutorials</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link href="/docs">
-                <Button variant="outline" className="w-full">
-                  View Docs
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <MessageSquare className="h-10 w-10 text-green-600 mb-2" />
-              <CardTitle>Contact Support</CardTitle>
-              <CardDescription>Get help from our team</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link href="/contact">
-                <Button variant="outline" className="w-full">
-                  Contact Us
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <Zap className="h-10 w-10 text-purple-600 mb-2" />
-              <CardTitle>Quick Start</CardTitle>
-              <CardDescription>Get started in minutes</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link href="/signup">
-                <Button variant="outline" className="w-full">
-                  Sign Up
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm p-8">
-          <h2 className="text-2xl font-bold mb-6">Frequently Asked Questions</h2>
-
-          <div className="space-y-6">
-            <div>
-              <div className="flex items-start gap-3">
-                <HelpCircle className="h-5 w-5 text-blue-600 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">How do I create my first article?</h3>
-                  <p className="text-gray-700 leading-relaxed">
-                    After logging in, click the "New Article" button in your dashboard. You can start writing manually or use our AI-powered editor to generate content based on your topic and requirements.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-start gap-3">
-                <HelpCircle className="h-5 w-5 text-blue-600 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">Can I publish to multiple platforms at once?</h3>
-                  <p className="text-gray-700 leading-relaxed">
-                    Yes! Publish Type supports multi-platform publishing to WordPress, Medium, Dev.to, Hashnode, Ghost, and LinkedIn. Connect your accounts in the Platforms section and publish with one click.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-start gap-3">
-                <HelpCircle className="h-5 w-5 text-blue-600 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">What's included in the free plan?</h3>
-                  <p className="text-gray-700 leading-relaxed">
-                    The free plan includes 5 articles per month, AI writing assistance, basic SEO analysis, 3 platform connections, and access to stock images from Pexels and Unsplash.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-start gap-3">
-                <HelpCircle className="h-5 w-5 text-blue-600 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">How does the AI content generation work?</h3>
-                  <p className="text-gray-700 leading-relaxed">
-                    Our AI uses advanced language models (Google Gemini, Claude, GPT-4) to generate high-quality content based on your inputs. You provide the topic, tone, and key points, and the AI creates a complete article that you can edit and customize.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-start gap-3">
-                <HelpCircle className="h-5 w-5 text-blue-600 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">Can I schedule posts for later?</h3>
-                  <p className="text-gray-700 leading-relaxed">
-                    Yes! All plans support scheduled publishing. Simply select a future date and time when creating or editing your article, and it will automatically publish at that time.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-start gap-3">
-                <HelpCircle className="h-5 w-5 text-blue-600 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">How do I upgrade my plan?</h3>
-                  <p className="text-gray-700 leading-relaxed">
-                    Visit the <Link href="/pricing" className="text-blue-600 hover:underline">Pricing page</Link> to view available plans. Click "Upgrade" on your desired plan and complete the payment process. Your upgrade will be immediate.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-start gap-3">
-                <HelpCircle className="h-5 w-5 text-blue-600 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">Is my content secure?</h3>
-                  <p className="text-gray-700 leading-relaxed">
-                    Yes, we take security seriously. All data is encrypted in transit and at rest. Your content is private and only you have access to it. We never share or sell your data.
-                  </p>
-                </div>
-              </div>
-            </div>
+          <div style={{ position: 'relative', maxWidth: '600px', margin: '0 auto' }}>
+            <input
+              type="text"
+              placeholder="Search for articles, guides..."
+              style={{
+                width: '100%',
+                padding: '20px 24px 20px 60px',
+                borderRadius: '50px',
+                border: '1px solid #eee',
+                backgroundColor: '#fff',
+                fontSize: '16px',
+                outline: 'none',
+                boxShadow: '0 10px 40px rgba(0,0,0,0.05)'
+              }}
+            />
+            <Search style={{ position: 'absolute', left: '24px', top: '50%', transform: 'translateY(-50%)', color: '#999' }} size={22} />
           </div>
         </div>
 
-        <div className="mt-12 text-center bg-white rounded-lg shadow-sm p-8">
-          <Mail className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-          <h3 className="text-2xl font-bold mb-2">Still have questions?</h3>
-          <p className="text-gray-600 mb-6">Our support team is here to help</p>
-          <Link href="/contact">
-            <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
-              Contact Support
-            </Button>
-          </Link>
+        {/* Categories Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '100px' }}>
+          {categories.map((cat, i) => (
+            <div key={i} style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              backdropFilter: 'blur(10px)',
+              padding: '40px 32px',
+              borderRadius: '32px',
+              border: '1px solid rgba(238, 238, 238, 0.5)',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.02)',
+              cursor: 'pointer',
+              transition: 'transform 0.2s ease'
+            }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '14px', backgroundColor: '#FFF5F0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FF7A33', marginBottom: '24px' }}>
+                {cat.icon}
+              </div>
+              <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#1a1a1a', marginBottom: '12px' }}>{cat.title}</h3>
+              <p style={{ fontSize: '14px', color: '#666', lineHeight: '1.6', margin: 0 }}>{cat.desc}</p>
+            </div>
+          ))}
         </div>
-      </div>
+
+        {/* FAQ Section */}
+        <div style={{ marginBottom: '100px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '40px' }}>
+            <div>
+              <h2 style={{ fontSize: '32px', fontWeight: 800, color: '#1a1a1a', margin: 0 }}>Frequently Asked Questions</h2>
+              <p style={{ color: '#666', marginTop: '8px', fontWeight: 500 }}>Quick answers to the most common queries.</p>
+            </div>
+            <Link href="/docs" style={{ color: '#FF7A33', textDecoration: 'none', fontWeight: 800, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              View all documentation <ChevronRight size={16} />
+            </Link>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+            {faqs.map((faq, i) => (
+              <div key={i} style={{
+                backgroundColor: 'rgba(255, 255, 255, 1)',
+                padding: '32px',
+                borderRadius: '24px',
+                border: '1px solid #eee'
+              }}>
+                <h4 style={{ fontSize: '16px', fontWeight: 800, color: '#1a1a1a', marginBottom: '16px', display: 'flex', gap: '12px' }}>
+                  <HelpCircle size={20} color="#FF7A33" style={{ flexShrink: 0 }} />
+                  {faq.q}
+                </h4>
+                <p style={{ fontSize: '14px', color: '#666', lineHeight: '1.7', margin: 0, paddingLeft: '32px' }}>
+                  {faq.a}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Still need help? */}
+        <div style={{
+          backgroundColor: '#1a1a1a',
+          borderRadius: '40px',
+          padding: '80px',
+          textAlign: 'center',
+          backgroundImage: 'url("/design/BG%2023-01%202.png")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)' }}></div>
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ width: '64px', height: '64px', backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 32px', color: '#FF7A33' }}>
+              <Mail size={32} />
+            </div>
+            <h2 style={{ fontSize: '36px', fontWeight: 800, color: '#fff', marginBottom: '16px' }}>Still have questions?</h2>
+            <p style={{ fontSize: '18px', color: 'rgba(255, 255, 255, 0.6)', fontWeight: 500, marginBottom: '40px', maxWidth: '500px', margin: '0 auto 40px' }}>
+              Our support team is online and ready to help you with anything you need.
+            </p>
+            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+              <button style={{
+                backgroundColor: '#FF7A33',
+                color: 'white',
+                padding: '16px 40px',
+                borderRadius: '50px',
+                border: 'none',
+                fontSize: '15px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                boxShadow: '0 8px 25px rgba(255, 122, 51, 0.3)'
+              }}>Contact Support</button>
+              <button style={{
+                backgroundColor: 'transparent',
+                color: 'white',
+                padding: '16px 40px',
+                borderRadius: '50px',
+                border: '1px solid rgba(255,255,255,0.2)',
+                fontSize: '15px',
+                fontWeight: 800,
+                cursor: 'pointer'
+              }}>Live Chat</button>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer style={{ padding: '60px 40px', textAlign: 'center', borderTop: '1px solid #eee' }}>
+        <p style={{ color: '#999', fontSize: '13px', fontWeight: 600 }}>
+          &copy; 2026 PublishType. All rights reserved. <span style={{ margin: '0 8px' }}>•</span>
+          <Link href="/privacy" style={{ color: '#999', textDecoration: 'none' }}>Privacy Policy</Link> <span style={{ margin: '0 8px' }}>•</span>
+          <Link href="/terms" style={{ color: '#999', textDecoration: 'none' }}>Terms of Service</Link>
+        </p>
+      </footer>
     </div>
+  )
+}
+
+function Users({ size, color }: any) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
   )
 }

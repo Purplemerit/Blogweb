@@ -1,94 +1,150 @@
+"use client"
+
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Shield, Eye, Lock, Globe, Bell, UserCheck, Mail } from "lucide-react"
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100">
-      <div className="container mx-auto px-4 py-12 max-w-4xl">
-        <Link href="/">
-          <Button variant="ghost" className="mb-6">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Home
-          </Button>
-        </Link>
+    <div style={{ backgroundColor: '#fff', minHeight: '100vh', color: '#1a1a1a' }}>
 
-        <h1 className="text-4xl font-bold mb-8">Privacy Policy</h1>
+      {/* Hero Section */}
+      <section style={{
+        backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.92)), url("/design/BG%2023-01%202.png")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        padding: '120px 24px 80px',
+        textAlign: 'center'
+      }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+          <p style={{
+            fontSize: '12px',
+            fontWeight: 800,
+            color: '#FF7A33',
+            textTransform: 'uppercase',
+            letterSpacing: '0.2em',
+            marginBottom: '16px'
+          }}>Legal Center</p>
+          <h1 style={{
+            fontSize: 'clamp(38px, 6vw, 64px)',
+            fontWeight: 800,
+            marginBottom: '16px',
+            color: '#1a1a1a',
+            lineHeight: '1.2'
+          }}>
+            Privacy <span style={{ fontStyle: 'italic', fontWeight: 300, color: '#666', fontFamily: '"Playfair Display", serif' }}>Policy</span>
+          </h1>
+          <p style={{ color: '#666', fontSize: '15px', maxWidth: '600px', margin: '0 auto' }}>
+            Learn how we collect, use, and protect your personal information when you use PublishType.
+          </p>
+        </div>
+      </section>
 
-        <div className="bg-white rounded-lg shadow-sm p-8 space-y-6">
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">1. Information We Collect</h2>
-            <p className="text-gray-700 leading-relaxed">
-              We collect information you provide directly to us, including your name, email address, and content you create using our platform. We also collect usage data to improve our services.
-            </p>
-          </section>
+      {/* Content Section */}
+      <section style={{ padding: '0 24px 120px' }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
 
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">2. How We Use Your Information</h2>
-            <p className="text-gray-700 leading-relaxed mb-4">
-              We use the information we collect to:
-            </p>
-            <ul className="list-disc list-inside text-gray-700 space-y-2 ml-4">
-              <li>Provide, maintain, and improve our services</li>
-              <li>Process your transactions and send related information</li>
-              <li>Send you technical notices and support messages</li>
-              <li>Respond to your comments and questions</li>
-              <li>Analyze usage patterns to enhance user experience</li>
-            </ul>
-          </section>
+          <div style={{ padding: '60px 0' }}>
+            <Link href="/" style={{ color: '#FF7A33', textDecoration: 'none', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '40px' }}>
+              <ArrowLeft size={16} /> Back to Home
+            </Link>
 
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">3. Data Security</h2>
-            <p className="text-gray-700 leading-relaxed">
-              We implement appropriate technical and organizational measures to protect your personal data against unauthorized access, alteration, disclosure, or destruction.
-            </p>
-          </section>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '80px' }}>
 
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">4. Third-Party Services</h2>
-            <p className="text-gray-700 leading-relaxed">
-              We use third-party services like Google OAuth, payment processors, and analytics tools. These services have their own privacy policies governing the use of your information.
-            </p>
-          </section>
+              <section>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(255,122,51,0.1)', color: '#FF7A33', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Eye size={20} />
+                  </div>
+                  <h2 style={{ fontSize: '28px', fontWeight: 800 }}>1. Information We Collect</h2>
+                </div>
+                <p style={{ fontSize: '17px', lineHeight: '1.8', color: '#444' }}>
+                  We collect information you provide directly to us, including your name, email address, and content you create using our platform. We also collect usage data to improve our services and provide a more personalized experience.
+                </p>
+              </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">5. Your Rights</h2>
-            <p className="text-gray-700 leading-relaxed">
-              You have the right to access, update, or delete your personal information at any time. You can manage your account settings or contact us for assistance.
-            </p>
-          </section>
+              <section>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(255,122,51,0.1)', color: '#FF7A33', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Shield size={20} />
+                  </div>
+                  <h2 style={{ fontSize: '28px', fontWeight: 800 }}>2. How We Use Information</h2>
+                </div>
+                <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {[
+                    'To provide, maintain, and improve our services across all platforms.',
+                    'To process your transactions and subscriptions via secure channels.',
+                    'To send technical notices, updates, and security alerts.',
+                    'To analyze usage patterns to enhance cross-platform performance.',
+                    'To personalize your experience with AI-tailored content suggestions.'
+                  ].map((item, i) => (
+                    <li key={i} style={{ display: 'flex', gap: '12px', fontSize: '17px', lineHeight: '1.6', color: '#444' }}>
+                      <div style={{ color: '#FF7A33', marginTop: '4px' }}>•</div>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">6. Cookies</h2>
-            <p className="text-gray-700 leading-relaxed">
-              We use cookies and similar tracking technologies to track activity on our service and store certain information. You can instruct your browser to refuse all cookies or to indicate when a cookie is being sent.
-            </p>
-          </section>
+              <section>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(255,122,51,0.1)', color: '#FF7A33', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Lock size={20} />
+                  </div>
+                  <h2 style={{ fontSize: '28px', fontWeight: 800 }}>3. Data Security</h2>
+                </div>
+                <p style={{ fontSize: '17px', lineHeight: '1.8', color: '#444' }}>
+                  We implement industry-standard technical and organizational measures to protect your personal data. This includes end-to-end encryption for sensitive data and regular security audits to ensure your content remains private and protected.
+                </p>
+              </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">7. Changes to This Policy</h2>
-            <p className="text-gray-700 leading-relaxed">
-              We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last Updated" date.
-            </p>
-          </section>
+              <section>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(255,122,51,0.1)', color: '#FF7A33', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Globe size={20} />
+                  </div>
+                  <h2 style={{ fontSize: '28px', fontWeight: 800 }}>4. Third-Party Services</h2>
+                </div>
+                <p style={{ fontSize: '17px', lineHeight: '1.8', color: '#444' }}>
+                  We utilize trusted third-party services like Razorpay for payments and Google for authentication. These services have their own independent privacy policies, and we encourage you to review them to understand how they handle your data.
+                </p>
+              </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">8. Contact Us</h2>
-            <p className="text-gray-700 leading-relaxed">
-              If you have any questions about this Privacy Policy, please contact us at:
-            </p>
-            <p className="text-gray-700 mt-2">
-              Email: <a href="mailto:privacy@publishtype.com" className="text-blue-600 hover:underline">privacy@publishtype.com</a>
-            </p>
-          </section>
+              <section>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(255,122,51,0.1)', color: '#FF7A33', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <UserCheck size={20} />
+                  </div>
+                  <h2 style={{ fontSize: '28px', fontWeight: 800 }}>5. Your Rights</h2>
+                </div>
+                <p style={{ fontSize: '17px', lineHeight: '1.8', color: '#444' }}>
+                  You have the right to access, update, or delete your personal information at any time. Our dashboard provides tools to manage your account settings, or you can contact our support team for specialized assistance regarding your data rights.
+                </p>
+              </section>
 
-          <div className="pt-6 border-t mt-8">
-            <p className="text-sm text-gray-500">
-              Last Updated: January 19, 2026
-            </p>
+              <section>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(255,122,51,0.1)', color: '#FF7A33', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Mail size={20} />
+                  </div>
+                  <h2 style={{ fontSize: '28px', fontWeight: 800 }}>8. Contact Us</h2>
+                </div>
+                <p style={{ fontSize: '17px', lineHeight: '1.8', color: '#444', marginBottom: '16px' }}>
+                  If you have any questions about this Privacy Policy, please reach out to our legal team:
+                </p>
+                <a href="mailto:privacy@publishtype.com" style={{ fontSize: '18px', fontWeight: 800, color: '#FF7A33', textDecoration: 'none' }}>
+                  privacy@publishtype.com
+                </a>
+              </section>
+
+            </div>
+
+            <div style={{ marginTop: '100px', paddingTop: '40px', borderTop: '1px solid #eee', color: '#999', fontSize: '14px' }}>
+              Last Updated: February 05, 2026
+            </div>
           </div>
         </div>
-      </div>
+      </section>
+
     </div>
   )
 }

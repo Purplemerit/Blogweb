@@ -1,8 +1,7 @@
-'use client'
+"use client"
 
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft, Sparkles, Zap, Shield, Check } from "lucide-react"
+import { ArrowLeft, Sparkles, Zap, Shield, Check, Calendar } from "lucide-react"
 
 export default function ChangelogPage() {
   const entries = [
@@ -10,7 +9,7 @@ export default function ChangelogPage() {
       version: "2.0.0",
       date: "January 19, 2026",
       tag: "Latest",
-      tagColor: "bg-emerald-100 text-emerald-700 border-emerald-200",
+      tagColor: "#22c55e",
       type: "major",
       changes: [
         { text: "Added multi-platform publishing support", type: "new" },
@@ -34,7 +33,7 @@ export default function ChangelogPage() {
       version: "1.0.0",
       date: "December 15, 2025",
       tag: "Initial Release",
-      tagColor: "bg-blue-100 text-blue-700 border-blue-200",
+      tagColor: "#3b82f6",
       type: "major",
       changes: [
         { text: "Initial release", type: "new" },
@@ -47,118 +46,146 @@ export default function ChangelogPage() {
 
   const getChangeIcon = (type: string) => {
     switch (type) {
-      case "new":
-        return <Sparkles className="h-4 w-4 text-emerald-600" />
-      case "improvement":
-        return <Zap className="h-4 w-4 text-blue-600" />
-      case "fix":
-        return <Shield className="h-4 w-4 text-orange-600" />
-      default:
-        return <Check className="h-4 w-4 text-neutral-600" />
+      case "new": return <Sparkles size={16} style={{ color: '#22c55e' }} />
+      case "improvement": return <Zap size={16} style={{ color: '#3b82f6' }} />
+      case "fix": return <Shield size={16} style={{ color: '#FF7A33' }} />
+      default: return <Check size={16} style={{ color: '#666' }} />
     }
   }
 
   const getChangeBadge = (type: string) => {
     switch (type) {
-      case "new":
-        return <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">NEW</span>
-      case "improvement":
-        return <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">IMPROVED</span>
-      case "fix":
-        return <span className="text-xs font-semibold text-orange-600 bg-orange-50 px-2 py-0.5 rounded">FIXED</span>
-      default:
-        return null
+      case "new": return <span style={{ fontSize: '10px', fontWeight: 800, color: '#22c55e', backgroundColor: 'rgba(34, 197, 94, 0.1)', padding: '2px 8px', borderRadius: '4px' }}>NEW</span>
+      case "improvement": return <span style={{ fontSize: '10px', fontWeight: 800, color: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', padding: '2px 8px', borderRadius: '4px' }}>IMPROVED</span>
+      case "fix": return <span style={{ fontSize: '10px', fontWeight: 800, color: '#FF7A33', backgroundColor: 'rgba(255, 122, 51, 0.1)', padding: '2px 8px', borderRadius: '4px' }}>FIXED</span>
+      default: return null
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100">
-      {/* Header */}
-      <div className="bg-white border-b border-neutral-200">
-        <div className="mx-auto max-w-4xl px-4 py-12 lg:px-8">
-          <Link href="/">
-            <Button variant="ghost" size="sm" className="mb-6 hover:bg-neutral-100">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Home
-            </Button>
-          </Link>
-          <div className="text-center">
-            <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-neutral-900 to-neutral-700 bg-clip-text text-transparent">
-              Changelog
-            </h1>
-            <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
-              Stay up to date with the latest features, improvements, and bug fixes
-            </p>
-          </div>
-        </div>
-      </div>
+    <div style={{ backgroundColor: '#fff', minHeight: '100vh', color: '#1a1a1a' }}>
 
-      {/* Changelog Entries */}
-      <div className="mx-auto max-w-4xl px-4 py-12 lg:px-8">
-        <div className="space-y-6">
-          {entries.map((entry) => (
-            <div
-              key={entry.version}
-              className="bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden hover:shadow-md transition-shadow"
-            >
-              {/* Entry Header */}
-              <div className="bg-gradient-to-r from-neutral-50 to-white p-6 border-b border-neutral-200">
-                <div className="flex items-center justify-between flex-wrap gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-3xl font-bold text-neutral-900">v{entry.version}</span>
+      {/* Hero Section */}
+      <section style={{
+        backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.92)), url("/design/BG%2023-01%202.png")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        padding: '120px 24px 80px',
+        textAlign: 'center'
+      }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+          <p style={{
+            fontSize: '12px',
+            fontWeight: 800,
+            color: '#FF7A33',
+            textTransform: 'uppercase',
+            letterSpacing: '0.2em',
+            marginBottom: '16px'
+          }}>Product Updates</p>
+          <h1 style={{
+            fontSize: 'clamp(38px, 6vw, 64px)',
+            fontWeight: 800,
+            marginBottom: '16px',
+            color: '#1a1a1a',
+            lineHeight: '1.2'
+          }}>
+            Release <span style={{ fontStyle: 'italic', fontWeight: 300, color: '#666', fontFamily: '"Playfair Display", serif' }}>Changelog</span>
+          </h1>
+          <p style={{ color: '#666', fontSize: '15px', maxWidth: '600px', margin: '0 auto' }}>
+            Explore the latest features, improvements, and fixes we've built for you.
+          </p>
+        </div>
+      </section>
+
+      {/* Changelog Content */}
+      <section style={{ padding: '0 24px 120px' }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+
+          <div style={{ padding: '60px 0' }}>
+            <Link href="/" style={{ color: '#FF7A33', textDecoration: 'none', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '40px' }}>
+              <ArrowLeft size={16} /> Back to Home
+            </Link>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '60px' }}>
+              {entries.map((entry) => (
+                <div key={entry.version} style={{
+                  backgroundColor: '#fff',
+                  borderRadius: '40px',
+                  border: '1px solid #f0f0f0',
+                  overflow: 'hidden',
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.02)'
+                }}>
+                  {/* Entry Header */}
+                  <div style={{ padding: '40px', borderBottom: '1px solid #f9f9f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fafafa' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      <h2 style={{ fontSize: '32px', fontWeight: 800, margin: 0 }}>v{entry.version}</h2>
                       {entry.tag && (
-                        <span className={`text-xs font-semibold px-3 py-1 rounded-full border ${entry.tagColor}`}>
-                          {entry.tag}
-                        </span>
+                        <span style={{
+                          fontSize: '11px',
+                          fontWeight: 800,
+                          color: entry.tagColor,
+                          backgroundColor: 'white',
+                          padding: '4px 12px',
+                          borderRadius: '50px',
+                          border: `1px solid ${entry.tagColor}44`
+                        }}>{entry.tag}</span>
                       )}
                     </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#999', fontSize: '14px', fontWeight: 700 }}>
+                      <Calendar size={16} style={{ color: '#FF7A33' }} />
+                      {entry.date}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-neutral-500">
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span>{entry.date}</span>
+
+                  {/* Entry Changes */}
+                  <div style={{ padding: '40px' }}>
+                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                      {entry.changes.map((change, idx) => (
+                        <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '16px', color: '#444' }}>
+                          <div style={{ width: '32px', height: '32px', borderRadius: '10px', backgroundColor: '#f9f9f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {getChangeIcon(change.type)}
+                          </div>
+                          <span style={{ flex: 1, fontWeight: 500 }}>{change.text}</span>
+                          {getChangeBadge(change.type)}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
-              </div>
-
-              {/* Entry Content */}
-              <div className="p-6">
-                <ul className="space-y-3">
-                  {entry.changes.map((change, idx) => (
-                    <li key={idx} className="flex items-start gap-3 group">
-                      <div className="mt-0.5 flex-shrink-0">
-                        {getChangeIcon(change.type)}
-                      </div>
-                      <div className="flex-1 flex items-center justify-between gap-3">
-                        <span className="text-neutral-700 group-hover:text-neutral-900 transition-colors">
-                          {change.text}
-                        </span>
-                        {getChangeBadge(change.type)}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        {/* Subscribe Section */}
-        <div className="mt-12 bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-xl shadow-lg p-8 text-center text-white">
-          <h3 className="text-2xl font-bold mb-2">Stay Updated</h3>
-          <p className="text-emerald-100 mb-6">
-            Subscribe to our newsletter to get notified about new features and updates
-          </p>
-          <Link href="/contact">
-            <Button size="lg" variant="secondary" className="bg-white text-emerald-700 hover:bg-neutral-50">
-              Contact Us for Updates
-            </Button>
-          </Link>
+            {/* Bottom Section */}
+            <div style={{
+              marginTop: '100px',
+              padding: '60px',
+              borderRadius: '48px',
+              backgroundColor: '#FF7A33',
+              color: 'white',
+              textAlign: 'center',
+              boxShadow: '0 20px 50px rgba(255, 122, 51, 0.3)'
+            }}>
+              <h3 style={{ fontSize: '32px', fontWeight: 800, marginBottom: '16px' }}>Stay in the loop</h3>
+              <p style={{ fontSize: '17px', opacity: 0.9, marginBottom: '32px', maxWidth: '500px', margin: '0 auto 32px' }}>
+                Never miss an update. Join our community and be the first to know about new features.
+              </p>
+              <Link href="/contact" style={{
+                backgroundColor: 'white',
+                color: '#FF7A33',
+                padding: '18px 48px',
+                borderRadius: '50px',
+                textDecoration: 'none',
+                fontWeight: 800,
+                fontSize: '15px',
+                display: 'inline-block'
+              }}>
+                Contact Us for Updates
+              </Link>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
+
     </div>
   )
 }
-

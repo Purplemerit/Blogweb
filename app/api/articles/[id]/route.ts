@@ -152,6 +152,8 @@ export async function PUT(
       folderId,
       toneOfVoice,
       contentFramework,
+      slug,
+      scheduleAt,
     } = body;
 
     // Calculate word count and reading time if content is provided
@@ -175,6 +177,8 @@ export async function PUT(
       ...(folderId !== undefined && { folderId }),
       ...(toneOfVoice !== undefined && { toneOfVoice }),
       ...(contentFramework !== undefined && { contentFramework }),
+      ...(slug !== undefined && { slug }),
+      ...(scheduleAt !== undefined && { scheduleAt: scheduleAt ? new Date(scheduleAt) : null }),
     };
 
     // If status is being changed to PUBLISHED, set publishedAt

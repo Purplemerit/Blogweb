@@ -2,13 +2,9 @@
 
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { PenSquare, ArrowLeft, CheckCircle } from "lucide-react"
 import { useState, useEffect, Suspense } from "react"
 import { toast } from "sonner"
+import { ArrowLeft, Loader2, CheckCircle2, Eye, EyeOff } from "lucide-react"
 
 function ResetPasswordForm() {
   const router = useRouter()
@@ -17,6 +13,7 @@ function ResetPasswordForm() {
 
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -33,14 +30,12 @@ function ResetPasswordForm() {
     setIsLoading(true)
     setErrors({})
 
-    // Validate passwords match
     if (password !== confirmPassword) {
       setErrors({ confirmPassword: 'Passwords do not match' })
       setIsLoading(false)
       return
     }
 
-    // Validate password strength
     if (password.length < 8) {
       setErrors({ password: 'Password must be at least 8 characters' })
       setIsLoading(false)
@@ -82,112 +77,188 @@ function ResetPasswordForm() {
     }
   }
 
-  if (!token) {
-    return null
+  const inputStyle = (hasError: boolean) => ({
+    width: '100%',
+    padding: '16px 24px',
+    borderRadius: '50px',
+    border: `1px solid ${hasError ? '#FF4B2B' : '#eee'}`,
+    backgroundColor: '#f9f9f9',
+    fontSize: '15px',
+    outline: 'none',
+    transition: 'all 0.2s',
+    marginBottom: hasError ? '0px' : '24px'
+  })
+
+  const labelStyle = {
+    fontSize: '13px',
+    fontWeight: 800,
+    color: '#1a1a1a',
+    marginBottom: '8px',
+    display: 'block'
   }
 
+  if (!token) return null
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <PenSquare className="h-8 w-8" />
-            <span className="text-2xl font-bold">Publish Type</span>
-          </Link>
-        </div>
+    <div style={{
+      backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.4)), url("/design/BG%2023-01%202.png")',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
 
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">
-              {isSuccess ? 'Password Reset Complete' : 'Reset Your Password'}
-            </CardTitle>
-            <CardDescription>
-              {isSuccess
-                ? 'Your password has been successfully reset'
-                : 'Enter your new password below'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isSuccess ? (
-              <div className="text-center space-y-4">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                  <CheckCircle className="w-10 h-10 text-green-600" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-neutral-900 mb-2">
-                    Password Updated!
-                  </h3>
-                  <p className="text-sm text-neutral-600 mb-6">
-                    You can now log in with your new password.
-                  </p>
-                </div>
-                <Link href="/login" className="block">
-                  <Button className="w-full bg-emerald-800 hover:bg-emerald-900 text-white">
-                    Continue to Login
-                  </Button>
-                </Link>
+      {/* Mini Header */}
+      <header style={{ padding: '24px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
+          <div style={{ width: '32px', height: '32px', backgroundColor: '#FF7A33', borderRadius: '8px' }}></div>
+          <span style={{ fontSize: '20px', fontWeight: 800, color: '#1a1a1a' }}>PublishType</span>
+        </Link>
+      </header>
+
+      {/* Main Content */}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
+        <div style={{
+          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+          backdropFilter: 'blur(20px)',
+          borderRadius: '48px',
+          padding: '60px',
+          width: '100%',
+          maxWidth: '540px',
+          boxShadow: '0 30px 60px rgba(0,0,0,0.05)',
+          textAlign: 'center'
+        }}>
+          {isSuccess ? (
+            <div>
+              <div style={{ width: '80px', height: '80px', backgroundColor: 'rgba(34, 197, 94, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 32px', color: '#22c55e' }}>
+                <CheckCircle2 size={40} strokeWidth={2.5} />
               </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="password">New Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                  {errors.password && (
-                    <p className="text-xs text-red-500">{errors.password}</p>
-                  )}
-                  <p className="text-xs text-neutral-500">
-                    Must be at least 8 characters with 1 uppercase and 1 number
-                  </p>
+              <h1 style={{ fontSize: '32px', fontWeight: 800, marginBottom: '16px', color: '#1a1a1a' }}>Password Reset!</h1>
+              <p style={{ color: '#666', fontSize: '16px', lineHeight: '1.6', marginBottom: '32px' }}>
+                Your password has been successfully updated. You can now use your new password to log in.
+              </p>
+              <Link href="/login" style={{
+                backgroundColor: '#FF7A33',
+                color: 'white',
+                padding: '18px 48px',
+                borderRadius: '50px',
+                border: 'none',
+                fontSize: '15px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                textDecoration: 'none',
+                display: 'inline-block',
+                boxShadow: '0 8px 25px rgba(255, 122, 51, 0.3)'
+              }}>
+                Back to Login
+              </Link>
+            </div>
+          ) : (
+            <>
+              <h1 style={{ fontSize: '32px', fontWeight: 800, marginBottom: '16px', color: '#1a1a1a' }}>Set New Password</h1>
+              <p style={{ color: '#666', fontSize: '15px', marginBottom: '40px', lineHeight: '1.6' }}>
+                Please choose a strong password that you haven't used before.
+              </p>
+
+              <form onSubmit={handleSubmit} style={{ textAlign: 'left' }}>
+                <div>
+                  <label style={labelStyle}>New Password</label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="********"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      style={inputStyle(!!errors.password)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{ position: 'absolute', right: '20px', top: '22px', background: 'none', border: 'none', cursor: 'pointer', color: '#999' }}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {errors.password && <p style={{ fontSize: '11px', color: '#FF4B2B', marginBottom: '16px', fontWeight: 700, marginLeft: '12px' }}>{errors.password}</p>}
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="••••••••"
+                <div>
+                  <label style={labelStyle}>Confirm New Password</label>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="********"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
+                    style={inputStyle(!!errors.confirmPassword)}
                   />
-                  {errors.confirmPassword && (
-                    <p className="text-xs text-red-500">{errors.confirmPassword}</p>
-                  )}
+                  {errors.confirmPassword && <p style={{ fontSize: '11px', color: '#FF4B2B', marginBottom: '16px', fontWeight: 700, marginLeft: '12px' }}>{errors.confirmPassword}</p>}
                 </div>
 
-                <Button
+                <button
                   type="submit"
-                  className="w-full bg-emerald-800 hover:bg-emerald-900 text-white"
                   disabled={isLoading}
-                >
-                  {isLoading ? "Resetting password..." : "Reset Password"}
-                </Button>
+                  style={{
+                    width: '100%',
+                    backgroundColor: '#FF7A33',
+                    color: 'white',
+                    padding: '18px',
+                    borderRadius: '50px',
+                    border: 'none',
+                    fontSize: '16px',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    boxShadow: '0 8px 25px rgba(255, 122, 51, 0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '10px',
+                    marginTop: '8px'
+                  }}>
+                  {isLoading ? <Loader2 className="animate-spin" size={20} /> : 'Reset Password'}
+                </button>
 
-                <Link href="/login">
-                  <Button variant="ghost" className="w-full">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to login
-                  </Button>
+                <Link href="/login" style={{
+                  marginTop: '32px',
+                  color: '#999',
+                  fontSize: '14px',
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}>
+                  <ArrowLeft size={16} /> Back to Login
                 </Link>
               </form>
-            )}
-          </CardContent>
-        </Card>
+            </>
+          )}
+        </div>
       </div>
+
+      <footer style={{ padding: '24px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '24px' }}>
+          <Link href="/privacy" style={{ fontSize: '13px', color: '#999', textDecoration: 'none', fontWeight: 600 }}>Privacy Policy</Link>
+          <Link href="/terms" style={{ fontSize: '13px', color: '#999', textDecoration: 'none', fontWeight: 600 }}>Term & Condition</Link>
+        </div>
+        <p style={{ margin: 0, fontSize: '13px', color: '#999', fontWeight: 600 }}>
+          © {new Date().getFullYear()} PublishType. All Rights Reserved.
+        </p>
+      </footer>
     </div>
   )
 }
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+    <Suspense fallback={
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' }}>
+        <Loader2 size={40} className="animate-spin" style={{ color: '#FF7A33' }} />
+      </div>
+    }>
       <ResetPasswordForm />
     </Suspense>
   )

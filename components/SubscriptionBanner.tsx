@@ -1,11 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/context/AuthContext"
-import { AlertCircle, Crown, Zap, Sparkles, ArrowRight } from "lucide-react"
+import { AlertCircle, Crown, Zap, Sparkles, ArrowRight, ShieldCheck } from "lucide-react"
 import Link from "next/link"
 import { PLAN_PRICING_DISPLAY } from "@/lib/hooks/useRazorpay"
 
@@ -40,7 +37,6 @@ export function SubscriptionBanner() {
         const data = await response.json()
         setUsage(data.data)
 
-        // Show upgrade if over limit
         if (data.data.articlesThisMonth >= data.data.maxArticlesPerMonth) {
           setShowUpgrade(true)
         }
@@ -52,81 +48,110 @@ export function SubscriptionBanner() {
 
   if (!user) return null
 
-  const planColors = {
-    FREE: { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-300', icon: AlertCircle },
-    STARTER: { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-300', icon: Zap },
-    CREATOR: { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-300', icon: Sparkles },
-    PROFESSIONAL: { bg: 'bg-amber-100', text: 'text-amber-800', border: 'border-amber-300', icon: Crown },
+  const plan = user.subscriptionPlan || 'FREE'
+
+  // Refined theme colors for the banner
+  const getBannerStyles = () => {
+    if (plan === 'FREE') return { bg: '#fff', border: '1px solid #eee', accent: '#FF7A33' }
+    return { bg: '#fff', border: '1px solid #eee', accent: '#FF7A33' }
   }
 
-  const plan = user.subscriptionPlan as keyof typeof planColors
-  const color = planColors[plan] || planColors.FREE
-  const Icon = color.icon
+  const styles = getBannerStyles()
 
   return (
-    <Card className={`border-2 ${color.border} ${color.bg}`}>
-      <CardContent className="p-4">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className={`h-10 w-10 flex-shrink-0 rounded-full ${color.bg} flex items-center justify-center`}>
-              <Icon className={`h-5 w-5 ${color.text}`} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="outline" className={`${color.bg} ${color.text} ${color.border} font-semibold text-xs`}>
-                  {plan} PLAN
-                </Badge>
-                {plan === 'FREE' && showUpgrade && (
-                  <Badge variant="destructive" className="text-xs">
-                    OVER LIMIT
-                  </Badge>
-                )}
-              </div>
-              {usage && (
-                <div className="text-xs text-gray-600 mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
-                  <span className={usage.articlesThisMonth >= usage.maxArticlesPerMonth ? 'text-red-600 font-semibold' : ''}>
-                    📝 {usage.articlesThisMonth}/{usage.maxArticlesPerMonth === -1 ? '∞' : usage.maxArticlesPerMonth} articles
-                  </span>
-                  <span>
-                    💾 {usage.drafts}/{usage.maxDrafts === -1 ? '∞' : usage.maxDrafts} drafts
-                  </span>
-                  <span>
-                    🔌 {usage.platformConnections}/{usage.maxPlatformConnections === -1 ? '∞' : usage.maxPlatformConnections} platforms
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {plan === 'FREE' && (
-            <Link href="/pricing" className="flex-shrink-0">
-              <Button size="sm" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 w-full md:w-auto text-xs md:text-sm">
-                <Sparkles className="h-4 w-4 mr-1.5" />
-                <span className="hidden sm:inline">Upgrade to STARTER - </span>₹{PLAN_PRICING_DISPLAY.STARTER.monthly.inr.toLocaleString('en-IN')}/mo
-                <ArrowRight className="h-4 w-4 ml-1.5" />
-              </Button>
-            </Link>
-          )}
-
-          {plan === 'STARTER' && (
-            <Link href="/pricing" className="flex-shrink-0">
-              <Button size="sm" variant="outline" className="w-full md:w-auto text-xs md:text-sm">
-                <Crown className="h-4 w-4 mr-1.5" />
-                <span className="hidden sm:inline">Upgrade to CREATOR - </span>₹{PLAN_PRICING_DISPLAY.CREATOR.monthly.inr.toLocaleString('en-IN')}/mo
-              </Button>
-            </Link>
-          )}
+    <div style={{
+      backgroundColor: styles.bg,
+      border: styles.border,
+      borderRadius: '32px',
+      padding: '24px 32px',
+      boxShadow: '0 10px 40px rgba(0,0,0,0.02)',
+      display: 'flex',
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: '24px',
+      flexWrap: 'wrap'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: 1 }}>
+        <div style={{
+          width: '56px',
+          height: '56px',
+          borderRadius: '16px',
+          backgroundColor: '#fcfcfc',
+          border: '1px solid #f0f0f0',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: styles.accent
+        }}>
+          {plan === 'FREE' ? <AlertCircle size={28} /> : <ShieldCheck size={28} />}
         </div>
 
-        {plan === 'FREE' && usage && usage.articlesThisMonth >= usage.maxArticlesPerMonth && (
-          <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-sm text-red-800">
-              <strong>⚠️ Article limit reached!</strong> You've created {usage.articlesThisMonth} articles this month.
-              Upgrade to STARTER for 20 articles/month or wait until next month.
-            </p>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+            <span style={{
+              fontSize: '11px',
+              fontWeight: 900,
+              color: styles.accent,
+              backgroundColor: '#FFF5F0',
+              padding: '4px 12px',
+              borderRadius: '50px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em'
+            }}>
+              {plan} PLAN
+            </span>
+            {plan === 'FREE' && showUpgrade && (
+              <span style={{ fontSize: '10px', fontWeight: 800, color: '#ff4b2b', backgroundColor: '#fff5f5', padding: '4px 12px', borderRadius: '50px' }}>
+                LIMIT REACHED
+              </span>
+            )}
           </div>
-        )}
-      </CardContent>
-    </Card>
+
+          {usage && (
+            <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, color: usage.articlesThisMonth >= usage.maxArticlesPerMonth ? '#ff4b2b' : '#666' }}>
+                <span style={{ opacity: 0.6 }}>📝</span> {usage.articlesThisMonth}/{usage.maxArticlesPerMonth === -1 ? '∞' : usage.maxArticlesPerMonth} articles
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, color: '#666' }}>
+                <span style={{ opacity: 0.6 }}>💾</span> {usage.drafts}/{usage.maxDrafts === -1 ? '∞' : usage.maxDrafts} drafts
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, color: '#666' }}>
+                <span style={{ opacity: 0.6 }}>🔌</span> {usage.platformConnections}/{usage.maxPlatformConnections === -1 ? '∞' : usage.maxPlatformConnections} platforms
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {(plan === 'FREE' || plan === 'STARTER') && (
+        <Link href="/pricing" style={{ textDecoration: 'none' }}>
+          <button style={{
+            backgroundColor: styles.accent,
+            color: '#fff',
+            padding: '14px 28px',
+            borderRadius: '50px',
+            border: 'none',
+            fontSize: '13px',
+            fontWeight: 800,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            boxShadow: '0 8px 25px rgba(255, 122, 51, 0.2)',
+            transition: 'transform 0.2s'
+          }}>
+            <Sparkles size={16} />
+            UPGRADE TO {plan === 'FREE' ? 'STARTER' : 'CREATOR'}
+            <span style={{ opacity: 0.8, fontSize: '11px' }}>- ₹{PLAN_PRICING_DISPLAY[plan === 'FREE' ? 'STARTER' : 'CREATOR'].monthly.inr.toLocaleString('en-IN')}/mo</span>
+            <ChevronRight size={16} />
+          </button>
+        </Link>
+      )}
+    </div>
   )
+}
+
+function ChevronRight({ size }: { size: number }) {
+  return <ArrowRight size={size} />
 }

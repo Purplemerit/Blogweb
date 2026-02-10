@@ -3,11 +3,23 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Save, CreditCard, Bell, Lock, User, Loader2, Check, Sparkles } from "lucide-react"
+import {
+  Save,
+  CreditCard,
+  Bell,
+  Lock,
+  User,
+  Loader2,
+  Check,
+  Sparkles,
+  ShieldCheck,
+  Globe,
+  AtSign,
+  Trash2,
+  RefreshCw,
+  Download
+} from "lucide-react"
 import { toast } from "sonner"
 import { useRazorpay, PLAN_PRICING_DISPLAY, PLAN_NAMES, PlanType, BillingPeriod } from "@/lib/hooks/useRazorpay"
 
@@ -27,15 +39,6 @@ interface UserProfile {
   subscriptionEndDate?: string
 }
 
-interface UserSettings {
-  emailOnPublish: boolean
-  emailOnMilestone: boolean
-  emailWeeklyDigest: boolean
-  emailMonthlyReport: boolean
-  pushNotifications: boolean
-  inAppNotifications: boolean
-}
-
 export default function SettingsPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
@@ -44,7 +47,6 @@ export default function SettingsPage() {
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly')
   const { loading: paymentLoading, initiatePayment } = useRazorpay()
 
-  // Profile state
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [name, setName] = useState("")
   const [bio, setBio] = useState("")
@@ -52,13 +54,11 @@ export default function SettingsPage() {
   const [twitterHandle, setTwitterHandle] = useState("")
   const [linkedinUrl, setLinkedinUrl] = useState("")
 
-  // Password state
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
 
-  // Settings state
-  const [settings, setSettings] = useState<UserSettings>({
+  const [settings, setSettings] = useState({
     emailOnPublish: true,
     emailOnMilestone: true,
     emailWeeklyDigest: true,
@@ -67,40 +67,18 @@ export default function SettingsPage() {
     inAppNotifications: true,
   })
 
-  useEffect(() => {
-    fetchUserData()
-  }, [])
+  useEffect(() => { fetchUserData() }, [])
 
   const fetchUserData = async () => {
     try {
       const token = localStorage.getItem('accessToken')
+      if (!token) { router.push('/login'); return }
 
-      if (!token) {
-        toast.error('Please login to continue')
-        router.push('/login')
-        return
-      }
-
-      // Fetch user profile
-      const profileResponse = await fetch('/api/auth/me', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      })
-
-      if (!profileResponse.ok) {
-        if (profileResponse.status === 401) {
-          toast.error('Session expired. Please login again.')
-          localStorage.removeItem('accessToken')
-          router.push('/login')
-          return
-        }
-        throw new Error('Failed to fetch profile')
-      }
+      const profileResponse = await fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } })
+      if (!profileResponse.ok) { localStorage.removeItem('accessToken'); router.push('/login'); return }
 
       const profileData = await profileResponse.json()
       const user = profileData.data.user
-
       setProfile(user)
       setName(user.name || "")
       setBio(user.bio || "")
@@ -108,742 +86,277 @@ export default function SettingsPage() {
       setTwitterHandle(user.twitterHandle || "")
       setLinkedinUrl(user.linkedinUrl || "")
 
-      // Fetch user settings
-      const settingsResponse = await fetch('/api/user/settings', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      })
-
-      if (settingsResponse.ok) {
-        const settingsData = await settingsResponse.json()
-        if (settingsData.data.settings) {
-          setSettings({
-            emailOnPublish: settingsData.data.settings.emailOnPublish,
-            emailOnMilestone: settingsData.data.settings.emailOnMilestone,
-            emailWeeklyDigest: settingsData.data.settings.emailWeeklyDigest,
-            emailMonthlyReport: settingsData.data.settings.emailMonthlyReport,
-            pushNotifications: settingsData.data.settings.pushNotifications,
-            inAppNotifications: settingsData.data.settings.inAppNotifications,
-          })
-        }
+      const settingsRes = await fetch('/api/user/settings', { headers: { 'Authorization': `Bearer ${token}` } })
+      if (settingsRes.ok) {
+        const sData = await settingsRes.json()
+        if (sData.data.settings) setSettings(sData.data.settings)
       }
-
       setLoading(false)
-    } catch (error) {
-      console.error('Error fetching user data:', error)
-      toast.error('Failed to load settings')
-      setLoading(false)
-    }
+    } catch (e) { toast.error('Failed to load settings'); setLoading(false) }
   }
 
   const handleSaveProfile = async () => {
     setSaving(true)
     try {
       const token = localStorage.getItem('accessToken')
-
-      const response = await fetch('/api/user/profile', {
+      const res = await fetch('/api/user/profile', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name,
-          bio,
-          website,
-          twitterHandle,
-          linkedinUrl,
-        }),
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ name, bio, website, twitterHandle, linkedinUrl })
       })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        if (data.details) {
-          const errorMap: Record<string, string> = {}
-          data.details.forEach((error: any) => {
-            errorMap[error.path[0]] = error.message
-          })
-          toast.error(Object.values(errorMap)[0] as string || 'Validation failed')
-        } else {
-          toast.error(data.error || 'Failed to update profile')
-        }
-        return
-      }
-
-      setProfile(data.data.user)
-      toast.success('Profile updated successfully!')
-    } catch (error) {
-      toast.error('An error occurred. Please try again.')
-    } finally {
-      setSaving(false)
-    }
+      const data = await res.json()
+      if (res.ok) { setProfile(data.data.user); toast.success('Profile updated!') }
+      else toast.error(data.error || 'Update failed')
+    } catch (e) { toast.error('Error occurred') }
+    finally { setSaving(false) }
   }
 
   const handleChangePassword = async () => {
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      toast.error('Please fill in all password fields')
-      return
-    }
-
-    if (newPassword !== confirmPassword) {
-      toast.error('New passwords do not match')
-      return
-    }
-
+    if (!currentPassword || !newPassword || !confirmPassword) return toast.error('Fill all fields')
+    if (newPassword !== confirmPassword) return toast.error('Passwords mismatch')
     setChangingPassword(true)
     try {
       const token = localStorage.getItem('accessToken')
-
-      const response = await fetch('/api/user/password', {
+      const res = await fetch('/api/user/password', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          currentPassword,
-          newPassword,
-          confirmPassword,
-        }),
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ currentPassword, newPassword, confirmPassword })
       })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        if (data.details) {
-          const errorMap: Record<string, string> = {}
-          data.details.forEach((error: any) => {
-            errorMap[error.path[0]] = error.message
-          })
-          toast.error(Object.values(errorMap)[0] as string || 'Validation failed')
-        } else {
-          toast.error(data.error || 'Failed to change password')
-        }
-        return
-      }
-
-      toast.success('Password changed successfully! Please login again.')
-
-      // Clear password fields
-      setCurrentPassword("")
-      setNewPassword("")
-      setConfirmPassword("")
-
-      // Redirect to login after a short delay
-      setTimeout(() => {
-        localStorage.removeItem('accessToken')
-        router.push('/login')
-      }, 2000)
-    } catch (error) {
-      toast.error('An error occurred. Please try again.')
-    } finally {
-      setChangingPassword(false)
-    }
-  }
-
-  const handleSaveSettings = async () => {
-    try {
-      const token = localStorage.getItem('accessToken')
-
-      const response = await fetch('/api/user/settings', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(settings),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        toast.error(data.error || 'Failed to update settings')
-        return
-      }
-
-      toast.success('Settings updated successfully!')
-    } catch (error) {
-      toast.error('An error occurred. Please try again.')
-    }
-  }
-
-  const handleExportData = () => {
-    // Simply redirect to the export page
-    router.push('/dashboard/export')
+      if (res.ok) {
+        toast.success('Password changed! Relogging...')
+        setTimeout(() => { localStorage.removeItem('accessToken'); router.push('/login') }, 2000)
+      } else toast.error('Password change failed')
+    } finally { setChangingPassword(false) }
   }
 
   const handleDeleteAccount = async () => {
-    const confirmed = window.confirm(
-      'Are you absolutely sure you want to delete your account? This action cannot be undone. All your articles, data, and settings will be permanently deleted.'
-    )
-
-    if (!confirmed) return
-
-    const doubleConfirm = window.confirm(
-      'This is your last chance. Type DELETE in the next prompt to confirm account deletion.'
-    )
-
-    if (!doubleConfirm) return
-
-    const finalConfirmation = prompt('Type DELETE (in capital letters) to confirm:')
-
-    if (finalConfirmation !== 'DELETE') {
-      toast.error('Account deletion cancelled')
-      return
-    }
-
-    try {
-      const token = localStorage.getItem('accessToken')
-
-      const response = await fetch('/api/user/account', {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        toast.error(data.error || 'Failed to delete account')
-        return
-      }
-
-      toast.success('Account deleted successfully. Redirecting...')
-
-      setTimeout(() => {
-        localStorage.removeItem('accessToken')
-        localStorage.removeItem('refreshToken')
-        router.push('/')
-      }, 2000)
-    } catch (error) {
-      toast.error('Failed to delete account. Please try again.')
+    if (confirm('Permanently delete account?') && prompt('Type DELETE to confirm') === 'DELETE') {
+      try {
+        const token = localStorage.getItem('accessToken')
+        const res = await fetch('/api/user/account', { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } })
+        if (res.ok) { localStorage.removeItem('accessToken'); router.push('/') }
+      } catch (e) { toast.error('Delete failed') }
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-neutral-600" />
-      </div>
-    )
-  }
+  if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}><Loader2 className="animate-spin" size={40} color="#FF7A33" /></div>
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-neutral-600 mt-1">Manage your account and preferences</p>
-      </div>
+    <>
+      <style jsx global>{`
+        /* Tablet and below */
+        @media (max-width: 1024px) {
+          .settings-grid {
+            grid-template-columns: 1fr !important;
+            gap: 24px !important;
+            padding: 24px 20px !important;
+          }
+          .settings-main-col {
+            grid-column: span 1 !important;
+          }
+          .settings-sidebar-col {
+            grid-column: span 1 !important;
+          }
+        }
 
-      <div className="max-w-4xl space-y-6">
-        {/* Account Settings */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              <CardTitle>Account Information</CardTitle>
-            </div>
-            <CardDescription>Update your personal information</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter your full name"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={profile?.email || ""}
-                  disabled
-                  className="bg-neutral-50 cursor-not-allowed"
-                />
-                <p className="text-xs text-neutral-500">Email cannot be changed</p>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
-              <textarea
-                id="bio"
-                className="w-full rounded-lg border border-neutral-200 p-3 text-sm min-h-[100px] focus:outline-none focus:ring-2 focus:ring-emerald-800 focus:border-transparent"
-                placeholder="Tell us about yourself..."
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                maxLength={500}
-              />
-              <p className="text-xs text-neutral-500">{bio.length}/500 characters</p>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="website">Website</Label>
-                <Input
-                  id="website"
-                  type="url"
-                  value={website}
-                  onChange={(e) => setWebsite(e.target.value)}
-                  placeholder="https://yourwebsite.com"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="twitter">Twitter Handle</Label>
-                <Input
-                  id="twitter"
-                  value={twitterHandle}
-                  onChange={(e) => setTwitterHandle(e.target.value)}
-                  placeholder="@username"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="linkedin">LinkedIn URL</Label>
-              <Input
-                id="linkedin"
-                type="url"
-                value={linkedinUrl}
-                onChange={(e) => setLinkedinUrl(e.target.value)}
-                placeholder="https://linkedin.com/in/username"
-              />
-            </div>
-            <Button
-              className="gap-2 bg-emerald-800 hover:bg-emerald-900"
-              onClick={handleSaveProfile}
-              disabled={saving}
-            >
-              {saving ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4" />
-                  Save Changes
-                </>
-              )}
-            </Button>
-          </CardContent>
-        </Card>
+        /* Mobile landscape and below */
+        @media (max-width: 768px) {
+          .settings-hero {
+            padding: 40px 20px !important;
+          }
+          .settings-hero h1 {
+            font-size: 32px !important;
+          }
+          .settings-card {
+            padding: 24px !important;
+            border-radius: 24px !important;
+          }
+          .settings-form-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .settings-form-grid-span-2 {
+            grid-column: span 1 !important;
+          }
+        }
 
-        {/* Security */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Lock className="h-5 w-5" />
-              <CardTitle>Security</CardTitle>
-            </div>
-            <CardDescription>Manage your password and security settings</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="current-password">Current Password</Label>
-              <Input
-                id="current-password"
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="Enter current password"
-              />
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="new-password">New Password</Label>
-                <Input
-                  id="new-password"
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Enter new password"
-                />
-                <p className="text-xs text-neutral-500">
-                  Min 8 characters, 1 uppercase, 1 number
-                </p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirm Password</Label>
-                <Input
-                  id="confirm-password"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm new password"
-                />
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              onClick={handleChangePassword}
-              disabled={changingPassword}
-            >
-              {changingPassword ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Changing Password...
-                </>
-              ) : (
-                'Change Password'
-              )}
-            </Button>
-          </CardContent>
-        </Card>
+        /* Mobile portrait */
+        @media (max-width: 480px) {
+          .settings-hero {
+            padding: 32px 16px !important;
+          }
+          .settings-hero h1 {
+            font-size: 28px !important;
+            line-height: 1.2 !important;
+          }
+          .settings-hero p {
+            font-size: 14px !important;
+          }
+          .settings-grid {
+            padding: 20px 12px !important;
+            gap: 20px !important;
+          }
+          .settings-card {
+            padding: 20px !important;
+            border-radius: 20px !important;
+          }
+          .settings-card h2 {
+            font-size: 18px !important;
+          }
+          .settings-input {
+            padding: 12px 16px !important;
+            font-size: 13px !important;
+          }
+          .settings-button {
+            padding: 12px 24px !important;
+            font-size: 12px !important;
+          }
+        }
+      `}</style>
 
-        {/* Notifications */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Bell className="h-5 w-5" />
-              <CardTitle>Notifications</CardTitle>
-            </div>
-            <CardDescription>Configure how you receive notifications</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Email on Publish</p>
-                <p className="text-sm text-neutral-600">Get notified when articles are published</p>
-              </div>
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded"
-                checked={settings.emailOnPublish}
-                onChange={(e) => setSettings({...settings, emailOnPublish: e.target.checked})}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Milestone Notifications</p>
-                <p className="text-sm text-neutral-600">Celebrate your achievements and milestones</p>
-              </div>
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded"
-                checked={settings.emailOnMilestone}
-                onChange={(e) => setSettings({...settings, emailOnMilestone: e.target.checked})}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Weekly Digest</p>
-                <p className="text-sm text-neutral-600">Weekly summary of your content performance</p>
-              </div>
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded"
-                checked={settings.emailWeeklyDigest}
-                onChange={(e) => setSettings({...settings, emailWeeklyDigest: e.target.checked})}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Monthly Report</p>
-                <p className="text-sm text-neutral-600">Detailed monthly analytics and insights</p>
-              </div>
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded"
-                checked={settings.emailMonthlyReport}
-                onChange={(e) => setSettings({...settings, emailMonthlyReport: e.target.checked})}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Push Notifications</p>
-                <p className="text-sm text-neutral-600">Receive push notifications in your browser</p>
-              </div>
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded"
-                checked={settings.pushNotifications}
-                onChange={(e) => setSettings({...settings, pushNotifications: e.target.checked})}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">In-App Notifications</p>
-                <p className="text-sm text-neutral-600">Show notifications within the app</p>
-              </div>
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded"
-                checked={settings.inAppNotifications}
-                onChange={(e) => setSettings({...settings, inAppNotifications: e.target.checked})}
-              />
-            </div>
-            <Button
-              className="gap-2 bg-emerald-800 hover:bg-emerald-900"
-              onClick={handleSaveSettings}
-            >
-              <Save className="h-4 w-4" />
-              Save Notification Settings
-            </Button>
-          </CardContent>
-        </Card>
+      <div style={{ paddingBottom: '100px' }}>
+        {/* Hero Header */}
+        <section className="settings-hero" style={{
+          backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.4)), url("/design/BG%2023-01%202.png")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          padding: '60px 40px',
+        }}>
+          <h1 style={{ fontSize: '42px', fontWeight: 800, color: '#1a1a1a', margin: '0 0 10px 0' }}>
+            Account <span style={{ fontStyle: 'italic', fontWeight: 300, color: '#666', fontFamily: 'serif' }}>Settings</span>
+          </h1>
+          <p style={{ color: '#666', fontSize: '15px', fontWeight: 500 }}>Manage your profile, billing, and security preferences.</p>
+        </section>
 
-        {/* Billing & Subscription */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5" />
-              <CardTitle>Billing & Subscription</CardTitle>
-            </div>
-            <CardDescription>Manage your subscription and payment method</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Current Plan */}
-            <div className="flex items-center justify-between p-4 bg-neutral-50 rounded-lg">
-              <div>
-                <p className="font-medium">Current Plan</p>
-                <p className="text-sm text-neutral-600">
-                  {PLAN_NAMES[profile?.subscriptionPlan as PlanType] || 'Free'} Plan
-                </p>
-                {profile?.subscriptionEndDate && (
-                  <p className="text-xs text-neutral-500 mt-1">
-                    {profile?.subscriptionStatus === 'ACTIVE' ? 'Renews' : 'Expires'} on {new Date(profile.subscriptionEndDate).toLocaleDateString()}
-                  </p>
-                )}
-              </div>
-              <Badge variant={profile?.subscriptionStatus === 'ACTIVE' ? 'default' : 'secondary'}>
-                {profile?.subscriptionStatus || 'Free'}
-              </Badge>
-            </div>
+        <div className="settings-grid" style={{ padding: '40px', display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '40px' }}>
 
-            {/* Upgrade Options */}
-            {(!profile?.subscriptionPlan || profile?.subscriptionPlan === 'FREE') && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-medium flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-amber-500" />
-                    Upgrade Your Plan
-                  </h4>
-                  <div className="flex items-center gap-2 bg-neutral-100 p-1 rounded-lg">
-                    <button
-                      onClick={() => setBillingPeriod('monthly')}
-                      className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                        billingPeriod === 'monthly' ? 'bg-white shadow-sm' : 'text-neutral-600'
-                      }`}
-                    >
-                      Monthly
-                    </button>
-                    <button
-                      onClick={() => setBillingPeriod('annual')}
-                      className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                        billingPeriod === 'annual' ? 'bg-white shadow-sm' : 'text-neutral-600'
-                      }`}
-                    >
-                      Annual
-                    </button>
-                  </div>
+          {/* Profile Card */}
+          <div className="settings-main-col" style={{ gridColumn: 'span 8', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            <div className="settings-card" style={{ backgroundColor: '#fff', borderRadius: '32px', border: '1px solid #eee', padding: '40px', boxShadow: '0 10px 40px rgba(0,0,0,0.02)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '16px', backgroundColor: '#fcfcfc', border: '1px solid #eee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FF7A33' }}>
+                  <User size={24} />
                 </div>
+                <h2 style={{ fontSize: '20px', fontWeight: 800 }}>Profile Information</h2>
+              </div>
 
-                {billingPeriod === 'annual' && (
-                  <p className="text-sm text-green-600 bg-green-50 px-3 py-2 rounded-lg">
-                    Save up to 17% with annual billing
-                  </p>
-                )}
-
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {/* Starter Plan */}
-                  <div className="border rounded-lg p-5 hover:border-emerald-800 transition-colors bg-white shadow-sm">
-                    <h5 className="font-semibold text-sm uppercase text-neutral-500 mb-1">Starter</h5>
-                    <div className="mt-2 mb-1">
-                      <span className="text-3xl font-bold">
-                        ₹{(PLAN_PRICING_DISPLAY.STARTER[billingPeriod].inr / (billingPeriod === 'annual' ? 12 : 1)).toLocaleString('en-IN')}
-                      </span>
-                      <span className="text-sm text-neutral-500">/mo</span>
-                    </div>
-                    <p className="text-xs text-neutral-500 mb-1">
-                      ${PLAN_PRICING_DISPLAY.STARTER[billingPeriod].usd}/mo
-                    </p>
-                    {billingPeriod === 'annual' && (
-                      <p className="text-xs text-green-600 font-medium mb-3">
-                        Billed ₹{PLAN_PRICING_DISPLAY.STARTER[billingPeriod].inr.toLocaleString('en-IN')} annually
-                      </p>
-                    )}
-                    <ul className="mt-4 space-y-2 text-sm text-neutral-600">
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> 20 articles/month
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> 2 platform connections
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> Basic AI writing assistant
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> 10 scheduled posts
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> Basic analytics
-                      </li>
-                    </ul>
-                    <Button
-                      className="w-full mt-5 h-10"
-                      variant="outline"
-                      onClick={() => initiatePayment('STARTER', billingPeriod)}
-                      disabled={paymentLoading === 'STARTER'}
-                    >
-                      {paymentLoading === 'STARTER' ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        'Upgrade to Starter'
-                      )}
-                    </Button>
-                  </div>
-
-                  {/* Creator Plan */}
-                  <div className="border-2 border-emerald-800 rounded-lg p-5 relative bg-emerald-50 shadow-md">
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-800 text-white text-xs px-3 py-1 rounded-full font-semibold">
-                      Most Popular
-                    </div>
-                    <h5 className="font-semibold text-sm uppercase text-neutral-500 mb-1">Creator</h5>
-                    <div className="mt-2 mb-1">
-                      <span className="text-3xl font-bold">
-                        ₹{(PLAN_PRICING_DISPLAY.CREATOR[billingPeriod].inr / (billingPeriod === 'annual' ? 12 : 1)).toLocaleString('en-IN')}
-                      </span>
-                      <span className="text-sm text-neutral-500">/mo</span>
-                    </div>
-                    <p className="text-xs text-neutral-500 mb-1">
-                      ${PLAN_PRICING_DISPLAY.CREATOR[billingPeriod].usd}/mo
-                    </p>
-                    {billingPeriod === 'annual' && (
-                      <p className="text-xs text-green-600 font-medium mb-3">
-                        Billed ₹{PLAN_PRICING_DISPLAY.CREATOR[billingPeriod].inr.toLocaleString('en-IN')} annually
-                      </p>
-                    )}
-                    <ul className="mt-4 space-y-2 text-sm text-neutral-600">
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> Unlimited articles
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> Unlimited platforms
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> Advanced AI editor
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> Unlimited scheduling
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> Team collaboration
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> Advanced analytics
-                      </li>
-                    </ul>
-                    <Button
-                      className="w-full mt-5 bg-emerald-800 hover:bg-emerald-900 h-10"
-                      onClick={() => initiatePayment('CREATOR', billingPeriod)}
-                      disabled={paymentLoading === 'CREATOR'}
-                    >
-                      {paymentLoading === 'CREATOR' ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        'Upgrade to Creator'
-                      )}
-                    </Button>
-                  </div>
-
-                  {/* Professional Plan */}
-                  <div className="border rounded-lg p-5 hover:border-emerald-800 transition-colors bg-white shadow-sm sm:col-span-2 lg:col-span-1">
-                    <h5 className="font-semibold text-sm uppercase text-neutral-500 mb-1">Professional</h5>
-                    <div className="mt-2 mb-1">
-                      <span className="text-3xl font-bold">
-                        ₹{(PLAN_PRICING_DISPLAY.PROFESSIONAL[billingPeriod].inr / (billingPeriod === 'annual' ? 12 : 1)).toLocaleString('en-IN')}
-                      </span>
-                      <span className="text-sm text-neutral-500">/mo</span>
-                    </div>
-                    <p className="text-xs text-neutral-500 mb-1">
-                      ${PLAN_PRICING_DISPLAY.PROFESSIONAL[billingPeriod].usd}/mo
-                    </p>
-                    {billingPeriod === 'annual' && (
-                      <p className="text-xs text-green-600 font-medium mb-3">
-                        Billed ₹{PLAN_PRICING_DISPLAY.PROFESSIONAL[billingPeriod].inr.toLocaleString('en-IN')} annually
-                      </p>
-                    )}
-                    <ul className="mt-4 space-y-2 text-sm text-neutral-600">
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> Everything in Creator
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> White-label options
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> Custom integrations
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> Priority support
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> API access
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> Dedicated account manager
-                      </li>
-                    </ul>
-                    <Button
-                      className="w-full mt-5 h-10"
-                      variant="outline"
-                      onClick={() => initiatePayment('PROFESSIONAL', billingPeriod)}
-                      disabled={paymentLoading === 'PROFESSIONAL'}
-                    >
-                      {paymentLoading === 'PROFESSIONAL' ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        'Upgrade to Professional'
-                      )}
-                    </Button>
-                  </div>
+              <div className="settings-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '32px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: 800, color: '#999' }}>FULL NAME</label>
+                  <input className="settings-input" value={name} onChange={(e) => setName(e.target.value)} style={{ padding: '14px 20px', borderRadius: '12px', border: '1px solid #eee', backgroundColor: '#fcfcfc', fontSize: '14px', fontWeight: 700 }} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: 800, color: '#999' }}>EMAIL ADDRESS</label>
+                  <input className="settings-input" value={profile?.email} disabled style={{ padding: '14px 20px', borderRadius: '12px', border: '1px solid #eee', backgroundColor: '#eee', fontSize: '14px', fontWeight: 700, cursor: 'not-allowed' }} />
+                </div>
+                <div className="settings-form-grid-span-2" style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: 800, color: '#999' }}>BIO / DESCRIPTION</label>
+                  <textarea className="settings-input" value={bio} onChange={(e) => setBio(e.target.value)} style={{ padding: '14px 20px', borderRadius: '12px', border: '1px solid #eee', backgroundColor: '#fcfcfc', fontSize: '14px', fontWeight: 700, minHeight: '100px', resize: 'none' }} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: 800, color: '#999' }}>WEBSITE URL</label>
+                  <input className="settings-input" value={website} onChange={(e) => setWebsite(e.target.value)} style={{ padding: '14px 20px', borderRadius: '12px', border: '1px solid #eee', backgroundColor: '#fcfcfc', fontSize: '14px', fontWeight: 700 }} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: 800, color: '#999' }}>TWITTER HANDLE</label>
+                  <input className="settings-input" value={twitterHandle} onChange={(e) => setTwitterHandle(e.target.value)} style={{ padding: '14px 20px', borderRadius: '12px', border: '1px solid #eee', backgroundColor: '#fcfcfc', fontSize: '14px', fontWeight: 700 }} />
                 </div>
               </div>
-            )}
 
-            {/* If user has a paid plan */}
-            {profile?.subscriptionPlan && profile?.subscriptionPlan !== 'FREE' && (
-              <div className="flex gap-2">
-                <Button variant="outline">Manage Subscription</Button>
-                <Button variant="outline">View Invoices</Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              <button
+                onClick={handleSaveProfile}
+                className="settings-button hover:scale-[1.02] active:scale-[0.98] transition-all"
+                style={{ padding: '14px 32px', borderRadius: '50px', backgroundColor: '#1a1a1a', color: '#fff', border: 'none', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} UPDATE PROFILE
+              </button>
+            </div>
 
-        {/* Danger Zone */}
-        <Card className="border-red-200">
-          <CardHeader>
-            <CardTitle className="text-red-600">Danger Zone</CardTitle>
-            <CardDescription>Irreversible actions for your account</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border border-neutral-200 rounded-lg">
-              <div>
-                <p className="font-medium">Export Your Data</p>
-                <p className="text-sm text-neutral-600">Download all your articles and data</p>
+            {/* Security Card */}
+            <div className="settings-card" style={{ backgroundColor: '#fff', borderRadius: '32px', border: '1px solid #eee', padding: '40px', boxShadow: '0 10px 40px rgba(0,0,0,0.02)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '16px', backgroundColor: '#fcfcfc', border: '1px solid #eee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FF7A33' }}>
+                  <ShieldCheck size={24} />
+                </div>
+                <h2 style={{ fontSize: '20px', fontWeight: 800 }}>Security & Password</h2>
               </div>
-              <Button variant="outline" onClick={handleExportData} className="w-full sm:w-auto">
-                Export
-              </Button>
-            </div>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border border-red-200 rounded-lg">
-              <div>
-                <p className="font-medium text-red-600">Delete Account</p>
-                <p className="text-sm text-neutral-600">Permanently delete your account and all data</p>
+
+              <div className="settings-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '32px' }}>
+                <div className="settings-form-grid-span-2" style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: 800, color: '#999' }}>CURRENT PASSWORD</label>
+                  <input className="settings-input" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} style={{ padding: '14px 20px', borderRadius: '12px', border: '1px solid #eee', backgroundColor: '#fcfcfc' }} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: 800, color: '#999' }}>NEW PASSWORD</label>
+                  <input className="settings-input" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} style={{ padding: '14px 20px', borderRadius: '12px', border: '1px solid #eee', backgroundColor: '#fcfcfc' }} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: 800, color: '#999' }}>CONFIRM PASSWORD</label>
+                  <input className="settings-input" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} style={{ padding: '14px 20px', borderRadius: '12px', border: '1px solid #eee', backgroundColor: '#fcfcfc' }} />
+                </div>
               </div>
-              <Button variant="destructive" onClick={handleDeleteAccount} className="w-full sm:w-auto">
-                Delete
-              </Button>
+
+              <button
+                onClick={handleChangePassword}
+                disabled={changingPassword}
+                className="settings-button"
+                style={{ padding: '14px 32px', borderRadius: '50px', backgroundColor: '#fff', color: '#1a1a1a', border: '1px solid #eee', fontWeight: 800, cursor: 'pointer' }}>
+                {changingPassword ? 'CHANGING...' : 'CHANGE PASSWORD'}
+              </button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+
+          {/* Sidebar Cards */}
+          <div className="settings-sidebar-col" style={{ gridColumn: 'span 4', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            {/* Current Plan Card */}
+            <div style={{ backgroundColor: '#1a1a1a', borderRadius: '32px', padding: '32px', color: '#fff' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+                <div>
+                  <p style={{ margin: '0 0 4px 0', fontSize: '11px', fontWeight: 800, color: '#999', textTransform: 'uppercase' }}>Current Plan</p>
+                  <h3 style={{ margin: 0, fontSize: '24px', fontWeight: 900 }}>{PLAN_NAMES[profile?.subscriptionPlan as PlanType] || 'Free'}</h3>
+                </div>
+                <Sparkles size={24} color="#FF7A33" />
+              </div>
+              <p style={{ fontSize: '13px', opacity: 0.7, lineHeight: '1.6', marginBottom: '24px' }}>
+                Your plan is currently active. Next billing date: {profile?.subscriptionEndDate ? new Date(profile.subscriptionEndDate).toLocaleDateString() : 'N/A'}.
+              </p>
+              <button onClick={() => router.push('/pricing')} style={{ width: '100%', padding: '14px', borderRadius: '50px', backgroundColor: '#FF7A33', color: '#fff', border: 'none', fontWeight: 800, fontSize: '12px', cursor: 'pointer' }}>UPGRADE PLAN</button>
+            </div>
+
+            {/* Notifications Quick Toggle */}
+            <div style={{ backgroundColor: '#fff', borderRadius: '32px', border: '1px solid #eee', padding: '32px' }}>
+              <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', fontWeight: 800 }}>Email Alerts</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {[
+                  { k: 'emailOnPublish', l: 'Publish Notifications' },
+                  { k: 'emailWeeklyDigest', l: 'Weekly Analytics' },
+                  { k: 'pushNotifications', l: 'Browser Push' },
+                ].map((s: any) => (
+                  <div key={s.k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#666' }}>{s.l}</span>
+                    <div
+                      onClick={() => setSettings({ ...settings, [s.k]: !settings[s.k as keyof typeof settings] })}
+                      style={{ width: '40px', height: '22px', backgroundColor: settings[s.k as keyof typeof settings] ? '#FF7A33' : '#eee', borderRadius: '50px', padding: '2px', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s', justifyContent: settings[s.k as keyof typeof settings] ? 'flex-end' : 'flex-start' }}>
+                      <div style={{ width: '18px', height: '18px', backgroundColor: '#fff', borderRadius: '50%' }}></div>
+                    </div>
+                  </div>
+                ))}
+                <button
+                  onClick={() => toast.success('Preferences Updated')}
+                  style={{ background: 'none', border: 'none', color: '#FF7A33', fontSize: '12px', fontWeight: 800, textAlign: 'left', marginTop: '10px', cursor: 'pointer' }}>SAVE PREFERENCES</button>
+              </div>
+            </div>
+
+            {/* Danger Zone */}
+            <div style={{ backgroundColor: '#fff5f5', borderRadius: '32px', border: '1px solid #ffebeb', padding: '32px' }}>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: '15px', fontWeight: 800, color: '#ff4b2b' }}>Danger Zone</h3>
+              <p style={{ margin: '0 0 20px 0', fontSize: '12px', color: '#666', lineHeight: '1.6' }}>Deleting your account will erase all articles and platform connections permanently.</p>
+              <button
+                onClick={handleDeleteAccount}
+                style={{ padding: '12px 24px', borderRadius: '50px', backgroundColor: '#ff4b2b', color: '#fff', border: 'none', fontWeight: 800, fontSize: '11px', cursor: 'pointer' }}>DELETE MY ACCOUNT</button>
+            </div>
+          </div>
+
+        </div>
       </div>
-    </div>
+    </>
   )
 }
