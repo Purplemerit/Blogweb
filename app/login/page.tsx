@@ -3,8 +3,8 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { toast } from "sonner"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -17,17 +17,16 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     try {
       setOauthLoading(true)
-      const response = await fetch('/api/oauth/google')
+      const response = await fetch("/api/oauth/google")
       const data = await response.json()
-
       if (data.success && data.data.authUrl) {
         window.location.href = data.data.authUrl
       } else {
-        toast.error('Failed to initiate Google login')
+        toast.error("Failed to initiate Google login")
         setOauthLoading(false)
       }
-    } catch (error) {
-      toast.error('An error occurred. Please try again.')
+    } catch {
+      toast.error("An error occurred. Please try again.")
       setOauthLoading(false)
     }
   }
@@ -35,17 +34,16 @@ export default function LoginPage() {
   const handleGitHubLogin = async () => {
     try {
       setOauthLoading(true)
-      const response = await fetch('/api/oauth/github')
+      const response = await fetch("/api/oauth/github")
       const data = await response.json()
-
       if (data.success && data.data.authUrl) {
         window.location.href = data.data.authUrl
       } else {
-        toast.error('Failed to initiate GitHub login')
+        toast.error("Failed to initiate GitHub login")
         setOauthLoading(false)
       }
-    } catch (error) {
-      toast.error('An error occurred. Please try again.')
+    } catch {
+      toast.error("An error occurred. Please try again.")
       setOauthLoading(false)
     }
   }
@@ -55,221 +53,128 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       })
 
       const data = await response.json()
-
       if (!response.ok) {
-        toast.error(data.error || 'Failed to login')
+        toast.error(data.error || "Failed to login")
         setIsLoading(false)
         return
       }
 
-      localStorage.setItem('accessToken', data.data.accessToken)
-      toast.success('Logged in successfully!')
-      window.location.href = '/dashboard'
-    } catch (error) {
-      toast.error('An error occurred. Please try again.')
+      localStorage.setItem("accessToken", data.data.accessToken)
+      toast.success("Logged in successfully!")
+      window.location.href = "/dashboard"
+    } catch {
+      toast.error("An error occurred. Please try again.")
       setIsLoading(false)
     }
   }
 
-  const inputStyle = {
-    width: '100%',
-    padding: '16px 24px',
-    borderRadius: '50px',
-    border: '1px solid #eee',
-    backgroundColor: '#f9f9f9',
-    fontSize: '15px',
-    outline: 'none',
-    transition: 'all 0.2s'
-  }
-
-  const labelStyle = {
-    fontSize: '13px',
-    fontWeight: 800,
-    color: '#1a1a1a',
-    marginBottom: '8px',
-    display: 'block'
-  }
-
   return (
-    <div style={{
-      backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.4)), url("/design/BG%2023-01%202.png")',
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
-
-      {/* Mini Header */}
-      <header style={{ padding: '24px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-          <div style={{ width: '32px', height: '32px', backgroundColor: '#FF7A33', borderRadius: '8px' }}></div>
-          <span style={{ fontSize: '20px', fontWeight: 800, color: '#1a1a1a' }}>PublishType</span>
-        </Link>
-        <p style={{ margin: 0, fontSize: '14px', color: '#666' }}>
-          Don't have an account? <Link href="/signup" style={{ color: '#FF7A33', fontWeight: 700, textDecoration: 'none' }}>Signup</Link>
-        </p>
+    <div className="min-h-screen bg-[linear-gradient(rgba(255,255,255,0.72),rgba(255,255,255,0.72)),url('/design/BG%2023-01%202.png')] bg-cover bg-center text-[#212121]">
+      <header className="border-b border-[#e9e9e9] px-6 py-5 md:px-10">
+        <div className="mx-auto flex max-w-[1360px] items-center justify-between">
+          <Link href="/" className="text-2xl font-extrabold text-[#fb6503]">LOGOIPSUM</Link>
+          <p className="text-sm text-[#4d4d4d]">Don’t have an account ? <Link href="/signup" className="font-bold italic text-[#fb6503]">Signup</Link></p>
+        </div>
       </header>
 
-      {/* Main Content */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
-        <div style={{
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-          backdropFilter: 'blur(20px)',
-          borderRadius: '48px',
-          padding: '60px',
-          width: '100%',
-          maxWidth: '540px',
-          boxShadow: '0 30px 60px rgba(0,0,0,0.05)',
-          textAlign: 'center'
-        }}>
-          <h1 style={{ fontSize: '32px', fontWeight: 800, marginBottom: '8px', color: '#1a1a1a' }}>Welcome Back</h1>
-          <p style={{ color: '#666', fontSize: '15px', marginBottom: '40px' }}>Log in to your Account</p>
+      <main className="mx-auto flex max-w-[1360px] items-center justify-center px-4 py-10 md:py-16">
+        <div className="w-full max-w-[520px] rounded-3xl border border-[#e9e9e9] bg-[rgba(195,195,195,0.14)] p-5 backdrop-blur-[15px] md:p-6">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold">Welcome Back</h1>
+            <p className="mt-1 text-base text-[#4d4d4d]">Log in to your Account</p>
+          </div>
 
-          <form onSubmit={handleSubmit} style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             <div>
-              <label style={labelStyle}>Email</label>
+              <label className="text-base font-medium">Email</label>
               <input
                 type="email"
                 placeholder="hello@chainex.co"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                style={inputStyle}
-                onFocus={(e) => e.target.style.borderColor = '#FF7A33'}
-                onBlur={(e) => e.target.style.borderColor = '#eee'}
+                className="mt-2 h-14 w-full rounded-full border border-black/10 bg-[#fffdf9] px-4 text-base placeholder:text-[#a5a7a7] outline-none"
               />
             </div>
 
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <label style={{ ...labelStyle, marginBottom: 0 }}>Password</label>
-                <Link href="/forgot-password" style={{ fontSize: '12px', color: '#999', textDecoration: 'none', fontWeight: 700 }}>Forget Password</Link>
-              </div>
-              <div style={{ position: 'relative' }}>
+              <label className="text-base font-medium">Password</label>
+              <div className="relative mt-2">
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="********"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  style={inputStyle}
-                  onFocus={(e) => e.target.style.borderColor = '#FF7A33'}
-                  onBlur={(e) => e.target.style.borderColor = '#eee'}
+                  className="h-14 w-full rounded-full border border-black/10 bg-[#fffdf9] px-4 pr-12 text-base placeholder:text-[#a5a7a7] outline-none"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  style={{ position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#999' }}
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#6a6a6a]">
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <input type="checkbox" id="remember" style={{ width: '18px', height: '18px', accentColor: '#FF7A33' }} />
-              <label htmlFor="remember" style={{ fontSize: '14px', color: '#666', fontWeight: 600 }}>Remember me</label>
+            <div className="flex items-center justify-between">
+              <label className="inline-flex items-center gap-2 text-sm tracking-[0.04em] text-[#6a6a6a]">
+                <input type="checkbox" className="h-4 w-4 rounded border-2 border-black/50" />
+                Remember me
+              </label>
+              <Link href="/forgot-password" className="text-sm tracking-[0.04em] text-[#6a6a6a] underline">Forget Password</Link>
             </div>
 
             <button
               type="submit"
               disabled={isLoading}
-              style={{
-                backgroundColor: '#FF7A33',
-                color: 'white',
-                padding: '18px',
-                borderRadius: '50px',
-                border: 'none',
-                fontSize: '16px',
-                fontWeight: 800,
-                cursor: 'pointer',
-                boxShadow: '0 8px 25px rgba(255, 122, 51, 0.3)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '10px',
-                marginTop: '10px'
-              }}>
-              {isLoading ? <Loader2 className="animate-spin" size={20} /> : 'Login'}
+              className="mt-1 flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[#fb6503] text-base font-bold text-[#fffefd]"
+            >
+              {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Login"}
             </button>
           </form>
 
-          <div style={{ position: 'relative', margin: '40px 0', textAlign: 'center' }}>
-            <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', borderTop: '1px solid #eee' }}></div>
-            <span style={{ position: 'relative', backgroundColor: 'white', padding: '0 16px', fontSize: '13px', color: '#999', fontWeight: 700 }}>or continue with</span>
+          <div className="mt-5 flex items-center gap-3">
+            <div className="h-px flex-1 bg-[#e9e9e9]" />
+            <p className="text-base tracking-[0.04em]">or continue with</p>
+            <div className="h-px flex-1 bg-[#e9e9e9]" />
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div className="mt-5 space-y-3">
             <button
               onClick={handleGoogleLogin}
               disabled={oauthLoading}
-              style={{
-                width: '100%',
-                padding: '14px',
-                borderRadius: '50px',
-                border: '1px solid #eee',
-                backgroundColor: '#fff',
-                fontSize: '14px',
-                fontWeight: 700,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '12px',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}>
+              className="flex h-12 w-full items-center justify-center gap-3 rounded-full border border-black/10 bg-[#fffdf9] text-base text-black/60"
+            >
               <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18" alt="Google" />
               Signup with Google
             </button>
             <button
               onClick={handleGitHubLogin}
               disabled={oauthLoading}
-              style={{
-                width: '100%',
-                padding: '14px',
-                borderRadius: '50px',
-                border: '1px solid #eee',
-                backgroundColor: '#fff',
-                fontSize: '14px',
-                fontWeight: 700,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '12px',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 4.802 3.116 8.872 7.423 10.3c.6.11.819-.26.819-.578v-2.132c-3.338.724-4.042-1.61-4.042-1.61-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" /></svg>
-              Signup with GitHub
+              className="flex h-12 w-full items-center justify-center gap-3 rounded-full border border-black/10 bg-[#fffdf9] text-base text-black/60"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12c0 5.302 3.438 9.8 8.205 11.387.6.11.82-.261.82-.577v-2.234c-3.338.724-4.043-1.416-4.043-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.108-.776.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.304-.536-1.527.117-3.176 0 0 1.008-.322 3.301 1.23A11.52 11.52 0 0112 6.844c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.872.118 3.176.77.84 1.235 1.91 1.235 3.221 0 4.609-2.804 5.624-5.476 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.218.694.825.576C20.565 21.795 24 17.298 24 12c0-6.627-5.373-12-12-12z" /></svg>
+              Sign up with Apple
             </button>
           </div>
 
-          <p style={{ marginTop: '40px', fontSize: '14px', color: '#666', fontWeight: 600 }}>
-            Don't have an account yet ? <Link href="/signup" style={{ color: '#1a1a1a', fontWeight: 800, textDecoration: 'none' }}>Create Account</Link>
+          <p className="mt-6 text-center text-base tracking-[0.04em] text-[#4d4d4d]">
+            Don't have an account yet ? <Link href="/signup" className="font-medium text-[#1e1e1e]">Create Account</Link>
           </p>
         </div>
-      </div>
+      </main>
 
-      <footer style={{ padding: '24px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', gap: '24px' }}>
-          <Link href="/privacy" style={{ fontSize: '13px', color: '#999', textDecoration: 'none', fontWeight: 600 }}>Privacy Policy</Link>
-          <Link href="/terms" style={{ fontSize: '13px', color: '#999', textDecoration: 'none', fontWeight: 600 }}>Term & Condition</Link>
+      <footer className="mx-auto flex max-w-[1360px] flex-wrap items-center justify-between gap-4 px-6 pb-6 text-sm text-[#4d4d4d] md:px-10">
+        <div className="flex items-center gap-6">
+          <Link href="/privacy">Privacy Policy</Link>
+          <Link href="/terms">Term & Condition</Link>
         </div>
-        <p style={{ margin: 0, fontSize: '13px', color: '#999', fontWeight: 600 }}>
-          © {new Date().getFullYear()} PublishType. All Rights Reserved.
-        </p>
+        <p>© 2025 logoipsum. All Rights Reserved.</p>
       </footer>
     </div>
   )

@@ -255,7 +255,7 @@ function DashboardContent() {
             </Button>
           </div>
 
-          <div className="dashboard-stats-row" style={{ display: 'flex', gap: '20px' }}>
+          <div className="dashboard-stats-row" style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
             <div className="dashboard-stat-card" style={{ backgroundColor: '#fff', padding: '24px 32px', borderRadius: '24px', textAlign: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.02)', minWidth: '160px', border: '1px solid #f0f0f0' }}>
               <p style={{ margin: '0 0 10px 0', fontSize: '11px', fontWeight: 800, color: '#999', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Total Views</p>
               <p style={{ margin: 0, fontSize: '28px', fontWeight: 800, color: '#1a1a1a' }}>{stats.totalViews >= 1000 ? `${(stats.totalViews / 1000).toFixed(1)}K` : stats.totalViews}</p>
@@ -263,6 +263,14 @@ function DashboardContent() {
             <div className="dashboard-stat-card" style={{ backgroundColor: '#fff', padding: '24px 32px', borderRadius: '24px', textAlign: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.02)', minWidth: '160px', border: '1px solid #f0f0f0' }}>
               <p style={{ margin: '0 0 10px 0', fontSize: '11px', fontWeight: 800, color: '#999', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Published</p>
               <p style={{ margin: 0, fontSize: '28px', fontWeight: 800, color: '#1a1a1a' }}>{stats.totalPublished}</p>
+            </div>
+            <div className="dashboard-stat-card" style={{ backgroundColor: '#fff', padding: '24px 32px', borderRadius: '24px', textAlign: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.02)', minWidth: '160px', border: '1px solid #f0f0f0' }}>
+              <p style={{ margin: '0 0 10px 0', fontSize: '11px', fontWeight: 800, color: '#999', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Drafts</p>
+              <p style={{ margin: 0, fontSize: '28px', fontWeight: 800, color: '#1a1a1a' }}>{stats.drafts}</p>
+            </div>
+            <div className="dashboard-stat-card" style={{ backgroundColor: '#fff', padding: '24px 32px', borderRadius: '24px', textAlign: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.02)', minWidth: '160px', border: '1px solid #f0f0f0' }}>
+              <p style={{ margin: '0 0 10px 0', fontSize: '11px', fontWeight: 800, color: '#999', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Scheduled</p>
+              <p style={{ margin: 0, fontSize: '28px', fontWeight: 800, color: '#1a1a1a' }}>{stats.scheduled}</p>
             </div>
           </div>
         </section>
@@ -388,17 +396,33 @@ function DashboardContent() {
               </div>
             </div>
 
-            {/* Updates Section */}
-            <div style={{ backgroundColor: '#fafafa', borderRadius: '32px', border: '1px solid #eee', padding: '32px' }}>
+            {/* Upgrade Section */}
+            <div style={{ backgroundColor: '#171717', borderRadius: '32px', border: '1px solid #262626', padding: '32px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h3 style={{ margin: 0, fontSize: '12px', fontWeight: 800, color: '#999', textTransform: 'uppercase' }}>System Update</h3>
+                <h3 style={{ margin: 0, fontSize: '12px', fontWeight: 800, color: '#a3a3a3', textTransform: 'uppercase' }}>Upgrade Plan</h3>
                 <Sparkles size={16} color="#FF7A33" />
               </div>
               <div>
-                <p style={{ margin: '0 0 8px 0', fontSize: '13px', fontWeight: 800, color: '#1a1a1a' }}>New: Multi-Platform Sync</p>
-                <p style={{ margin: 0, fontSize: '12px', fontWeight: 600, color: '#666', lineHeight: '1.6' }}>
-                  Restored all dynamic analytics syncing across Ghost, Medium and more.
+                <p style={{ margin: '0 0 8px 0', fontSize: '17px', fontWeight: 800, color: '#fff' }}>Unlock Pro Analytics</p>
+                <p style={{ margin: 0, fontSize: '12px', fontWeight: 600, color: '#b4b4b4', lineHeight: '1.6' }}>
+                  Get advanced dashboard filters, deeper engagement funnels, and automated growth reports.
                 </p>
+                <button
+                  style={{
+                    marginTop: '18px',
+                    background: '#ff7a33',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '12px',
+                    padding: '10px 14px',
+                    fontSize: '12px',
+                    fontWeight: 800,
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => router.push('/pricing')}
+                >
+                  VIEW PLANS
+                </button>
               </div>
             </div>
 

@@ -25,6 +25,8 @@ import {
   Pie,
   Cell,
   ResponsiveContainer,
+  LineChart,
+  Line,
   BarChart,
   Bar,
   XAxis,
@@ -68,6 +70,7 @@ function AnalyticsContent() {
   const searchParams = useSearchParams()
   const { user } = useAuth()
   const [activeTab, setActiveTab] = useState("overview")
+  const [timeRange, setTimeRange] = useState<"7d" | "30d" | "90d">("30d")
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
 
@@ -256,26 +259,50 @@ function AnalyticsContent() {
         </section>
 
         <section className="analytics-content" style={{ padding: '40px' }}>
-          <div style={{ display: 'flex', gap: '12px', marginBottom: '40px' }}>
-            {['overview', 'platforms', 'comparison'].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                style={{
-                  padding: '10px 24px',
-                  borderRadius: '50px',
-                  border: activeTab === tab ? 'none' : '1px solid #eee',
-                  backgroundColor: activeTab === tab ? '#FF7A33' : '#fff',
-                  color: activeTab === tab ? '#fff' : '#666',
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  textTransform: 'capitalize'
-                }}
-              >
-                {tab}
-              </button>
-            ))}
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '40px', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              {['overview', 'platforms', 'comparison'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  style={{
+                    padding: '10px 24px',
+                    borderRadius: '50px',
+                    border: activeTab === tab ? 'none' : '1px solid #eee',
+                    backgroundColor: activeTab === tab ? '#FF7A33' : '#fff',
+                    color: activeTab === tab ? '#fff' : '#666',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    textTransform: 'capitalize'
+                  }}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              {(['7d', '30d', '90d'] as const).map((range) => (
+                <button
+                  key={range}
+                  onClick={() => setTimeRange(range)}
+                  style={{
+                    padding: '10px 16px',
+                    borderRadius: '12px',
+                    border: timeRange === range ? '1px solid #FF7A33' : '1px solid #eee',
+                    backgroundColor: timeRange === range ? '#fff2ea' : '#fff',
+                    color: timeRange === range ? '#c95417' : '#666',
+                    fontSize: '12px',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    textTransform: 'uppercase'
+                  }}
+                >
+                  {range}
+                </button>
+              ))}
+            </div>
           </div>
 
           {activeTab === 'overview' && (
@@ -302,6 +329,26 @@ function AnalyticsContent() {
               </div>
 
               <div className="analytics-charts-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+                <div style={{ backgroundColor: '#fff', borderRadius: '32px', border: '1px solid #eee', padding: '32px' }}>
+                  <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', fontWeight: 800 }}>Views Trend ({timeRange})</h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart
+                      data={byArticle.slice(0, 8).map((article, idx) => ({
+                        name: `${idx + 1}`,
+                        views: article.totalViews,
+                        likes: article.totalLikes,
+                      }))}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 700 }} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 700 }} />
+                      <Tooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="views" name="Views" stroke="#FF7A33" strokeWidth={3} dot={{ r: 3 }} />
+                      <Line type="monotone" dataKey="likes" name="Likes" stroke="#171717" strokeWidth={2} dot={{ r: 2 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
                 <div style={{ backgroundColor: '#fff', borderRadius: '32px', border: '1px solid #eee', padding: '32px' }}>
                   <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', fontWeight: 800 }}>Status Distribution</h3>
                   <ResponsiveContainer width="100%" height={300}>
