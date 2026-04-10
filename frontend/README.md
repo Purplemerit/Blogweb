@@ -1,22 +1,3 @@
-# Blogweb Monorepo
-
-This repository is now split into separate frontend and backend folders.
-
-## Structure
-
-- `frontend/` - Next.js application (UI + existing Next API routes)
-- `backend/` - Express.js server (dedicated backend service)
-
-## Run
-
-- Frontend: `npm run dev:frontend`
-- Backend: `npm run dev:backend`
-
-From the repository root:
-
-- `npm run dev` starts frontend
-
-Use two terminals if you want both running at once.
 # 🚀 Publish Type - AI-Powered Blog Platform
 
 > A comprehensive AI-powered blog generation and multi-platform publishing SaaS platform built with Next.js 16.
