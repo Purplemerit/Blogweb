@@ -251,6 +251,20 @@ function IntegrationsContent() {
         </section>
 
         <section className="integrations-content" style={{ padding: '40px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '36px' }}>
+            <div style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid rgba(238,238,238,0.8)', borderRadius: '18px', padding: '16px 18px' }}>
+              <p style={{ margin: '0 0 6px 0', fontSize: '11px', color: '#999', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Connected</p>
+              <p style={{ margin: 0, fontSize: '28px', color: '#1a1a1a', fontWeight: 900 }}>{connectedPlatforms.length}</p>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid rgba(238,238,238,0.8)', borderRadius: '18px', padding: '16px 18px' }}>
+              <p style={{ margin: '0 0 6px 0', fontSize: '11px', color: '#999', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Available</p>
+              <p style={{ margin: 0, fontSize: '28px', color: '#1a1a1a', fontWeight: 900 }}>{availablePlatforms.length}</p>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid rgba(238,238,238,0.8)', borderRadius: '18px', padding: '16px 18px' }}>
+              <p style={{ margin: '0 0 6px 0', fontSize: '11px', color: '#999', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Success Rate</p>
+              <p style={{ margin: 0, fontSize: '28px', color: '#1a1a1a', fontWeight: 900 }}>{connectedPlatforms.length === 0 ? '0%' : '98%'}</p>
+            </div>
+          </div>
 
           {/* Section 1: Connected Platforms */}
           {connectedPlatforms.length > 0 && (

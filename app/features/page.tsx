@@ -1,237 +1,124 @@
 "use client"
 
-import { useState } from "react"
 import { useRouter } from "next/navigation"
-import Image from "next/image"
-import {
-  Check,
-  Share2,
-  PenLine,
-  Zap,
-  Layout,
-  Users2,
-  Heart,
-  TrendingUp,
-  Album,
-  Plus
-} from "lucide-react"
 import { useAuth } from "@/lib/context/AuthContext"
+import { Activity, AlignCenter, BookOpen, CheckCircle2, PenLine, Share2, Users2 } from "lucide-react"
+
+const featureRows = [
+  {
+    title: "Multi-Platform Publishing",
+    description:
+      "Publish your content simultaneously across Ghost, Substack, Medium, LinkedIn, and more. Reach your audience wherever they are with just one click.",
+    bullets: ["One-click multi-platform distribution", "Automatic format optimization", "Platform-specific customization"],
+    icon: Share2,
+  },
+  {
+    title: "Customizable AI Editor",
+    description:
+      "Write with confidence using our intelligent editor. Get real-time suggestions, grammar corrections, and style improvements powered by advanced AI.",
+    bullets: ["Smart content suggestions", "Grammar and style enhancement", "Rich formatting options"],
+    icon: PenLine,
+    reverse: true,
+  },
+  {
+    title: "AI-Powered Analytics",
+    description:
+      "Understand your audience with deep insights. Track engagement, identify trends, and optimize your content strategy with AI-driven analytics.",
+    bullets: ["Real-time performance tracking", "Audience behavior insights", "Predictive content recommendations"],
+    icon: Activity,
+  },
+  {
+    title: "SEO-Optimized",
+    description:
+      "Rank higher in search results with built-in SEO tools. Optimize meta tags, keywords, and content structure automatically for better visibility.",
+    bullets: ["Automatic meta tag generation", "Keyword density analysis", "Readability score optimization"],
+    icon: AlignCenter,
+    reverse: true,
+  },
+  {
+    title: "Collaborative Workspace",
+    description:
+      "Work together seamlessly with your team. Share drafts, leave comments, and collaborate in real-time on your content projects.",
+    bullets: ["Real-time collaboration", "Inline comments and feedback", "Version history tracking"],
+    icon: Users2,
+  },
+  {
+    title: "Content Scheduling",
+    description:
+      "Plan your content calendar with ease. Schedule posts in advance and maintain a consistent publishing rhythm across all platforms.",
+    bullets: ["Visual content calendar", "Optimal timing suggestions", "Bulk scheduling options"],
+    icon: BookOpen,
+    reverse: true,
+  },
+]
 
 export default function FeaturesPage() {
   const { user } = useAuth()
   const router = useRouter()
 
   const handleStart = () => {
-    if (user) {
-      router.push('/dashboard')
-    } else {
-      router.push('/signup')
-    }
+    router.push(user ? "/dashboard" : "/signup")
   }
 
-  const features = [
-    {
-      title: "Multi-Platform Publishing",
-      desc: "Publish your content simultaneously across Ghost, Substack, Medium, LinkedIn, and more. Reach your audience wherever they are with just one click.",
-      points: ["One-click multi-platform distribution", "Automatic format optimization", "Platform-specific customization"],
-      img: "/imagea.png",
-      icon: <Share2 size={20} />,
-      color: "#FF7A33"
-    },
-    {
-      title: "Customizable AI Editor",
-      desc: "Write with confidence using our intelligent editor. Get real-time suggestions, grammar corrections, and style improvements powered by advanced AI.",
-      points: ["Smart content suggestions", "Grammar and style enhancement", "Rich formatting options"],
-      img: "/imageb.png",
-      icon: <PenLine size={20} />,
-      reverse: true,
-      color: "#FF7A33"
-    },
-    {
-      title: "AI-Powered Analytics",
-      desc: "Understand your audience with deep insights. Track engagement, identify trends, and optimize your content strategy with AI-driven analytics.",
-      points: ["Real-time performance tracking", "Audience behavior insights", "Predictive content recommendations"],
-      img: "/imagec.png",
-      icon: <Zap size={20} />,
-      color: "#FF7A33"
-    },
-    {
-      title: "SEO-Optimized",
-      desc: "Rank higher in search results with built-in SEO tools. Optimize meta tags, keywords, and content structure automatically for better visibility.",
-      points: ["Automatic meta tag generation", "Keyword density analysis", "Readability score optimization"],
-      img: "/imaged.png",
-      icon: <Layout size={20} />,
-      reverse: true,
-      color: "#FF7A33"
-    },
-    {
-      title: "Collaborative Workspace",
-      desc: "Work together seamlessly with your team. Share drafts, leave comments, and collaborate in real-time on your content projects.",
-      points: ["Real-time collaboration", "Inline comments and feedback", "Version history tracking"],
-      img: "/imagee.png",
-      icon: <Users2 size={20} />,
-      color: "#FF7A33"
-    },
-    {
-      title: "Content Scheduling",
-      desc: "Plan your content calendar with ease. Schedule posts in advance and maintain a consistent publishing rhythm across all platforms.",
-      points: ["Visual content calendar", "Optimal timing suggestions", "Bulk scheduling options"],
-      img: "/imagef.png",
-      icon: <Heart size={20} />,
-      reverse: true,
-      color: "#FF7A33"
-    },
-    {
-      title: "Content Optimization",
-      desc: "Maximize your content's impact with AI-powered optimization. Get suggestions for headlines, structure, and engagement based on proven best practices.",
-      points: ["Headline scoring and suggestions", "Content structure analysis", "Engagement prediction"],
-      img: "/imageg.png",
-      icon: <TrendingUp size={20} />,
-      color: "#FF7A33"
-    },
-    {
-      title: "Content Curation Library",
-      desc: "Build your content library with ease. Organize, tag, and retrieve your best content for repurposing and reference across all your channels.",
-      points: ["Smart content organization", "Advanced tagging system", "Quick search and retrieval"],
-      img: "/imageh.png",
-      icon: <Album size={20} />,
-      reverse: true,
-      color: "#FF7A33"
-    }
-  ]
-
   return (
-    <div style={{ backgroundColor: '#fff', minHeight: '100vh' }}>
-
-      {/* Hero Section */}
-      <section style={{
-        backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.92)), url("/design/BG%2023-01%202.png")',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        padding: '120px 24px 80px',
-        textAlign: 'center'
-      }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-          <h1 style={{
-            fontSize: 'clamp(38px, 6vw, 64px)',
-            fontWeight: 800,
-            marginBottom: '16px',
-            color: '#1a1a1a',
-            lineHeight: '1.2'
-          }}>
-            Everything You Need To<br />
-            <span style={{ fontStyle: 'italic', fontWeight: 300, color: '#666', fontFamily: '"Playfair Display", serif' }}>Succeed</span>
+    <div className="bg-[#fffefd] text-[#171717]">
+      <section className="bg-[linear-gradient(rgba(255,254,253,0.9),rgba(255,254,253,0.9)),url('/design/BG%2023-01%202.png')] bg-cover bg-center px-4 pb-16 pt-20 md:px-8 md:pt-24">
+        <div className="mx-auto max-w-[1260px] text-center">
+          <h1 className="text-4xl font-bold leading-tight md:text-6xl">
+            Everything You Need To
+            <br />
+            <span className="font-medium italic text-[#6a6a6a]">Succeed</span>
           </h1>
-          <p style={{ color: '#666', fontSize: '15px', marginBottom: '40px', maxWidth: '600px', margin: '0 auto' }}>
-            Every step, your journal should inspire others publish high quality alongside features.
+          <p className="mx-auto mt-4 max-w-[820px] text-sm font-medium text-[#4d4d4d] md:text-base">
+            Everything you need to create, optimize, and publish high-quality blogs faster than ever.
           </p>
         </div>
       </section>
 
-      {/* Features List */}
-      <section style={{ padding: '40px 24px 100px' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '40px' }}>
-          {features.map((f, idx) => (
-            <div key={idx} style={{
-              backgroundColor: 'rgba(255, 122, 51, 0.05)',
-              borderRadius: '48px',
-              padding: '48px',
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '40px',
-              alignItems: 'center'
-            }}>
-              {/* Image Side */}
-              <div style={{
-                order: f.reverse ? 2 : 1,
-                backgroundColor: '#fff',
-                borderRadius: '24px',
-                padding: '24px',
-                height: '400px',
-                position: 'relative',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 10px 30px rgba(0,0,0,0.03)'
-              }}>
-                <div style={{ width: '100%', height: '100%', position: 'relative', borderRadius: '16px', overflow: 'hidden' }}>
-                  <Image
-                    src={f.img}
-                    alt={f.title}
-                    fill
-                    style={{ objectFit: 'cover' }}
-                    unoptimized // Keeping as requested not to change image/ext
-                  />
-                </div>
-              </div>
-
-              {/* Text Side */}
-              <div style={{ order: f.reverse ? 1 : 2 }}>
-                <div style={{
-                  width: '42px',
-                  height: '42px',
-                  borderRadius: '12px',
-                  backgroundColor: '#fff',
-                  border: '1px solid #f0f0f0',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: f.color,
-                  marginBottom: '24px',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
-                }}>
-                  {f.icon}
-                </div>
-                <h2 style={{ fontSize: '32px', fontWeight: 800, marginBottom: '16px', color: '#1a1a1a' }}>{f.title}</h2>
-                <p style={{ color: '#666', fontSize: '15px', lineHeight: '1.6', marginBottom: '24px' }}>
-                  {f.desc}
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {f.points.map(pt => (
-                    <div key={pt} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#1a1a1a', fontWeight: 600 }}>
-                      <Check size={18} style={{ color: f.color }} strokeWidth={3} />
-                      <span>{pt}</span>
+      <section className="px-4 pb-16 md:px-8">
+        <div className="mx-auto max-w-[1360px] rounded-[32px] bg-gradient-to-b from-[rgba(254,207,177,0.35)] to-[rgba(255,240,230,0.06)] p-4 md:p-8">
+          <div className="space-y-6">
+            {featureRows.map((row) => {
+              const Icon = row.icon
+              return (
+                <article key={row.title} className="rounded-[28px] bg-[#fff7ed] p-3 md:p-8">
+                  <div className={row.reverse ? "grid items-center gap-8 lg:grid-cols-[1fr_1.08fr]" : "grid items-center gap-8 lg:grid-cols-[1.08fr_1fr]"}>
+                    <div className={row.reverse ? "lg:order-2" : ""}>
+                      <div className="rounded-[20px] bg-[#fff7ed] p-3">
+                        <div className="h-[250px] rounded-lg bg-white md:h-[340px]" />
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
 
-      {/* Bottom CTA Section */}
-      <section style={{ padding: '100px 24px', textAlign: 'center' }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: 'clamp(32px, 5vw, 42px)', fontWeight: 800, color: '#1a1a1a', marginBottom: '20px' }}>
-            Ready to elevate your content ?
-          </h2>
-          <p style={{ color: '#666', marginBottom: '40px', fontSize: '16px' }}>
-            Join thousands of creators and brands automating their growth today.
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-            <button
-              onClick={handleStart}
-              style={{
-                backgroundColor: '#FF7A33',
-                color: 'white',
-                padding: '18px 56px',
-                borderRadius: '50px',
-                border: 'none',
-                fontSize: '15px',
-                fontWeight: 800,
-                cursor: 'pointer',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-                boxShadow: '0 8px 25px rgba(255, 122, 51, 0.3)'
-              }}>
-              GET STARTED NOW
-            </button>
-            <p style={{ fontSize: '13px', color: '#999' }}>No credit card required for free plan</p>
+                    <div className={row.reverse ? "lg:order-1" : ""}>
+                      <div className="mb-4 inline-flex rounded-full bg-[#fff7ed] p-1.5">
+                        <div className="rounded-full bg-[#fff0e6] p-3 text-[#fb6503]"><Icon className="h-5 w-5" /></div>
+                      </div>
+                      <h2 className="text-2xl font-medium md:text-[31px]">{row.title}</h2>
+                      <p className="mt-3 max-w-[540px] text-sm text-[#212121] md:text-base">{row.description}</p>
+
+                      <div className="mt-6 space-y-3">
+                        {row.bullets.map((bullet) => (
+                          <div key={bullet} className="flex items-center gap-2 text-sm font-bold text-[#4d4d4d] md:text-base">
+                            <CheckCircle2 className="h-4 w-4 text-[#fc8435]" />
+                            <span>{bullet}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              )
+            })}
           </div>
         </div>
       </section>
 
+      <section className="px-4 pb-16 pt-8 text-center md:px-8">
+        <h3 className="text-4xl font-bold">Ready to elevate your content ?</h3>
+        <p className="mt-2 text-sm text-[#4d4d4d]">Join thousands of creators and brands automating their growth today.</p>
+        <button onClick={handleStart} className="mt-5 rounded-full bg-[#fb6503] px-10 py-3 text-sm font-bold text-white">GET STARTED NOW</button>
+        <p className="mt-2 text-xs text-[#999]">No credit card required for free plan</p>
+      </section>
     </div>
   )
 }

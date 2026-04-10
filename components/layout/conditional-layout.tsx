@@ -14,9 +14,10 @@ export function ConditionalLayout({ children }: { children: React.ReactNode }) {
     pathname?.startsWith('/forgot-password') ||
     pathname?.startsWith('/reset-password') ||
     pathname?.startsWith('/verify-email')
+  const isHome = pathname === '/'
 
   // If it's a dashboard or auth route, don't render Header and Footer
-  if (isDashboard || isAuth) {
+  if (isDashboard || isAuth || isHome) {
     return <>{children}</>
   }
 
