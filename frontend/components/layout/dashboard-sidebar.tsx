@@ -12,8 +12,10 @@ import {
   Settings,
   HelpCircle,
   Star,
+  ShieldCheck,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/lib/context/AuthContext"
 
 type NavItem = {
   name: string
@@ -24,6 +26,7 @@ type NavItem = {
 export function DashboardSidebar({ className, onNavigate }: { className?: string; onNavigate?: () => void }) {
   const pathname = usePathname()
   const router = useRouter()
+  const { user } = useAuth()
 
   const navGroups: Array<{ label: string; items: NavItem[] }> = [
     {
@@ -48,6 +51,10 @@ export function DashboardSidebar({ className, onNavigate }: { className?: string
       ],
     },
   ]
+
+  const adminNavItems: NavItem[] = user?.role === "ADMIN"
+    ? [{ name: "Admin Panel", href: "/admin/users", icon: ShieldCheck }]
+    : []
 
   return (
     <aside
@@ -100,6 +107,31 @@ export function DashboardSidebar({ className, onNavigate }: { className?: string
               })}
             </div>
           ))}
+
+          {adminNavItems.length > 0 && (
+            <div className="space-y-1.5 pt-1">
+              <p className="px-3 text-[13px] font-bold uppercase text-[#4D4D4D] dark:text-[#B3B3B3]">ADMIN</p>
+              {adminNavItems.map((item) => {
+                const Icon = item.icon
+                const active = pathname === item.href || pathname?.startsWith(item.href + "/")
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={onNavigate}
+                    className={`flex items-center gap-3 rounded-2xl px-3 py-4 text-base font-medium transition-colors ${
+                      active
+                        ? "bg-[#FFFAF3] text-black dark:bg-[#2A2A2A] dark:text-white"
+                        : "text-[#212121] hover:bg-[#FFFBF7] dark:text-[#E5E5E5] dark:hover:bg-[#242424]"
+                    }`}
+                  >
+                    <Icon className="h-6 w-6" />
+                    {item.name}
+                  </Link>
+                )
+              })}
+            </div>
+          )}
         </nav>
       </div>
 

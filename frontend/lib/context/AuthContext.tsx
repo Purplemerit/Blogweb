@@ -109,11 +109,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(data.error || 'Failed to login')
       }
 
+      const loggedInUser = data?.data?.user
       localStorage.setItem('accessToken', data.data.accessToken)
       await fetchUser()
 
       toast.success('Logged in successfully!')
-      router.push('/dashboard')
+      router.push(loggedInUser?.role === 'ADMIN' ? '/admin/users' : '/dashboard')
     } catch (error: any) {
       toast.error(error.message || 'An error occurred')
       throw error

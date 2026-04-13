@@ -9,6 +9,7 @@ export function ConditionalLayout({ children }: { children: React.ReactNode }) {
 
   // Check if we're on a dashboard or auth route
   const isDashboard = pathname?.startsWith('/dashboard')
+  const isAdmin = pathname?.startsWith('/admin')
   const isAuth = pathname?.startsWith('/login') ||
     pathname?.startsWith('/signup') ||
     pathname?.startsWith('/forgot-password') ||
@@ -16,8 +17,8 @@ export function ConditionalLayout({ children }: { children: React.ReactNode }) {
     pathname?.startsWith('/verify-email')
   const isHome = pathname === '/'
 
-  // If it's a dashboard or auth route, don't render Header and Footer
-  if (isDashboard || isAuth || isHome) {
+  // If it's a dashboard, admin, auth route, or home, don't render Header and Footer
+  if (isDashboard || isAdmin || isAuth || isHome) {
     return <>{children}</>
   }
 
