@@ -245,7 +245,7 @@ export default function AdminArticlesPage() {
     <div className="min-h-screen bg-[#FFFEFD]" style={{ fontFamily: 'Satoshi, var(--font-geist-sans), sans-serif' }}>
       <header className="border-b border-[#E9E9E9] bg-white px-3 py-3 sm:px-4 md:px-6">
         <div className="mx-auto flex max-w-[1220px] items-center justify-between gap-4">
-          <p className="text-[22px] font-black uppercase tracking-[-0.04em] text-[#FB6503] sm:text-[26px] md:text-[34px]">LOGOIPSUM</p>
+          <p className="text-[22px] font-black uppercase tracking-[-0.04em] text-[#FB6503] sm:text-[26px] md:text-[34px]">PublishType</p>
           <div className="hidden w-full max-w-[460px] items-center gap-2 rounded-[28px] border border-[#E45C03] px-3 py-2 md:flex">
             <Search className="h-4 w-4 text-[#999999]" />
             <input placeholder="Search Documentation" className="w-full bg-transparent text-[16px] text-[#212121] outline-none" />

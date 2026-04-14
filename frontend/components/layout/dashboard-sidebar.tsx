@@ -68,7 +68,7 @@ export function DashboardSidebar({ className, onNavigate }: { className?: string
       <div className="flex min-h-0 flex-1 flex-col gap-10">
         <div className="flex h-14 items-center border-b border-[#E9E9E9] px-2.5">
           <Link href="/dashboard" className="text-[34px] font-black uppercase tracking-[-0.04em] text-[#FB6503]">
-            LOGOIPSUM
+            PublishType
           </Link>
         </div>
 

@@ -79,7 +79,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-[linear-gradient(rgba(255,255,255,0.72),rgba(255,255,255,0.72)),url('/design/BG%2023-01%202.png')] bg-cover bg-center text-[#212121]">
       <header className="border-b border-[#e9e9e9] px-6 py-5 md:px-10">
         <div className="mx-auto flex max-w-[1360px] items-center justify-between">
-          <Link href="/" className="text-2xl font-extrabold text-[#fb6503]">LOGOIPSUM</Link>
+          <Link href="/" className="text-2xl font-extrabold text-[#fb6503]">PublishType</Link>
           <p className="text-sm text-[#4d4d4d]">Don’t have an account ? <Link href="/signup" className="font-bold italic text-[#fb6503]">Signup</Link></p>
         </div>
       </header>
@@ -174,7 +174,7 @@ export default function LoginPage() {
           <Link href="/privacy">Privacy Policy</Link>
           <Link href="/terms">Term & Condition</Link>
         </div>
-        <p>© 2025 logoipsum. All Rights Reserved.</p>
+        <p>© 2025 PublishType. All Rights Reserved.</p>
       </footer>
     </div>
   )

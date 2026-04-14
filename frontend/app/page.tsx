@@ -108,7 +108,7 @@ export default function Home() {
       <div className="relative overflow-hidden border-b border-[#e9e9e9] bg-[linear-gradient(rgba(255,254,253,0.72),rgba(255,254,253,0.72)),url('/design/BG%2023-01%202.png')] bg-cover bg-center px-4 pb-12 pt-6 md:px-8 lg:px-12">
         <div className="mx-auto max-w-[1360px]">
           <header className="flex items-center justify-between rounded-full border border-[#f3dfd1] bg-[#fffefd]/70 px-4 py-3 backdrop-blur md:px-6">
-            <Link href="/" className="text-lg font-extrabold tracking-tight text-[#fb6503] md:text-xl">LOGOIPSUM</Link>
+            <Link href="/" className="text-lg font-extrabold tracking-tight text-[#fb6503] md:text-xl">PublishType</Link>
             <nav className="hidden items-center gap-2 md:flex">
               {[
                 ["Home", "/"],
@@ -300,7 +300,7 @@ export default function Home() {
 
       <footer className="mx-4 mb-4 mt-4 overflow-hidden rounded-t-[40px] bg-gradient-to-b from-[#fff6f0] via-[rgba(255,246,240,0.82)] to-[rgba(255,211,183,0.7)] px-5 pb-8 pt-12 md:mx-8 lg:mx-12">
         <div className="mx-auto max-w-[1360px]">
-          <p className="text-center text-5xl font-black text-[#fb6503]/20 md:text-8xl lg:text-[170px] lg:leading-none">LOGOIPSUM</p>
+          <p className="text-center text-5xl font-black text-[#fb6503]/20 md:text-8xl lg:text-[170px] lg:leading-none">PublishType</p>
           <div className="mt-6 flex flex-wrap items-end justify-between gap-4 border-b border-[#bababa] pb-5">
             <div>
               <p className="text-sm font-medium text-[#212121]">All Assistant That Captures Every Details.</p>
@@ -331,7 +331,7 @@ export default function Home() {
               <Link href="/privacy">Privacy Policy</Link>
               <Link href="/terms">Term & Condition</Link>
             </div>
-            <p className="text-xs">© 2025 logoipsum. All Rights Reserved.</p>
+            <p className="text-xs">© 2025 PublishType. All Rights Reserved.</p>
           </div>
         </div>
       </footer>
