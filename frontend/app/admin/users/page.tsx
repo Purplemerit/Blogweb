@@ -124,7 +124,7 @@ export default function AdminUsersIndexPage() {
       <header className="border-b border-[#E9E9E9] bg-white/90 px-3 py-3 sm:px-4 md:px-6">
         <div className="mx-auto flex max-w-[1220px] items-center justify-between gap-2 sm:gap-3">
           <div className="flex items-center gap-3">
-            <p className="text-[22px] font-black uppercase tracking-[-0.04em] text-[#FB6503] sm:text-[26px] md:text-[34px]">LOGOIPSUM</p>
+            <p className="text-[22px] font-black uppercase tracking-[-0.04em] text-[#FB6503] sm:text-[26px] md:text-[34px]">PublishType</p>
             <span className="hidden rounded-full bg-[#F3F0EA] px-2 py-1 text-[10px] font-bold text-[#57534D] sm:inline-flex">ADMIN PANEL</span>
           </div>
           <div className="flex min-w-0 items-center gap-2 text-[#6A6A6A] sm:gap-3">

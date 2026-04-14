@@ -165,7 +165,7 @@ export default function ArticlesPage() {
     >
       <div className="mx-auto w-full max-w-[1120px] px-3 pb-10 pt-6 sm:px-4 md:px-10 md:pt-12">
         <div className="mb-4 flex items-center justify-between border-b border-[#E9E9E9] pb-3 md:hidden">
-          <p className="text-[22px] font-black uppercase tracking-[-0.04em] text-[#FB6503]">LOGOIPSUM</p>
+          <p className="text-[22px] font-black uppercase tracking-[-0.04em] text-[#FB6503]">PublishType</p>
         </div>
 
         <div className="flex flex-wrap items-start justify-between gap-5">

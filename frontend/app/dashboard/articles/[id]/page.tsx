@@ -244,7 +244,7 @@ export default function ArticleEditorPage() {
             </div>
           </button>
 
-          <p className="order-3 w-full text-center text-[28px] font-black uppercase tracking-[-0.04em] text-[#FB6503] sm:text-[34px] lg:order-none lg:w-auto">LOGOIPSUM</p>
+          <p className="order-3 w-full text-center text-[28px] font-black uppercase tracking-[-0.04em] text-[#FB6503] sm:text-[34px] lg:order-none lg:w-auto">PublishType</p>
 
           <div className="flex items-center gap-2">
             <button type="button" onClick={toggleTheme} className="rounded-full p-1 text-[#212121] dark:text-[#F7F7F7]" aria-label="Toggle dark mode">
@@ -419,7 +419,7 @@ export default function ArticleEditorPage() {
       </div>
 
       <footer className="mx-auto mt-6 w-full max-w-[1360px] rounded-t-[40px] bg-gradient-to-b from-[#FFF6F0] to-[rgba(255,211,183,0.7)] px-4 py-8 dark:from-[#211A16] dark:to-[#1B1613] sm:rounded-t-[60px] sm:px-8 sm:py-10">
-        <p className="text-center text-[56px] font-black uppercase leading-none text-[#FB65031F] sm:text-[100px] md:text-[140px]">LOGOIPSUM</p>
+        <p className="text-center text-[56px] font-black uppercase leading-none text-[#FB65031F] sm:text-[100px] md:text-[140px]">PublishType</p>
         <div className="mt-6 flex flex-wrap items-start justify-between gap-6 border-b border-[#BABABA] pb-6">
           <div>
             <p className="text-base text-[#212121] dark:text-[#F2F2F2]">All Assistant That Captures Every Details.</p>
@@ -437,7 +437,7 @@ export default function ArticleEditorPage() {
         </div>
         <div className="mt-4 flex flex-wrap items-center justify-between text-sm text-[#212121] dark:text-[#F2F2F2]">
           <p>Privacy Policy • Term & Condition</p>
-          <p>© 2025 logoipsum. All Rights Reserved.</p>
+          <p>© 2025 PublishType. All Rights Reserved.</p>
         </div>
       </footer>
     </div>
